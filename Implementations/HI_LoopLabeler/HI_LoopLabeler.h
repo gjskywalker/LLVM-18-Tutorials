@@ -54,11 +54,11 @@ using namespace clang;
 
 class HI_LoopLabeler_Visitor : public RecursiveASTVisitor<HI_LoopLabeler_Visitor>
 {
-  public:
+public:
     HI_LoopLabeler_Visitor(CompilerInstance &_CI, Rewriter &R, std::string _parselog_name)
         : CI(_CI), TheRewriter(R), parselog_name(_parselog_name), ctx(_CI.getASTContext())
     {
-        parseLog = new llvm::raw_fd_ostream(_parselog_name.c_str(), ErrInfo, llvm::sys::fs::F_None);
+        parseLog = new llvm::raw_fd_ostream(_parselog_name.c_str(), ErrInfo, llvm::sys::fs::OF_None);
     }
 
     ~HI_LoopLabeler_Visitor()
@@ -169,7 +169,7 @@ class HI_LoopLabeler_Visitor : public RecursiveASTVisitor<HI_LoopLabeler_Visitor
         return PrintingPolicy(CI.getLangOpts());
     }
 
-  private:
+private:
     Rewriter &TheRewriter;
     CompilerInstance &CI;
     std::error_code ErrInfo;
@@ -184,7 +184,7 @@ class HI_LoopLabeler_Visitor : public RecursiveASTVisitor<HI_LoopLabeler_Visitor
 // by the Clang parser.
 class HI_LoopLabeler_ASTConsumer : public ASTConsumer
 {
-  public:
+public:
     HI_LoopLabeler_ASTConsumer(CompilerInstance &_CI, Rewriter &R, std::string _parselog_name)
         : Visitor(_CI, R, _parselog_name), CI(_CI), parselog_name(_parselog_name)
     {
@@ -201,7 +201,7 @@ class HI_LoopLabeler_ASTConsumer : public ASTConsumer
         return true;
     }
 
-  private:
+private:
     HI_LoopLabeler_Visitor Visitor;
     CompilerInstance &CI;
     std::string parselog_name;
@@ -215,7 +215,7 @@ class HI_LoopLabeler_ASTConsumer : public ASTConsumer
 // For each source file provided to the tool, a new FrontendAction is created.
 class HI_LoopLabeler_FrontendAction : public ASTFrontendAction
 {
-  public:
+public:
     HI_LoopLabeler_FrontendAction(const char *_parselog_name, Rewriter &R, const char *_outputCode_name)
         : parselog_name(_parselog_name), TheRewriter(R), outputCode_name(_outputCode_name)
     {
@@ -225,7 +225,7 @@ class HI_LoopLabeler_FrontendAction : public ASTFrontendAction
         SourceManager &SM = TheRewriter.getSourceMgr();
         llvm::errs() << "** EndSourceFileAction for: " << SM.getFileEntryForID(SM.getMainFileID())->getName()
                      << "\n"; // Now emit the rewritten buffer.
-        outputCode = new llvm::raw_fd_ostream(outputCode_name.c_str(), ErrInfo, llvm::sys::fs::F_None);
+        outputCode = new llvm::raw_fd_ostream(outputCode_name.c_str(), ErrInfo, llvm::sys::fs::OF_None);
         TheRewriter.getEditBuffer(SM.getMainFileID()).write(*outputCode);
         outputCode->flush();
         delete outputCode;
@@ -237,7 +237,7 @@ class HI_LoopLabeler_FrontendAction : public ASTFrontendAction
         return std::make_unique<HI_LoopLabeler_ASTConsumer>(CI, TheRewriter, parselog_name);
     }
 
-  private:
+private:
     Rewriter &TheRewriter;
     std::string parselog_name;
     std::string outputCode_name;
@@ -252,7 +252,7 @@ HI_LoopLabeler_rewrite_newFrontendActionFactory(const char *_parseLog_name, Rewr
 {
     class SimpleFrontendActionFactory : public tooling::FrontendActionFactory
     {
-      public:
+    public:
         SimpleFrontendActionFactory(const char *_parseLog_name, Rewriter &R, const char *_outputCode_name)
             : parseLog_name(_parseLog_name), TheRewriter(R), outputCode_name(_outputCode_name)
         {

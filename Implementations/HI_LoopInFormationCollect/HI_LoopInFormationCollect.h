@@ -41,7 +41,7 @@ class HI_LoopInFormationCollect : public LoopPass
     {
         //  this->getAsPMDataManager();
         Loop_Counter = 0;
-        Loop_out = new raw_fd_ostream(loopfile, ErrInfo, sys::fs::F_None);
+        Loop_out = new raw_fd_ostream(loopfile, ErrInfo, sys::fs::OF_None);
         // Loop2Blocks.clear();
         // Block2Loops.clear();
         // Loop_id.clear();

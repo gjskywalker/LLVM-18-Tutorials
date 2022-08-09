@@ -63,7 +63,7 @@ class HI_FunctionInterfaceInfo_Visitor : public RecursiveASTVisitor<HI_FunctionI
           FuncParamLine2OutermostSize(FuncParamLine2OutermostSize), topFunctioName(topFunctioName),
           functionAllInline(functionAllInline)
     {
-        parseLog = new llvm::raw_fd_ostream(_parselog_name.c_str(), ErrInfo, llvm::sys::fs::F_None);
+        parseLog = new llvm::raw_fd_ostream(_parselog_name.c_str(), ErrInfo, llvm::sys::fs::OF_None);
     }
 
     ~HI_FunctionInterfaceInfo_Visitor()
@@ -237,7 +237,7 @@ class HI_FunctionInterfaceInfo_FrontendAction : public ASTFrontendAction
         SourceManager &SM = TheRewriter.getSourceMgr();
         llvm::errs() << "** EndSourceFileAction for: " << SM.getFileEntryForID(SM.getMainFileID())->getName()
                      << "\n"; // Now emit the rewritten buffer.
-        outputCode = new llvm::raw_fd_ostream(outputCode_name.c_str(), ErrInfo, llvm::sys::fs::F_None);
+        outputCode = new llvm::raw_fd_ostream(outputCode_name.c_str(), ErrInfo, llvm::sys::fs::OF_None);
         TheRewriter.getEditBuffer(SM.getMainFileID()).write(*outputCode);
         outputCode->flush();
         delete outputCode;

@@ -119,7 +119,7 @@ class HI_AggressiveLSR_MUL : public FunctionPass
         BasicBlock_Counter = 0;
         Loop_Counter = 0;
         callCounter = 0;
-        AggrLSRLog = new raw_fd_ostream(AggrLSRLog_Name, ErrInfo, sys::fs::F_None);
+        AggrLSRLog = new raw_fd_ostream(AggrLSRLog_Name, ErrInfo, sys::fs::OF_None);
         tmp_stream = new raw_string_ostream(tmp_stream_str);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
 

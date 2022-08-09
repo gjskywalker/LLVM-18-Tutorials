@@ -168,7 +168,7 @@ int main(int argc, const char **argv)
 
         if (debugFlag)
         {
-            llvm::raw_fd_ostream OS3("top_output_loopextract.bc", EC, llvm::sys::fs::F_None);
+            llvm::raw_fd_ostream OS3("top_output_loopextract.bc", EC, llvm::sys::fs::OF_None);
             WriteBitcodeToFile(*Mod_tmp, OS3);
             OS3.flush();
         }
@@ -210,7 +210,7 @@ int main(int argc, const char **argv)
 
         if (debugFlag)
         {
-            llvm::raw_fd_ostream OSPM0("top_output_PM0.bc", EC, llvm::sys::fs::F_None);
+            llvm::raw_fd_ostream OSPM0("top_output_PM0.bc", EC, llvm::sys::fs::OF_None);
             WriteBitcodeToFile(*Mod_tmp, OSPM0);
             OSPM0.flush();
         }
@@ -269,7 +269,7 @@ int main(int argc, const char **argv)
 
         if (debugFlag)
         {
-            llvm::raw_fd_ostream OS111("top_output_PM1.bc", EC, llvm::sys::fs::F_None);
+            llvm::raw_fd_ostream OS111("top_output_PM1.bc", EC, llvm::sys::fs::OF_None);
             WriteBitcodeToFile(*Mod_tmp, OS111);
             OS111.flush();
         }
@@ -316,7 +316,7 @@ int main(int argc, const char **argv)
 
         if (debugFlag)
         {
-            llvm::raw_fd_ostream OSPM2("top_output_PM2.bc", EC, llvm::sys::fs::F_None);
+            llvm::raw_fd_ostream OSPM2("top_output_PM2.bc", EC, llvm::sys::fs::OF_None);
             WriteBitcodeToFile(*Mod_tmp, OSPM2);
             OSPM2.flush();
         }
@@ -370,7 +370,7 @@ int main(int argc, const char **argv)
 
         if (debugFlag)
         {
-            llvm::raw_fd_ostream OSPM2("top_output_PM4.bc", EC, llvm::sys::fs::F_None);
+            llvm::raw_fd_ostream OSPM2("top_output_PM4.bc", EC, llvm::sys::fs::OF_None);
             WriteBitcodeToFile(*Mod_tmp, OSPM2);
             OSPM2.flush();
         }
@@ -402,7 +402,7 @@ int main(int argc, const char **argv)
 
         if (debugFlag)
         {
-            llvm::raw_fd_ostream OS("top_output.bc", EC, llvm::sys::fs::F_None);
+            llvm::raw_fd_ostream OS("top_output.bc", EC, llvm::sys::fs::OF_None);
             WriteBitcodeToFile(*Mod_tmp, OS);
             OS.flush();
 

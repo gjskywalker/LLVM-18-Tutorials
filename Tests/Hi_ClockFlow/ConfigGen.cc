@@ -227,7 +227,8 @@ bool singleClockDesignEvaluation(
 {
     std::error_code EC;
 
-    checkedConfigs << "config #" << config_id << ":\n" << desginconfig_0;
+    checkedConfigs << "config #" << config_id << ":\n"
+                   << desginconfig_0;
     checkedConfigs.flush();
     legacy::PassManager PM0, PM1, PM2, PM3, PM4, PM5;
 
@@ -307,7 +308,7 @@ bool singleClockDesignEvaluation(
 
     if (debugFlag)
     {
-        llvm::raw_fd_ostream OSPM0("top_output_PM0.bc", EC, llvm::sys::fs::F_None);
+        llvm::raw_fd_ostream OSPM0("top_output_PM0.bc", EC, llvm::sys::fs::OF_None);
         WriteBitcodeToFile(*Mod_tmp, OSPM0);
         OSPM0.flush();
         OSPM0.close();
@@ -347,7 +348,7 @@ bool singleClockDesignEvaluation(
 
     if (debugFlag)
     {
-        llvm::raw_fd_ostream OSPM1("top_output_PM1.bc", EC, llvm::sys::fs::F_None);
+        llvm::raw_fd_ostream OSPM1("top_output_PM1.bc", EC, llvm::sys::fs::OF_None);
         WriteBitcodeToFile(*Mod_tmp, OSPM1);
         OSPM1.flush();
         OSPM1.close();
@@ -390,7 +391,7 @@ bool singleClockDesignEvaluation(
 
     if (debugFlag)
     {
-        llvm::raw_fd_ostream OSPM2("top_output_PM2.bc", EC, llvm::sys::fs::F_None);
+        llvm::raw_fd_ostream OSPM2("top_output_PM2.bc", EC, llvm::sys::fs::OF_None);
         WriteBitcodeToFile(*Mod_tmp, OSPM2);
         OSPM2.flush();
         OSPM2.close();
@@ -541,7 +542,7 @@ bool singleClockDesignEvaluation(
         if (debugFlag)
         {
             print_status("Writing LLVM IR to File");
-            llvm::raw_fd_ostream OSPM6("top_output.bc", EC, llvm::sys::fs::F_None);
+            llvm::raw_fd_ostream OSPM6("top_output.bc", EC, llvm::sys::fs::OF_None);
             WriteBitcodeToFile(*Mod_tmp_eval, OSPM6);
             OSPM6.flush();
             OSPM6.close();
@@ -626,7 +627,7 @@ bool multipleClockDesignEvaluation(
     for (auto funcName : FuncNames)
     {
         desginconfig_last.setClock(clockForFunction[funcName]);
-        //    llvm::raw_fd_ostream checkedConfigs("configSettings.txt", EC, llvm::sys::fs::F_None);
+        //    llvm::raw_fd_ostream checkedConfigs("configSettings.txt", EC, llvm::sys::fs::OF_None);
         designEvalResult design_eval_result;
         bool result_bypass = singleClockDesignEvaluation(
             desginconfig_last, checkedConfigs, Mod, design_eval_result, output_next_factor,
@@ -774,7 +775,7 @@ bool multipleClockDesignEvaluation(
 }
 
 std::string clockStrs_DSE[100] = {
-    "5",    "7", "8", "9", "10", "12.5",
+    "5", "7", "8", "9", "10", "12.5",
     "15", // 7
     "16",
     "17.5", //
@@ -854,7 +855,7 @@ std::string clockStrs_DSE[100] = {
 //     while (curClock_id>=0)
 //     {
 //         desginconfig_new.setClock(clockStrs_DSE[curClock_id]);
-//        // llvm::raw_fd_ostream checkedConfigs("configSettings.txt", EC, llvm::sys::fs::F_None);
+//        // llvm::raw_fd_ostream checkedConfigs("configSettings.txt", EC, llvm::sys::fs::OF_None);
 //         designEvalResult design_eval_result;
 //         singleClockDesignEvaluation(
 //                             desginconfig_new,
@@ -981,7 +982,7 @@ bool tryUpdateSlowestFuncClock(
         desginconfig_optClock.cyclicPartitionConfigs.clear();
         desginconfig_optClock.blockPartitionConfigs.clear();
         desginconfig_optClock.LoopLabel2UnrollFactor.clear();
-        // llvm::raw_fd_ostream checkedConfigs("configSettings.txt", EC, llvm::sys::fs::F_None);
+        // llvm::raw_fd_ostream checkedConfigs("configSettings.txt", EC, llvm::sys::fs::OF_None);
 
         resetResource(newclk_total_resource);
         double new_max_Latency;
@@ -1195,8 +1196,10 @@ bool tryUpdateHLSDirectives(
             if (entire_design_eval_result.LoopLabel2SmallestII[opt_LoopLabel] >
                 entire_design_eval_result.LoopLabel2IterationLatency[opt_LoopLabel])
             {
-                llvm::errs() << "previous result:\n" << entire_design_eval_result << "\n";
-                llvm::errs() << "previous desginconfig_last:\n" << desginconfig_last << "\n";
+                llvm::errs() << "previous result:\n"
+                             << entire_design_eval_result << "\n";
+                llvm::errs() << "previous desginconfig_last:\n"
+                             << desginconfig_last << "\n";
             }
             assert(entire_design_eval_result.LoopLabel2SmallestII[opt_LoopLabel] <=
                    entire_design_eval_result.LoopLabel2IterationLatency[opt_LoopLabel]);
@@ -1304,7 +1307,7 @@ enumerateDesignConfiguration::enumerateDesignConfiguration(
       TargetExtName2ArrayInfo(TargetExtName2ArrayInfo)
 {
     std::error_code ErrInfo;
-    auto genFile = new raw_fd_ostream(genFile_name, ErrInfo, sys::fs::F_None);
+    auto genFile = new raw_fd_ostream(genFile_name, ErrInfo, sys::fs::OF_None);
     for (auto loopIRName_dep_pair : LoopIRName2Depth)
     {
         if (loopIRName_dep_pair.second == 1)
@@ -1448,7 +1451,7 @@ bool justTryUpdateSlowestFuncClock_withoutHLSDSE(
     desginconfig_optClock.cyclicPartitionConfigs.clear();
     desginconfig_optClock.blockPartitionConfigs.clear();
     desginconfig_optClock.LoopLabel2UnrollFactor.clear();
-    // llvm::raw_fd_ostream checkedConfigs("configSettings.txt", EC, llvm::sys::fs::F_None);
+    // llvm::raw_fd_ostream checkedConfigs("configSettings.txt", EC, llvm::sys::fs::OF_None);
 
     resetResource(newclk_total_resource);
     double new_max_Latency;
@@ -1522,8 +1525,8 @@ bool findNextPossibleClockCombination(
 
         if (clockSet.size() >
             ClockNum_limit) // if the clock number exceeds the limitation, there is two options:
-        { // (1) find a lower clock for the slowest function (2) lower the clocks of those functions
-          // with the same clock with the original slowest function
+        {                   // (1) find a lower clock for the slowest function (2) lower the clocks of those functions
+                            // with the same clock with the original slowest function
             checkedConfigs << "     bypass clock [" << clockStrs_DSE[curClock_id]
                            << "]  for function [" << funcName_withMaxLat << "] due to\n"
                            << " the clock number exceeding the limitation. Clocks are: ";

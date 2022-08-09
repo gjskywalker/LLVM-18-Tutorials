@@ -376,9 +376,9 @@ class HI_MuxInsertionArrayPartition : public ModulePass
           DEBUG(DEBUG)
     {
         config_file = new std::ifstream(config_file_name);
-        BRAM_log = new raw_fd_ostream("HI_MuxInsertionArrayPartition_BRAM_log", ErrInfo, sys::fs::F_None);
+        BRAM_log = new raw_fd_ostream("HI_MuxInsertionArrayPartition_BRAM_log", ErrInfo, sys::fs::OF_None);
         top_function_name = std::string(top_function);
-        ArrayLog = new raw_fd_ostream("HI_MuxInsertionArrayPartition_Array_Log", ErrInfo, sys::fs::F_None);
+        ArrayLog = new raw_fd_ostream("HI_MuxInsertionArrayPartition_Array_Log", ErrInfo, sys::fs::OF_None);
         // get the configureation from the file, e.g. clock period
         Parse_Config();
     }
@@ -390,9 +390,9 @@ class HI_MuxInsertionArrayPartition : public ModulePass
           DEBUG(DEBUG)
     {
         //  config_file = new std::ifstream(config_file_name);
-        BRAM_log = new raw_fd_ostream("HI_MuxInsertionArrayPartition_BRAM_log", ErrInfo, sys::fs::F_None);
+        BRAM_log = new raw_fd_ostream("HI_MuxInsertionArrayPartition_BRAM_log", ErrInfo, sys::fs::OF_None);
         top_function_name = std::string(top_function);
-        ArrayLog = new raw_fd_ostream("HI_MuxInsertionArrayPartition_Array_Log", ErrInfo, sys::fs::F_None);
+        ArrayLog = new raw_fd_ostream("HI_MuxInsertionArrayPartition_Array_Log", ErrInfo, sys::fs::OF_None);
         // get the configureation from the file, e.g. clock period
         Parse_Config(configInfo);
     }

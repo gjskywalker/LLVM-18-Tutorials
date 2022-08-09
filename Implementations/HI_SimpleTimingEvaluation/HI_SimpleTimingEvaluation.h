@@ -39,7 +39,7 @@ using namespace llvm;
 // Pass for simple evluation of the latency of the top function, without considering HLS directives
 class HI_SimpleTimingEvaluation : public ModulePass
 {
-  public:
+public:
     // Pass for simple evluation of the latency of the top function, without considering HLS
     // directives
     HI_SimpleTimingEvaluation(const char *evaluating_log_name, const char *top_function) : ModulePass(ID)
@@ -49,7 +49,7 @@ class HI_SimpleTimingEvaluation : public ModulePass
         FunctionEvaluated.clear();
         Loop_id.clear();
         Loop_Counter = 0;
-        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::F_None);
+        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::OF_None);
         top_function_name = std::string(top_function);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
     ~HI_SimpleTimingEvaluation()

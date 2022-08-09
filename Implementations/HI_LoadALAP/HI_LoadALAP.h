@@ -57,7 +57,7 @@ class HI_LoadALAP : public FunctionPass
   public:
     HI_LoadALAP(const char *HI_LoadALAPLog_Name, bool DEBUG = 0) : FunctionPass(ID), DEBUG(DEBUG)
     {
-        HI_LoadALAPLog = new raw_fd_ostream(HI_LoadALAPLog_Name, ErrInfo, sys::fs::F_None);
+        HI_LoadALAPLog = new raw_fd_ostream(HI_LoadALAPLog_Name, ErrInfo, sys::fs::OF_None);
         tmp_stream = new raw_string_ostream(tmp_stream_str);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
 

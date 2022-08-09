@@ -40,7 +40,7 @@ using namespace llvm;
 
 class HI_DependenceList : public FunctionPass
 {
-  public:
+public:
     HI_DependenceList(const char *Instruction_out_file, const char *dependence_out_file) : FunctionPass(ID)
     {
         Instruction_Counter = 0;
@@ -48,8 +48,8 @@ class HI_DependenceList : public FunctionPass
         BasicBlock_Counter = 0;
         Loop_Counter = 0;
         callCounter = 0;
-        Instruction_out = new raw_fd_ostream(Instruction_out_file, ErrInfo, sys::fs::F_None);
-        Dependence_out = new raw_fd_ostream(dependence_out_file, ErrInfo, sys::fs::F_None);
+        Instruction_out = new raw_fd_ostream(Instruction_out_file, ErrInfo, sys::fs::OF_None);
+        Dependence_out = new raw_fd_ostream(dependence_out_file, ErrInfo, sys::fs::OF_None);
         tmp_stream = new raw_string_ostream(tmp_stream_str);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
 

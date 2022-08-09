@@ -115,7 +115,7 @@ int main(int argc, const char **argv)
         clockForFunction[funcName] = clock_period_str;
 
     llvm::raw_fd_ostream pushing_relaxtion_log("pushing_relaxtion_log.txt", EC,
-                                               llvm::sys::fs::F_None);
+                                               llvm::sys::fs::OF_None);
 
     int trial_cnt = 50000;
     std::map<std::string, HI_WithDirectiveTimingResourceEvaluation::timingBase>
@@ -143,7 +143,7 @@ int main(int argc, const char **argv)
         std::map<std::string, std::string> new_clockForFunction;
 
         llvm::raw_fd_ostream checkedConfigs_multipleClockDesignEvaluation(
-            "checkedConfigs_multipleClockDesignEvaluation.txt", EC, llvm::sys::fs::F_None);
+            "checkedConfigs_multipleClockDesignEvaluation.txt", EC, llvm::sys::fs::OF_None);
 
         int output_next_factor;
         std::string output_next_loopLabel;
@@ -179,7 +179,7 @@ int main(int argc, const char **argv)
         Parse_Config(configFile_str.c_str(), desginconfig_optLoop);
         double tryDircetive_latency;
         llvm::raw_fd_ostream checkedConfigs_tryUpdateHLSDirectives(
-            "checkedConfigs_tryUpdateHLSDirectives.txt", EC, llvm::sys::fs::F_None);
+            "checkedConfigs_tryUpdateHLSDirectives.txt", EC, llvm::sys::fs::OF_None);
         bool tryDirective = tryUpdateHLSDirectives(
             desginconfig_last, checkedConfigs_tryUpdateHLSDirectives, *Mod,
 
@@ -213,7 +213,7 @@ int main(int argc, const char **argv)
         if (enableTryClock)
         {
             llvm::raw_fd_ostream checkedConfigs_tryUpdateSlowestFuncClock(
-                "checkedConfigs_tryUpdateSlowestFuncClock.txt", EC, llvm::sys::fs::F_None);
+                "checkedConfigs_tryUpdateSlowestFuncClock.txt", EC, llvm::sys::fs::OF_None);
 
             tryClock = justTryUpdateSlowestFuncClock_withoutHLSDSE(
                 desginconfig_last, checkedConfigs_tryUpdateSlowestFuncClock, *Mod,

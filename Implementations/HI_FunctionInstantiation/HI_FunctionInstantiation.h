@@ -61,7 +61,7 @@ class HI_FunctionInstantiation : public ModulePass
     HI_FunctionInstantiation(const char *FuncInitiationLog_Name, const std::string _topFunctionName) : ModulePass(ID)
     {
         topFunctionName = _topFunctionName;
-        FuncInitiationLog = new raw_fd_ostream(FuncInitiationLog_Name, ErrInfo, sys::fs::F_None);
+        FuncInitiationLog = new raw_fd_ostream(FuncInitiationLog_Name, ErrInfo, sys::fs::OF_None);
         tmp_stream = new raw_string_ostream(tmp_stream_str);
     } // define a pass, which can be inherited from ModulePass, LoopPass, ModulePass and etc.
 

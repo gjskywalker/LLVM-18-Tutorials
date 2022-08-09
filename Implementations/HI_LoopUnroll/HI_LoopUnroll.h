@@ -106,7 +106,7 @@ class HI_LoopUnroll : public LoopPass
           LoopLabel2UnrollFactor(_LoopLabel2UnrollFactor)
     {
 
-        LoopUnrollLog = new raw_fd_ostream("LoopUnrollLog", ErrInfo, sys::fs::F_None);
+        LoopUnrollLog = new raw_fd_ostream("LoopUnrollLog", ErrInfo, sys::fs::OF_None);
     }
 
     ~HI_LoopUnroll()
@@ -150,7 +150,7 @@ class HI_LoopUnroll : public LoopPass
 //     HI_LoopUnroll(const char* LoopUnrollLog_Name ) : FunctionPass(ID)
 //     {
 
-//         LoopUnrollLog = new raw_fd_ostream(LoopUnrollLog_Name, ErrInfo, sys::fs::F_None);
+//         LoopUnrollLog = new raw_fd_ostream(LoopUnrollLog_Name, ErrInfo, sys::fs::OF_None);
 //         tmp_stream = new raw_string_ostream(tmp_stream_str);
 //     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
 

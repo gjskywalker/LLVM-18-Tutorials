@@ -140,7 +140,7 @@ int main(int argc, char **argv)
     PM1.run(*Mod);
 
     std::error_code EC;
-    llvm::raw_fd_ostream OS1("top_output0.bc", EC, llvm::sys::fs::F_None);
+    llvm::raw_fd_ostream OS1("top_output0.bc", EC, llvm::sys::fs::OF_None);
     WriteBitcodeToFile(*Mod, OS1);
     OS1.flush();
 
@@ -264,7 +264,7 @@ int main(int argc, char **argv)
 
     print_status("Writing LLVM IR to File");
 
-    llvm::raw_fd_ostream OS("top_output.bc", EC, llvm::sys::fs::F_None);
+    llvm::raw_fd_ostream OS("top_output.bc", EC, llvm::sys::fs::OF_None);
     WriteBitcodeToFile(*Mod, OS);
     OS.flush();
 

@@ -54,11 +54,11 @@ using namespace clang;
 
 class HI_APIntSrcAnalysis_Visitor : public RecursiveASTVisitor<HI_APIntSrcAnalysis_Visitor>
 {
-  public:
+public:
     HI_APIntSrcAnalysis_Visitor(CompilerInstance &_CI, Rewriter &R, std::string _parselog_name)
         : CI(_CI), TheRewriter(R), parselog_name(_parselog_name)
     {
-        parseLog = new llvm::raw_fd_ostream(_parselog_name.c_str(), ErrInfo, llvm::sys::fs::F_None);
+        parseLog = new llvm::raw_fd_ostream(_parselog_name.c_str(), ErrInfo, llvm::sys::fs::OF_None);
     }
 
     ~HI_APIntSrcAnalysis_Visitor()
@@ -149,7 +149,7 @@ class HI_APIntSrcAnalysis_Visitor : public RecursiveASTVisitor<HI_APIntSrcAnalys
         return PrintingPolicy(CI.getLangOpts());
     }
 
-  private:
+private:
     Rewriter &TheRewriter;
     CompilerInstance &CI;
     std::error_code ErrInfo;
@@ -161,7 +161,7 @@ class HI_APIntSrcAnalysis_Visitor : public RecursiveASTVisitor<HI_APIntSrcAnalys
 // by the Clang parser.
 class HI_APIntSrcAnalysis_ASTConsumer : public ASTConsumer
 {
-  public:
+public:
     HI_APIntSrcAnalysis_ASTConsumer(CompilerInstance &_CI, Rewriter &R, std::string _parselog_name)
         : Visitor(_CI, R, _parselog_name), CI(_CI), parselog_name(_parselog_name)
     {
@@ -177,7 +177,7 @@ class HI_APIntSrcAnalysis_ASTConsumer : public ASTConsumer
         return true;
     }
 
-  private:
+private:
     HI_APIntSrcAnalysis_Visitor Visitor;
     CompilerInstance &CI;
     std::string parselog_name;
@@ -191,7 +191,7 @@ class HI_APIntSrcAnalysis_ASTConsumer : public ASTConsumer
 // For each source file provided to the tool, a new FrontendAction is created.
 class HI_APIntSrcAnalysis_FrontendAction : public ASTFrontendAction
 {
-  public:
+public:
     HI_APIntSrcAnalysis_FrontendAction(const char *_parselog_name, Rewriter &R,
                                        const char *_outputCode_name)
         : parselog_name(_parselog_name), TheRewriter(R), outputCode_name(_outputCode_name)
@@ -204,7 +204,7 @@ class HI_APIntSrcAnalysis_FrontendAction : public ASTFrontendAction
                      << SM.getFileEntryForID(SM.getMainFileID())->getName()
                      << "\n"; // Now emit the rewritten buffer.
         outputCode =
-            new llvm::raw_fd_ostream(outputCode_name.c_str(), ErrInfo, llvm::sys::fs::F_None);
+            new llvm::raw_fd_ostream(outputCode_name.c_str(), ErrInfo, llvm::sys::fs::OF_None);
         TheRewriter.getEditBuffer(SM.getMainFileID()).write(*outputCode);
         outputCode->flush();
         delete outputCode;
@@ -216,7 +216,7 @@ class HI_APIntSrcAnalysis_FrontendAction : public ASTFrontendAction
         return llvm::make_unique<HI_APIntSrcAnalysis_ASTConsumer>(CI, TheRewriter, parselog_name);
     }
 
-  private:
+private:
     Rewriter &TheRewriter;
     std::string parselog_name;
     std::string outputCode_name;
@@ -232,7 +232,7 @@ HI_rewrite_newFrontendActionFactory(const char *_parseLog_name, Rewriter &R,
 {
     class SimpleFrontendActionFactory : public tooling::FrontendActionFactory
     {
-      public:
+    public:
         SimpleFrontendActionFactory(const char *_parseLog_name, Rewriter &R,
                                     const char *_outputCode_name)
             : parseLog_name(_parseLog_name), TheRewriter(R), outputCode_name(_outputCode_name)

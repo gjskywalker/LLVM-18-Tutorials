@@ -62,7 +62,7 @@ using namespace llvm;
 
 class HI_PragmaArrayInfo
 {
-  public:
+public:
     int dim_size[10];
     int sub_element_num[10];
     int partition_size[10];
@@ -125,7 +125,7 @@ raw_ostream &operator<<(raw_ostream &stream, const HI_PragmaArrayInfo &tb);
 // Pass for simple evluation of the latency of the top function, without considering HLS directives
 class HI_PragmaTargetExtraction : public ModulePass
 {
-  public:
+public:
     // Pass for simple evluation of the latency of the top function, without considering HLS
     // directives
     HI_PragmaTargetExtraction( // const char* config_file_name,
@@ -141,9 +141,9 @@ class HI_PragmaTargetExtraction : public ModulePass
 
     {
         // config_file = new std::ifstream(config_file_name);
-        loopTarget_log = new raw_fd_ostream("HI_PragmaTargetExtraction_loopTarget_log", ErrInfo, sys::fs::F_None);
+        loopTarget_log = new raw_fd_ostream("HI_PragmaTargetExtraction_loopTarget_log", ErrInfo, sys::fs::OF_None);
         top_function_name = std::string(top_function);
-        arrayTarget_Log = new raw_fd_ostream("HI_PragmaTargetExtraction_arrayTarget_Log", ErrInfo, sys::fs::F_None);
+        arrayTarget_Log = new raw_fd_ostream("HI_PragmaTargetExtraction_arrayTarget_Log", ErrInfo, sys::fs::OF_None);
         // get the configureation from the file, e.g. clock period
         // Generate_Config();
     }
@@ -166,9 +166,9 @@ class HI_PragmaTargetExtraction : public ModulePass
 
     {
         // config_file = new std::ifstream(config_file_name);
-        loopTarget_log = new raw_fd_ostream("HI_PragmaTargetExtraction_loopTarget_log", ErrInfo, sys::fs::F_None);
+        loopTarget_log = new raw_fd_ostream("HI_PragmaTargetExtraction_loopTarget_log", ErrInfo, sys::fs::OF_None);
         top_function_name = std::string(top_function);
-        arrayTarget_Log = new raw_fd_ostream("HI_PragmaTargetExtraction_arrayTarget_Log", ErrInfo, sys::fs::F_None);
+        arrayTarget_Log = new raw_fd_ostream("HI_PragmaTargetExtraction_arrayTarget_Log", ErrInfo, sys::fs::OF_None);
         // get the configureation from the file, e.g. clock period
         // Generate_Config();
     }
@@ -293,7 +293,7 @@ class HI_PragmaTargetExtraction : public ModulePass
 
     class HI_AccessInfo
     {
-      public:
+    public:
         int dim_size[10];
         int sub_element_num[10];
 
@@ -525,7 +525,7 @@ class HI_PragmaTargetExtraction : public ModulePass
 
     class HI_PragmaInfo
     {
-      public:
+    public:
         enum pragmaType
         {
             arrayPartition_Pragma,

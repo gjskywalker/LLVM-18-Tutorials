@@ -204,7 +204,7 @@ class HI_SeparateConstOffsetFromGEP : public FunctionPass
     HI_SeparateConstOffsetFromGEP(const char *Sep_Log_Name, bool LowerGEP = false, bool DEBUG = 0)
         : FunctionPass(ID), LowerGEP(LowerGEP), DEBUG(DEBUG)
     {
-        Sep_Log = new raw_fd_ostream(Sep_Log_Name, ErrInfo, sys::fs::F_None);
+        Sep_Log = new raw_fd_ostream(Sep_Log_Name, ErrInfo, sys::fs::OF_None);
     }
     ~HI_SeparateConstOffsetFromGEP()
     {

@@ -1,0 +1,21 @@
+-- Found LLVM 16.0.0git
+-- Using LLVMConfig.cmake in: /usr/local/lib/cmake/llvm
+-- Using PollyConfig.cmake in: /usr/local/lib/cmake/polly
+-- Using ClangConfig.cmake in: /usr/local/lib/cmake/clang
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/jacobge/Documents/HKUST_Intern/LLVM-11-Tutorials/Tests/LLVM_Learner_Libs/build
+Consolidate compiler generated dependencies of target HI_print
+Consolidate compiler generated dependencies of target HI_SysExec
+Consolidate compiler generated dependencies of target HI_DependenceList
+Consolidate compiler generated dependencies of target HI_FindFunctions
+[  2%] Built target HI_print
+[  4%] Built target HI_SysExec
+[  5%] Building CXX object building/HI_DependenceList/CMakeFiles/HI_DependenceList.dir/HI_DependenceList.cc.o
+[  6%] Building CXX object building/HI_FindFunctions/CMakeFiles/HI_FindFunctions.dir/HI_FindFunction.cc.o
+Consolidate compiler generated dependencies of target HI_LoopInFormationCollect
+[  7%] Building CXX object building/HI_LoopInFormationCollect/CMakeFiles/HI_LoopInFormationCollect.dir/HI_LoopInFormationCollect.cc.o
+Consolidate compiler generated dependencies of target HI_Polly_Info
+[  8%] Building CXX object building/HI_Polly_Info/CMakeFiles/HI_Polly_Info.dir/HI_Polly_Info.cc.o
+[  9%] Linking CXX static library libHI_FindFunctions.a
+[  9%] Built target HI_FindFunctions

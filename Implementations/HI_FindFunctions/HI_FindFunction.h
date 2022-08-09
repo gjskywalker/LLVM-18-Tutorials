@@ -50,10 +50,10 @@ using namespace llvm;
 
 class HI_FindFunctions : public ModulePass
 {
-  public:
+public:
     HI_FindFunctions() : ModulePass(ID)
     {
-        Function_Demangle = new raw_fd_ostream("Function_Demangle", ErrInfo, sys::fs::F_None);
+        Function_Demangle = new raw_fd_ostream("Function_Demangle", ErrInfo, sys::fs::OF_None);
         Function_Demangle_Map.clear();
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
     ~HI_FindFunctions()

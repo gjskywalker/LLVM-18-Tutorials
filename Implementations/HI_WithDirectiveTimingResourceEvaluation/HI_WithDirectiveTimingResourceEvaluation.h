@@ -468,11 +468,11 @@ class HI_WithDirectiveTimingResourceEvaluation : public ModulePass
         Loop_id.clear();
         Loop_Counter = 0;
         config_file = new std::ifstream(config_file_name);
-        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::F_None);
-        BRAM_log = new raw_fd_ostream(BRAM_log_name, ErrInfo, sys::fs::F_None);
+        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::OF_None);
+        BRAM_log = new raw_fd_ostream(BRAM_log_name, ErrInfo, sys::fs::OF_None);
         top_function_name = std::string(top_function);
-        FF_log = new raw_fd_ostream("FF_LOG", ErrInfo, sys::fs::F_None);
-        ArrayLog = new raw_fd_ostream(ArrayLog_name, ErrInfo, sys::fs::F_None);
+        FF_log = new raw_fd_ostream("FF_LOG", ErrInfo, sys::fs::OF_None);
+        ArrayLog = new raw_fd_ostream(ArrayLog_name, ErrInfo, sys::fs::OF_None);
         // get the configureation from the file, e.g. clock period
         Parse_Config_fromFile();
         config_file->clear();
@@ -500,11 +500,11 @@ class HI_WithDirectiveTimingResourceEvaluation : public ModulePass
         Loop_id.clear();
         Loop_Counter = 0;
         //     config_file = new std::ifstream(config_file_name);
-        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::F_None);
-        BRAM_log = new raw_fd_ostream(BRAM_log_name, ErrInfo, sys::fs::F_None);
+        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::OF_None);
+        BRAM_log = new raw_fd_ostream(BRAM_log_name, ErrInfo, sys::fs::OF_None);
         top_function_name = std::string(top_function);
-        FF_log = new raw_fd_ostream("FF_LOG", ErrInfo, sys::fs::F_None);
-        ArrayLog = new raw_fd_ostream(ArrayLog_name, ErrInfo, sys::fs::F_None);
+        FF_log = new raw_fd_ostream("FF_LOG", ErrInfo, sys::fs::OF_None);
+        ArrayLog = new raw_fd_ostream(ArrayLog_name, ErrInfo, sys::fs::OF_None);
         Parse_Config(configInfo);
     }
 
@@ -527,11 +527,11 @@ class HI_WithDirectiveTimingResourceEvaluation : public ModulePass
         Loop_id.clear();
         Loop_Counter = 0;
         config_file = new std::ifstream(config_file_name);
-        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::F_None);
-        BRAM_log = new raw_fd_ostream(BRAM_log_name, ErrInfo, sys::fs::F_None);
+        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::OF_None);
+        BRAM_log = new raw_fd_ostream(BRAM_log_name, ErrInfo, sys::fs::OF_None);
         top_function_name = std::string(top_function);
-        FF_log = new raw_fd_ostream("FF_LOG", ErrInfo, sys::fs::F_None);
-        ArrayLog = new raw_fd_ostream(ArrayLog_name, ErrInfo, sys::fs::F_None);
+        FF_log = new raw_fd_ostream("FF_LOG", ErrInfo, sys::fs::OF_None);
+        ArrayLog = new raw_fd_ostream(ArrayLog_name, ErrInfo, sys::fs::OF_None);
         // get the configureation from the file, e.g. clock period
         Parse_Config_fromFile();
         config_file->clear();

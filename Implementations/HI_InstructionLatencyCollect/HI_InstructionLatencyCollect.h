@@ -44,7 +44,7 @@ using namespace llvm;
 // Pass for simple evluation of the latency of the top function, without considering HLS directives
 class HI_InstructionLatencyCollect : public FunctionPass
 {
-  public:
+public:
     // Pass for simple evluation of the latency of the top function, without considering HLS
     // directives
     HI_InstructionLatencyCollect(const char *evaluating_log_name, const char *top_function,
@@ -57,7 +57,7 @@ class HI_InstructionLatencyCollect : public FunctionPass
         FunctionEvaluated.clear();
         Loop_id.clear();
         Loop_Counter = 0;
-        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::F_None);
+        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::OF_None);
         top_function_name = std::string(top_function);
         Loop2Blocks = L2Bs;
         Block2Loops = B2Ls;

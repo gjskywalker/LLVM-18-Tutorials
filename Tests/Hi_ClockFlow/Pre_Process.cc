@@ -160,7 +160,7 @@ void preAnalyzeProcess(
 
     if (debugFlag)
     {
-        llvm::raw_fd_ostream OS_PM_pre("top_output_loopextract.bc", EC, llvm::sys::fs::F_None);
+        llvm::raw_fd_ostream OS_PM_pre("top_output_loopextract.bc", EC, llvm::sys::fs::OF_None);
         WriteBitcodeToFile(*Mod_pre, OS_PM_pre);
         OS_PM_pre.flush();
     }

@@ -60,7 +60,7 @@ class HI_FaddOrderOpt : public FunctionPass
         BasicBlock_Counter = 0;
         Loop_Counter = 0;
         callCounter = 0;
-        FAddOrderOptLog = new raw_fd_ostream(FAddOrderOptLog_Name, ErrInfo, sys::fs::F_None);
+        FAddOrderOptLog = new raw_fd_ostream(FAddOrderOptLog_Name, ErrInfo, sys::fs::OF_None);
         tmp_stream = new raw_string_ostream(tmp_stream_str);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
 

@@ -61,7 +61,7 @@ class HI_IntstructionMoveBackward : public FunctionPass
         BasicBlock_Counter = 0;
         Loop_Counter = 0;
         callCounter = 0;
-        BackwardLog = new raw_fd_ostream(BackwardLog_Name, ErrInfo, sys::fs::F_None);
+        BackwardLog = new raw_fd_ostream(BackwardLog_Name, ErrInfo, sys::fs::OF_None);
         tmp_stream = new raw_string_ostream(tmp_stream_str);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
 

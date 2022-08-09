@@ -156,7 +156,7 @@ int main(int argc, const char **argv)
     PM_pre.run(*Mod);
     print_status("Accomplished LLVM pre-processing");
 
-    llvm::raw_fd_ostream OS3("top_output_loopextract.bc", EC, llvm::sys::fs::F_None);
+    llvm::raw_fd_ostream OS3("top_output_loopextract.bc", EC, llvm::sys::fs::OF_None);
     WriteBitcodeToFile(*Mod, OS3);
     OS3.flush();
 
@@ -307,7 +307,7 @@ int main(int argc, const char **argv)
 
     PM1.run(*Mod);
 
-    llvm::raw_fd_ostream OS1("top_output0.bc", EC, llvm::sys::fs::F_None);
+    llvm::raw_fd_ostream OS1("top_output0.bc", EC, llvm::sys::fs::OF_None);
     WriteBitcodeToFile(*Mod, OS1);
     OS1.flush();
 
@@ -457,7 +457,7 @@ int main(int argc, const char **argv)
 
     print_status("Writing LLVM IR to File");
 
-    llvm::raw_fd_ostream OS("top_output.bc", EC, llvm::sys::fs::F_None);
+    llvm::raw_fd_ostream OS("top_output.bc", EC, llvm::sys::fs::OF_None);
     WriteBitcodeToFile(*Mod, OS);
     OS.flush();
 

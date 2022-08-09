@@ -52,7 +52,7 @@ using namespace llvm;
 
 class HI_MulOrderOpt : public FunctionPass
 {
-  public:
+public:
     HI_MulOrderOpt(const char *MulOrderOptLog_Name) : FunctionPass(ID)
     {
         Instruction_Counter = 0;
@@ -60,7 +60,7 @@ class HI_MulOrderOpt : public FunctionPass
         BasicBlock_Counter = 0;
         Loop_Counter = 0;
         callCounter = 0;
-        MulOrderOptLog = new raw_fd_ostream(MulOrderOptLog_Name, ErrInfo, sys::fs::F_None);
+        MulOrderOptLog = new raw_fd_ostream(MulOrderOptLog_Name, ErrInfo, sys::fs::OF_None);
         tmp_stream = new raw_string_ostream(tmp_stream_str);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
 

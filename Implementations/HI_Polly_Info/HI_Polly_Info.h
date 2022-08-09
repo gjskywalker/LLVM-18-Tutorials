@@ -45,7 +45,7 @@ class HI_Polly_Info : public FunctionPass
     HI_Polly_Info(const char *Loop_out_file) : FunctionPass(ID)
     {
         Loop_Counter = 0;
-        Loop_out = new raw_fd_ostream(Loop_out_file, ErrInfo, sys::fs::F_None);
+        Loop_out = new raw_fd_ostream(Loop_out_file, ErrInfo, sys::fs::OF_None);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
     ~HI_Polly_Info()
     {

@@ -111,11 +111,11 @@ using namespace llvm;
 
 class HI_ArrayAccessPattern : public FunctionPass
 {
-  public:
+public:
     HI_ArrayAccessPattern(const char *ArrayLog_Name, std::string _top_function_name)
         : FunctionPass(ID), top_function_name(_top_function_name)
     {
-        ArrayLog = new raw_fd_ostream(ArrayLog_Name, ErrInfo, sys::fs::F_None);
+        ArrayLog = new raw_fd_ostream(ArrayLog_Name, ErrInfo, sys::fs::OF_None);
         tmp_stream = new raw_string_ostream(tmp_stream_str);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
 
@@ -169,7 +169,7 @@ class HI_ArrayAccessPattern : public FunctionPass
 
     class ArrayInfo
     {
-      public:
+    public:
         int dim_size[10];
         int sub_element_num[10];
         int num_dims;
@@ -206,7 +206,7 @@ class HI_ArrayAccessPattern : public FunctionPass
 
     class HI_AccessInfo
     {
-      public:
+    public:
         int dim_size[10];
         int sub_element_num[10];
         int index[10];

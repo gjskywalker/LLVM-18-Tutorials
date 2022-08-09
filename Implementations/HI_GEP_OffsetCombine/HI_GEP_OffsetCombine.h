@@ -52,7 +52,7 @@ class HI_GEP_OffsetCombine : public FunctionPass
         FunctionEvaluated.clear();
         Loop_id.clear();
         Loop_Counter = 0;
-        Transformationlog = new raw_fd_ostream(transformationlog_name, ErrInfo, sys::fs::F_None);
+        Transformationlog = new raw_fd_ostream(transformationlog_name, ErrInfo, sys::fs::OF_None);
         top_function_name = std::string(top_function);
         Loop2Blocks = L2Bs;
         Block2Loops = B2Ls;

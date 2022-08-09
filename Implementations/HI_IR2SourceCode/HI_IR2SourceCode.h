@@ -124,7 +124,7 @@ class HI_IR2SourceCode : public ModulePass
         BasicBlock_Counter = 0;
         Loop_Counter = 0;
         callCounter = 0;
-        IR2Src_Log = new raw_fd_ostream(IR2Src_Log_Name, ErrInfo, sys::fs::F_None);
+        IR2Src_Log = new raw_fd_ostream(IR2Src_Log_Name, ErrInfo, sys::fs::OF_None);
         tmp_stream = new raw_string_ostream(tmp_stream_str);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
 
