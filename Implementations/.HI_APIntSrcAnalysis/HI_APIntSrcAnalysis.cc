@@ -31,7 +31,7 @@ void HI_APIntSrcAnalysis_Visitor::printTypeInfo(const Type *T)
         auto Args = llvm::makeArrayRef(TST->getArgs(), TST->getNumArgs());
         for (auto arg : Args)
         {
-            arg.print(PP(), *parseLog);
+            arg.print(PP(), *parseLog, 0);
             *parseLog << " ";
         }
         *parseLog << " \n";

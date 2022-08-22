@@ -37,6 +37,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/Cloning.h"
@@ -57,7 +58,7 @@ using namespace llvm;
 
 class HI_FunctionInstantiation : public ModulePass
 {
-  public:
+public:
     HI_FunctionInstantiation(const char *FuncInitiationLog_Name, const std::string _topFunctionName) : ModulePass(ID)
     {
         topFunctionName = _topFunctionName;

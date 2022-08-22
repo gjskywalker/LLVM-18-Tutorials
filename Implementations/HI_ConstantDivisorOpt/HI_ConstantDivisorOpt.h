@@ -34,6 +34,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -52,7 +53,7 @@ using namespace llvm;
 
 class HI_ConstantDivisorOpt : public FunctionPass
 {
-  public:
+public:
     HI_ConstantDivisorOpt(const char *DivisionOptLog_Name) : FunctionPass(ID)
     {
         Instruction_Counter = 0;

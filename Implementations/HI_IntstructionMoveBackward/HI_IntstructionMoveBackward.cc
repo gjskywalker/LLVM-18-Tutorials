@@ -9,6 +9,7 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/CFGDiff.h"
 #include <ios>
 #include <stdio.h>
 #include <stdlib.h>
@@ -158,7 +159,7 @@ BasicBlock *HI_IntstructionMoveBackward::findUnprocessedLowestBlock(DominatorTre
         if (processedBlock.find(BB) != processedBlock.end())
             continue;
         bool hasUnprocessedChild = 0;
-        for (auto childNode : node->getChildren())
+        for (auto childNode : node->children())
         {
             BasicBlock *childBB = childNode->getBlock();
             if (processedBlock.find(childBB) == processedBlock.end())

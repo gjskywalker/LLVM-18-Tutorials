@@ -25,6 +25,7 @@
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/ScalarEvolution.h"
+#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/InstrTypes.h"
@@ -65,7 +66,7 @@ using namespace llvm;
 // A unit class to store the information of timing and resource for instruction
 class inst_timing_resource_info
 {
-  public:
+public:
     // resource
     int FF;
     int DSP;
@@ -88,6 +89,7 @@ class inst_timing_resource_info
         delay = input.delay;
         II = input.II;
         core_name = input.core_name;
+        return *this;
     }
 
     inst_timing_resource_info(const inst_timing_resource_info &input)
@@ -127,7 +129,7 @@ typedef std::map<int, std::map<int, std::map<std::string, inst_timing_resource_i
 // we want that when an loop is unrolled, the sensitive array should be partitioned accordingly.
 class HI_ArraySensitiveToLoopLevel : public ModulePass
 {
-  public:
+public:
     // Pass for simple evluation of the latency of the top function, without considering HLS
     // directives
     HI_ArraySensitiveToLoopLevel( // const char* config_file_name,
@@ -559,7 +561,7 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
     // A unit class to record the timing and latency for a(n) instruction/block/function/loop
     class timingBase
     {
-      public:
+    public:
         timingBase(int l, double t, int i, double p)
         {
             latency = l;
@@ -579,6 +581,7 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
             timing = input.timing;
             clock_period = input.clock_period;
             strict_timing = input.strict_timing;
+            return *this;
         }
 
         timingBase(const timingBase &input)
@@ -732,7 +735,7 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
     // A unit class to record the FPGA resource for a(n) instruction/block/function/loop
     class resourceBase
     {
-      public:
+    public:
         resourceBase(int D, int F, int L, double C)
         {
             DSP = D;
@@ -760,6 +763,7 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
             LUT = input.LUT;
             BRAM = input.BRAM;
             clock_period = input.clock_period;
+            return *this;
         }
 
         resourceBase(const resourceBase &input)
@@ -1093,7 +1097,7 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
 
     class HI_ArrayInfo
     {
-      public:
+    public:
         int dim_size[10];
         int sub_element_num[10];
         int partition_size[10];
@@ -1144,12 +1148,13 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
                 partition_size[i] = input.partition_size[i];
             for (int i = 0; i < num_dims; i++)
                 cyclic[i] = input.cyclic[i];
+            return *this;
         }
     };
 
     class HI_AccessInfo
     {
-      public:
+    public:
         int dim_size[10];
         int sub_element_num[10];
 
@@ -1313,7 +1318,7 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
 
     class partition_info
     {
-      public:
+    public:
         int num_dims = -1;
         int partition_id[10];
         Value *target;
@@ -1494,7 +1499,7 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
     // analyze DSP usage and try to reuse DSP
     class DSPReuseScheduleUnit
     {
-      public:
+    public:
         DSPReuseScheduleUnit(Instruction *opI, int DSPcost, int opcode, int timeslot_inBlock, partition_info LPartition,
                              partition_info RPartition)
             : opI(opI), DSPcost(DSPcost), LPartition(LPartition), RPartition(RPartition), opcode(opcode),
@@ -1537,6 +1542,7 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
 
             timeslot_inBlock = input.timeslot_inBlock;
             opI = input.opI;
+            return *this;
         }
 
         int DSPcost;
@@ -1607,7 +1613,7 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
 
     class HI_PragmaInfo
     {
-      public:
+    public:
         enum pragmaType
         {
             arrayPartition_Pragma,
@@ -1664,6 +1670,7 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
             scopeStr = input.scopeStr;
             ScopeFunc = input.ScopeFunc;
             labelStr = input.labelStr;
+            return *this;
         }
     };
 
@@ -1713,8 +1720,8 @@ class HI_ArraySensitiveToLoopLevel : public ModulePass
 
 namespace std
 {
-bool operator<(const HI_ArraySensitiveToLoopLevel::partition_info &A,
-               const HI_ArraySensitiveToLoopLevel::partition_info &B);
+    bool operator<(const HI_ArraySensitiveToLoopLevel::partition_info &A,
+                   const HI_ArraySensitiveToLoopLevel::partition_info &B);
 };
 
 #endif

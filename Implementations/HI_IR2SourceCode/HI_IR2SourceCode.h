@@ -86,6 +86,7 @@
 #include "llvm/Support/SaveAndRestore.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -112,7 +113,7 @@ using namespace llvm;
 
 class HI_IR2SourceCode : public ModulePass
 {
-  public:
+public:
     HI_IR2SourceCode(const char *IR2Src_Log_Name, std::map<std::string, std::string> &_IRLoop2LoopLabel,
                      std::map<std::string, std::vector<int>> &IRFunc2BeginLine,
                      std::map<std::string, int> &IRLoop2OriginTripCount, bool DEBUG = false)

@@ -51,7 +51,7 @@ using namespace llvm;
 
 class HI_DesignConfigInfo
 {
-  public:
+public:
     HI_DesignConfigInfo()
     {
     }
@@ -345,6 +345,7 @@ class HI_DesignConfigInfo
         funcDataflowConfigs = input.funcDataflowConfigs;
         localArrayConfigs = input.localArrayConfigs;
         HLS_lib_path = input.HLS_lib_path;
+        return *this;
     }
 
     double clock_period;
@@ -366,7 +367,7 @@ class HI_DesignConfigInfo
 // Pass for simple evluation of the latency of the top function, without considering HLS directives
 class HI_MuxInsertionArrayPartition : public ModulePass
 {
-  public:
+public:
     // Pass for simple evluation of the latency of the top function, without considering HLS
     // directives
     HI_MuxInsertionArrayPartition(const char *config_file_name, const char *top_function,
@@ -614,7 +615,7 @@ class HI_MuxInsertionArrayPartition : public ModulePass
 
     class HI_ArrayInfo
     {
-      public:
+    public:
         int dim_size[10];
         int sub_element_num[10];
         int partition_size[10];
@@ -671,12 +672,13 @@ class HI_MuxInsertionArrayPartition : public ModulePass
                 partition_size[i] = input.partition_size[i];
             for (int i = 0; i < num_dims; i++)
                 cyclic[i] = input.cyclic[i];
+            return *this;
         }
     };
 
     class HI_AccessInfo
     {
-      public:
+    public:
         int dim_size[10];
         int sub_element_num[10];
 
@@ -850,7 +852,7 @@ class HI_MuxInsertionArrayPartition : public ModulePass
 
     class partition_info
     {
-      public:
+    public:
         int num_dims = -1;
         int partition_id[10];
         Value *target;
@@ -1022,7 +1024,7 @@ class HI_MuxInsertionArrayPartition : public ModulePass
 
     class HI_PragmaInfo
     {
-      public:
+    public:
         enum pragmaType
         {
             arrayPartition_Pragma,
@@ -1093,6 +1095,7 @@ class HI_MuxInsertionArrayPartition : public ModulePass
             localArrayEnable = input.localArrayEnable;
             cyclic = input.cyclic;
             complete = input.complete;
+            return *this;
         }
     };
 
@@ -1161,8 +1164,8 @@ class HI_MuxInsertionArrayPartition : public ModulePass
 
 namespace std
 {
-bool operator<(const HI_MuxInsertionArrayPartition::partition_info A,
-               const HI_MuxInsertionArrayPartition::partition_info B);
+    bool operator<(const HI_MuxInsertionArrayPartition::partition_info A,
+                   const HI_MuxInsertionArrayPartition::partition_info B);
 };
 
 #endif

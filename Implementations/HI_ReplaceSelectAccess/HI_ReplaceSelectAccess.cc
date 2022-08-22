@@ -6,6 +6,7 @@
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IRReader/IRReader.h"
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
@@ -150,8 +151,9 @@ void HI_ReplaceSelectAccess::From_SelectAccess_To_AccessSelect(Instruction *I)
     Value *ResultPtr = nullptr;
     if (accessI->getOpcode() == Instruction::Load)
     {
-        Value *op0 = Builder.CreateLoad(selectI->getOperand(1), op0str.c_str());
-        Value *op1 = Builder.CreateLoad(selectI->getOperand(2), op1str.c_str());
+        Type *Ty;
+        Value *op0 = Builder.CreateLoad(Ty, selectI->getOperand(1), op0str.c_str());
+        Value *op1 = Builder.CreateLoad(Ty, selectI->getOperand(2), op1str.c_str());
         if (DEBUG)
             *ReplaceSelectAccess_Log << "newop0:" << *op0 << "\n";
         if (DEBUG)

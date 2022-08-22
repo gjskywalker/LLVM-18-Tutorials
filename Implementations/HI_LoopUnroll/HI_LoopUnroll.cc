@@ -43,8 +43,8 @@ LoopUnrollResult HI_LoopUnroll::tryToUnrollLoop(Loop *L, DominatorTree &DT, Loop
     bool NotDuplicatable;
     bool Convergent;
     TargetTransformInfo::UnrollingPreferences UP = gatherUnrollingPreferences(
-        L, SE, TTI, nullptr, nullptr, OptLevel, ProvidedThreshold, ProvidedCount, ProvidedAllowPartial, ProvidedRuntime,
-        ProvidedUpperBound, ProvidedAllowPeeling, true,
+        L, SE, TTI, nullptr, nullptr, ORE, OptLevel, ProvidedThreshold, ProvidedCount, ProvidedAllowPartial, ProvidedRuntime,
+        ProvidedUpperBound,
         None); // /*ProvidedAllowProfileBasedPeeling*/);//, ProvidedFullUnrollMaxCount);
 
     // Exit early if unrolling is disabled.
@@ -163,7 +163,7 @@ LoopUnrollResult HI_LoopUnroll::tryToUnrollLoop(Loop *L, DominatorTree &DT, Loop
     //                 LI, &SE, &DT, &AC, &ORE, PreserveLCSSA, &RemainderLoop);
 
     LoopUnrollResult UnrollResult =
-        UnrollLoop(L, {ProvidedCount, TripCount, true, false, true, false, false, 1, 0, true, true}, LI, &SE, &DT, &AC,
+        UnrollLoop(L, {ProvidedCount, true, false, true, false, true}, LI, &SE, &DT, &AC,
                    &TTI, &ORE, PreserveLCSSA, &RemainderLoop);
 
     if (UnrollResult == LoopUnrollResult::Unmodified)
@@ -172,12 +172,14 @@ LoopUnrollResult HI_LoopUnroll::tryToUnrollLoop(Loop *L, DominatorTree &DT, Loop
         return LoopUnrollResult::Unmodified;
     }
 
-    *LoopUnrollLog << "\n\n Functiion AFTER UNROLL \n\n" << *(recordFunc) << "\n";
+    *LoopUnrollLog << "\n\n Functiion AFTER UNROLL \n\n"
+                   << *(recordFunc) << "\n";
 
     LoopUnrollLog->flush();
     if (RemainderLoop)
     {
-        *LoopUnrollLog << "\n\n Loop Unroll remainder \n\n" << *RemainderLoop << "\n";
+        *LoopUnrollLog << "\n\n Loop Unroll remainder \n\n"
+                       << *RemainderLoop << "\n";
         Optional<MDNode *> RemainderLoopID =
             makeFollowupLoopID(OrigLoopID, {LLVMLoopUnrollFollowupAll, LLVMLoopUnrollFollowupRemainder});
         if (RemainderLoopID.hasValue())
@@ -202,7 +204,7 @@ LoopUnrollResult HI_LoopUnroll::tryToUnrollLoop(Loop *L, DominatorTree &DT, Loop
     // mark loop as unrolled to prevent unrolling beyond that requested.
     // If the loop was peeled, we already "used up" the profile information
     // we had, so we don't want to unroll or peel again.
-    if (UnrollResult != LoopUnrollResult::FullyUnrolled && (true || UP.PeelCount))
+    if (UnrollResult != LoopUnrollResult::FullyUnrolled && (true || UP.Count))
         L->setLoopAlreadyUnrolled();
     LoopUnrollLog->flush();
     return UnrollResult;

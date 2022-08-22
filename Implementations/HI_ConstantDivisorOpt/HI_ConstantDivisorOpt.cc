@@ -1,6 +1,7 @@
 #include "HI_ConstantDivisorOpt.h"
 #include "HI_print.h"
 #include "llvm/Analysis/LoopInfo.h"
+#include "llvm/ADT/APInt.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/LegacyPassManager.h"

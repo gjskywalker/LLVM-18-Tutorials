@@ -85,6 +85,7 @@
 #include "llvm/Support/SaveAndRestore.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -111,7 +112,7 @@ using namespace llvm;
 
 class HI_AggressiveLSR_MUL : public FunctionPass
 {
-  public:
+public:
     HI_AggressiveLSR_MUL(const char *AggrLSRLog_Name, bool DEBUG = 0) : FunctionPass(ID), DEBUG(DEBUG)
     {
         Instruction_Counter = 0;

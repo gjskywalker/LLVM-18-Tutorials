@@ -36,6 +36,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -54,7 +55,7 @@ using namespace llvm;
 
 class HI_LoadALAP : public FunctionPass
 {
-  public:
+public:
     HI_LoadALAP(const char *HI_LoadALAPLog_Name, bool DEBUG = 0) : FunctionPass(ID), DEBUG(DEBUG)
     {
         HI_LoadALAPLog = new raw_fd_ostream(HI_LoadALAPLog_Name, ErrInfo, sys::fs::OF_None);
