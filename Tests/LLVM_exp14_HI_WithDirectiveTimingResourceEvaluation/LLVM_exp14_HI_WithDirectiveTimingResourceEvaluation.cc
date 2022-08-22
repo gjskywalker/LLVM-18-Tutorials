@@ -1,6 +1,6 @@
 #include "LLVM_exp14_HI_WithDirectiveTimingResourceEvaluation.h"
 #include "ConfigParse.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

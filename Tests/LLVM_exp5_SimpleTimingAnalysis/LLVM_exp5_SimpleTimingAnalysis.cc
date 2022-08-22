@@ -1,5 +1,5 @@
 #include "LLVM_exp5_SimpleTimingAnalysis.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

@@ -15,7 +15,7 @@ message(STATUS "Using PollyConfig.cmake in: ${Polly_CMAKE_DIR}")
 message(STATUS "Using ClangConfig.cmake in: ${CLANG_CMAKE_DIR}") 
 # Needed to use support library 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -std=c++14 -g") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -std=c++17 -g") 
 
 include_directories(${Clang_INCLUDE_DIRS}) 
 include_directories(${LLVM_INCLUDE_DIRS}) 

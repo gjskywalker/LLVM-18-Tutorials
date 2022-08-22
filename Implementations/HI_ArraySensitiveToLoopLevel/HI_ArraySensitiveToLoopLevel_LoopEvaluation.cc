@@ -747,7 +747,7 @@ int HI_ArraySensitiveToLoopLevel::checkAccessIIForLoop_enumerateCheck(Loop *curL
 //             {
 //                 if (CallInst *callI = dyn_cast<CallInst>(&I))
 //                 {
-//                     for (int i=0;i<callI->getNumArgOperands();i++)
+//                     for (int i=0;i<callI->getNumOperands();i++)
 //                     {
 //                         if (callI->getArgOperand(i)->getType()->isPointerTy())
 //                         {

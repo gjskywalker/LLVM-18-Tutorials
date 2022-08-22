@@ -33,14 +33,14 @@ void HI_NoDirectiveTimingResourceEvaluation::findMemoryDeclarationin(Function *F
             if (it->getType()->isPointerTy())
             {
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                // llvm::errs() << *(tmp_PtrType->getElementType()) << "\n";
-                if (tmp_PtrType->getElementType()->isArrayTy())
+                // llvm::errs() << *(tmp_PtrType->getArrayElementType()) << "\n";
+                if (tmp_PtrType->getArrayElementType()->isArrayTy())
                 {
                     TraceAccessForTarget(it, it);
                 }
-                else if (tmp_PtrType->getElementType()->isIntegerTy() ||
-                         tmp_PtrType->getElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getElementType()->isDoubleTy())
+                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+                         tmp_PtrType->getArrayElementType()->isDoubleTy())
                 {
                     TraceAccessForTarget(it, it);
                 }
@@ -165,7 +165,7 @@ void HI_NoDirectiveTimingResourceEvaluation::TraceAccessForTarget(Value *cur_nod
         else if (CallInst *CallI = dyn_cast<CallInst>(it->getUser()))
         {
             *BRAM_log << "    is an CALL instruction: " << *CallI << "\n";
-            for (int i = 0; i < CallI->getNumArgOperands(); ++i)
+            for (int i = 0; i < CallI->getNumOperands(); ++i)
             {
                 if (CallI->getArgOperand(i) ==
                     cur_node) // find which argument is exactly the pointer we are tracing
@@ -470,16 +470,16 @@ HI_NoDirectiveTimingResourceEvaluation::get_BRAM_Num_For(AllocaInst *alloca_I)
     resourceBase res(0, 0, 0, 0, clock_period);
     *BRAM_log << "\n\nchecking allocation instruction [" << *alloca_I
               << "] and its type is: " << *alloca_I->getType() << " and its ElementType is: ["
-              << *alloca_I->getType()->getElementType() << "]\n";
-    Type *tmp_type = alloca_I->getType()->getElementType();
+              << *alloca_I->getType()->getArrayElementType() << "]\n";
+    Type *tmp_type = alloca_I->getType()->getArrayElementType();
     int total_ele = 1;
     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
     {
         *BRAM_log << "----- element type of : " << *tmp_type << " is "
-                  << *(array_T->getElementType()) << " and the number of its elements is "
+                  << *(array_T->getArrayElementType()) << " and the number of its elements is "
                   << (array_T->getNumElements()) << "\n";
         total_ele *= (array_T->getNumElements());
-        tmp_type = array_T->getElementType();
+        tmp_type = array_T->getArrayElementType();
     }
     int BW = 0;
     if (tmp_type->isIntegerTy())

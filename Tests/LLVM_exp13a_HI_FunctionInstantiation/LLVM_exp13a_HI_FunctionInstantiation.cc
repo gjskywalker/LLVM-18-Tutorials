@@ -1,5 +1,5 @@
 #include "LLVM_exp13a_HI_FunctionInstantiation.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

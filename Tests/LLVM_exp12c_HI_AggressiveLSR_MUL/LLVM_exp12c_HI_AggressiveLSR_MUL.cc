@@ -1,5 +1,5 @@
 #include "LLVM_exp12c_HI_AggressiveLSR_MUL.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

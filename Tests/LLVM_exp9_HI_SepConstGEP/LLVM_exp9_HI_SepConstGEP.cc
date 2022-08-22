@@ -1,5 +1,5 @@
 #include "LLVM_exp9_HI_SepConstGEP.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

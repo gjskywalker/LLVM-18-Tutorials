@@ -1,5 +1,5 @@
 #include "LLVM_exp13b_HI_ReplaceSelectAccess.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

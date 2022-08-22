@@ -1,6 +1,0 @@
-/home/jacobge/Documents/HKUST_Intern/LLVM-11-Tutorials/Tests/LLVM_exp0_find_functions/build/CMakeFiles/intrinsics_gen.dir
-/home/jacobge/Documents/HKUST_Intern/LLVM-11-Tutorials/Tests/LLVM_exp0_find_functions/build/CMakeFiles/omp_gen.dir
-/home/jacobge/Documents/HKUST_Intern/LLVM-11-Tutorials/Tests/LLVM_exp0_find_functions/build/CMakeFiles/acc_gen.dir
-/home/jacobge/Documents/HKUST_Intern/LLVM-11-Tutorials/Tests/LLVM_exp0_find_functions/build/CMakeFiles/LLVM_exp0_find_functions.dir
-/home/jacobge/Documents/HKUST_Intern/LLVM-11-Tutorials/Tests/LLVM_exp0_find_functions/build/CMakeFiles/edit_cache.dir
-/home/jacobge/Documents/HKUST_Intern/LLVM-11-Tutorials/Tests/LLVM_exp0_find_functions/build/CMakeFiles/rebuild_cache.dir

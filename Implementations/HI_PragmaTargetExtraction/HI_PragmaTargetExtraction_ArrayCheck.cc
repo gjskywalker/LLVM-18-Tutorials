@@ -40,7 +40,7 @@ void HI_PragmaTargetExtraction::findMemoryDeclarationAndAnalyzeAccessin(Function
             if (it->getType()->isPointerTy())
             {
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                if (tmp_PtrType->getElementType()->isArrayTy())
+                if (tmp_PtrType->getArrayElementType()->isArrayTy())
                 {
                     if (DEBUG)
                         *arrayTarget_Log << "  get array information of [" << it->getName()
@@ -53,9 +53,9 @@ void HI_PragmaTargetExtraction::findMemoryDeclarationAndAnalyzeAccessin(Function
                     if (DEBUG)
                         *arrayTarget_Log << Target2ArrayInfo[it] << "\n";
                 }
-                else if (tmp_PtrType->getElementType()->isIntegerTy() ||
-                         tmp_PtrType->getElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getElementType()->isDoubleTy())
+                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+                         tmp_PtrType->getArrayElementType()->isDoubleTy())
                 {
                     if (DEBUG)
                         *arrayTarget_Log << "  get array information of [" << it->getName()
@@ -217,7 +217,7 @@ void HI_PragmaTargetExtraction::TraceAccessForTarget(Value *cur_node, Value *ori
             Block2Targets[CallI->getParent()].insert(ori_node);
             if (DEBUG)
                 *arrayTarget_Log << "    is an CALL instruction: " << *CallI << "\n";
-            for (int i = 0; i < CallI->getNumArgOperands(); ++i)
+            for (int i = 0; i < CallI->getNumOperands(); ++i)
             {
                 if (CallI->getArgOperand(i) ==
                     cur_node) // find which argument is exactly the pointer we are tracing
@@ -252,8 +252,8 @@ HI_PragmaArrayInfo HI_PragmaTargetExtraction::getArrayInfo(Value *target)
     PointerType *ptr_type = dyn_cast<PointerType>(target->getType());
     if (DEBUG)
         *arrayTarget_Log << "\n\nchecking type : " << *ptr_type << " and its ElementType is: ["
-                         << *ptr_type->getElementType() << "]\n";
-    Type *tmp_type = ptr_type->getElementType();
+                         << *ptr_type->getArrayElementType() << "]\n";
+    Type *tmp_type = ptr_type->getArrayElementType();
     int total_ele = 1;
     int tmp_dim_size[10];
     int num_dims = 0;
@@ -261,13 +261,13 @@ HI_PragmaArrayInfo HI_PragmaTargetExtraction::getArrayInfo(Value *target)
     {
         if (DEBUG)
             *arrayTarget_Log << "----- element type of : " << *tmp_type << " is "
-                             << *(array_T->getElementType())
+                             << *(array_T->getArrayElementType())
                              << " and the number of its elements is " << (array_T->getNumElements())
                              << "\n";
         total_ele *= (array_T->getNumElements());
         tmp_dim_size[num_dims] = (array_T->getNumElements());
         num_dims++;
-        tmp_type = array_T->getElementType();
+        tmp_type = array_T->getArrayElementType();
     }
 
     HI_PragmaArrayInfo res_array_info;
@@ -319,7 +319,6 @@ HI_PragmaArrayInfo HI_PragmaTargetExtraction::getArrayInfo(Value *target)
 
     return res_array_info;
 }
-
 
 raw_ostream &operator<<(raw_ostream &stream, const HI_PragmaArrayInfo &tb)
 {

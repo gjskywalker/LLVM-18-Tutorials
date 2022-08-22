@@ -942,7 +942,7 @@ int HI_WithDirectiveTimingResourceEvaluation::checkDependenceIIForLoop(Loop *cur
                     {
                         continue;
                     }
-                    for (int i = 0; i < callI->getNumArgOperands(); i++)
+                    for (int i = 0; i < callI->getNumOperands(); i++)
                     {
                         if (callI->getArgOperand(i)->getType()->isPointerTy())
                         {
@@ -1048,12 +1048,12 @@ int HI_WithDirectiveTimingResourceEvaluation::checkDependenceIIForLoop(Loop *cur
                                       << BlockBegin_inLoop[tmp_I->getParent()].latency << "+"
                                       << Inst_Schedule[tmp_I].second << ") R_I_time_offset=" << R_I_time_offset << "\n";
 
-                        int interval = W_I_time_offset - R_I_time_offset;   
+                        int interval = W_I_time_offset - R_I_time_offset;
                         if (earliest_user_I)
                         {
-                            if (interval < getInstructionLatency(earliest_user_I).latency+ 1)
-                                interval = getInstructionLatency(earliest_user_I).latency+ 1;
-                        }                     
+                            if (interval < getInstructionLatency(earliest_user_I).latency + 1)
+                                interval = getInstructionLatency(earliest_user_I).latency + 1;
+                        }
                         if (interval < 1)
                             interval = 1;
                         if (interval > min_II)
@@ -1338,9 +1338,8 @@ int HI_WithDirectiveTimingResourceEvaluation::findEarlietUseTimeInTheLoop(Loop *
     return earliest_time_slot;
 }
 
-
 // find the earliest user of the load instruction (maybe for reschedule)
-Instruction * HI_WithDirectiveTimingResourceEvaluation::findEarlietUseInTheLoop(Loop *curLoop, Instruction *ori_R_I)
+Instruction *HI_WithDirectiveTimingResourceEvaluation::findEarlietUseInTheLoop(Loop *curLoop, Instruction *ori_R_I)
 {
     // initialize the result with the current time slot
     Instruction *R_I = nullptr;

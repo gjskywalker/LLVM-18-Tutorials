@@ -464,16 +464,16 @@ void HI_WithDirectiveTimingResourceEvaluation::functionDataflowCheck(Function *F
         if (it->getType()->isPointerTy())
         {
             PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-            if (tmp_PtrType->getElementType()->isArrayTy())
+            if (tmp_PtrType->getArrayElementType()->isArrayTy())
             {
                 if (isLocalArray(it))
                     continue;
                 arrays_need_buffer_curStage.push_back(it);
                 array2LastStage[it] = 0;
             }
-            else if (tmp_PtrType->getElementType()->isIntegerTy() ||
-                     tmp_PtrType->getElementType()->isFloatingPointTy() ||
-                     tmp_PtrType->getElementType()->isDoubleTy())
+            else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+                     tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+                     tmp_PtrType->getArrayElementType()->isDoubleTy())
             {
                 if (isLocalArray(it))
                     continue;

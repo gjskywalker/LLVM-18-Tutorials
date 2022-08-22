@@ -1,5 +1,5 @@
 #include "LLVM_exp4_polly_info.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

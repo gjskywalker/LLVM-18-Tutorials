@@ -257,20 +257,20 @@ HI_ArrayAccessPattern::ArrayInfo HI_ArrayAccessPattern::getArrayInfo(Value *targ
 
     PointerType *ptr_type = dyn_cast<PointerType>(target->getType());
     *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: ["
-              << *ptr_type->getElementType() << "]\n";
-    Type *tmp_type = ptr_type->getElementType();
+              << *ptr_type->getArrayElementType() << "]\n";
+    Type *tmp_type = ptr_type->getArrayElementType();
     int total_ele = 1;
     int tmp_dim_size[10];
     int num_dims = 0;
     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
     {
         *ArrayLog << "----- element type of : " << *tmp_type << " is "
-                  << *(array_T->getElementType()) << " and the number of its elements is "
+                  << *(array_T->getArrayElementType()) << " and the number of its elements is "
                   << (array_T->getNumElements()) << "\n";
         total_ele *= (array_T->getNumElements());
         tmp_dim_size[num_dims] = (array_T->getNumElements());
         num_dims++;
-        tmp_type = array_T->getElementType();
+        tmp_type = array_T->getArrayElementType();
     }
 
     ArrayInfo res_array_info;
@@ -316,7 +316,7 @@ void HI_ArrayAccessPattern::findMemoryDeclarationin(Function *F, bool isTopFunct
             if (it->getType()->isPointerTy())
             {
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                if (tmp_PtrType->getElementType()->isArrayTy())
+                if (tmp_PtrType->getArrayElementType()->isArrayTy())
                 {
                     Target2ArrayInfo[it] = getArrayInfo(it);
                     *ArrayLog << Target2ArrayInfo[it] << "\n";

@@ -754,7 +754,7 @@ HI_WithDirectiveTimingResourceEvaluation::getInstructionResource(Instruction *I)
                             << "\n";
         result = getFunctionResource(CI->getCalledFunction());
 
-        for (int i = 0; i < CI->getNumArgOperands(); i++)
+        for (int i = 0; i < CI->getNumOperands(); i++)
         {
             auto it = CI->getArgOperand(i);
 
@@ -768,7 +768,7 @@ HI_WithDirectiveTimingResourceEvaluation::getInstructionResource(Instruction *I)
                 }
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(target->getType());
 
-                if (tmp_PtrType->getElementType()->isArrayTy())
+                if (tmp_PtrType->getArrayElementType()->isArrayTy())
                 {
                     if (DEBUG)
                         *Evaluating_log << "  get array information of [" << target->getName()
@@ -785,9 +785,9 @@ HI_WithDirectiveTimingResourceEvaluation::getInstructionResource(Instruction *I)
                                         << " LUT\n";
                     result.LUT += partitionNum * 10;
                 }
-                else if (tmp_PtrType->getElementType()->isIntegerTy() ||
-                         tmp_PtrType->getElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getElementType()->isDoubleTy())
+                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+                         tmp_PtrType->getArrayElementType()->isDoubleTy())
                 {
                     if (DEBUG)
                         *Evaluating_log << "  get array information of [" << target->getName()

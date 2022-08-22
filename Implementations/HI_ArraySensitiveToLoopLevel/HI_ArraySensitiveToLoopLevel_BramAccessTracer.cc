@@ -39,7 +39,7 @@ void HI_ArraySensitiveToLoopLevel::findMemoryDeclarationAndAnalyzeAccessin(Funct
             if (it->getType()->isPointerTy())
             {
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                if (tmp_PtrType->getElementType()->isArrayTy())
+                if (tmp_PtrType->getArrayElementType()->isArrayTy())
                 {
                     if (DEBUG)
                         *ArrayLog << "  get array information of [" << it->getName()
@@ -50,9 +50,9 @@ void HI_ArraySensitiveToLoopLevel::findMemoryDeclarationAndAnalyzeAccessin(Funct
                     if (DEBUG)
                         *ArrayLog << Target2ArrayInfo[it] << "\n";
                 }
-                else if (tmp_PtrType->getElementType()->isIntegerTy() ||
-                         tmp_PtrType->getElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getElementType()->isDoubleTy())
+                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+                         tmp_PtrType->getArrayElementType()->isDoubleTy())
                 {
                     if (DEBUG)
                         *ArrayLog << "  get array information of [" << it->getName()
@@ -207,7 +207,7 @@ void HI_ArraySensitiveToLoopLevel::TraceAccessForTarget(Value *cur_node, Value *
         {
             if (DEBUG)
                 *BRAM_log << "    is an CALL instruction: " << *CallI << "\n";
-            for (int i = 0; i < CallI->getNumArgOperands(); ++i)
+            for (int i = 0; i < CallI->getNumOperands(); ++i)
             {
                 if (CallI->getArgOperand(i) ==
                     cur_node) // find which argument is exactly the pointer we are tracing
@@ -676,17 +676,17 @@ HI_ArraySensitiveToLoopLevel::get_BRAM_Num_For(AllocaInst *alloca_I)
     if (DEBUG)
         *BRAM_log << "\n\nchecking allocation instruction [" << *alloca_I
                   << "] and its type is: " << *alloca_I->getType() << " and its ElementType is: ["
-                  << *alloca_I->getType()->getElementType() << "]\n";
-    Type *tmp_type = alloca_I->getType()->getElementType();
+                  << *alloca_I->getType()->getArrayElementType() << "]\n";
+    Type *tmp_type = alloca_I->getType()->getArrayElementType();
     int total_ele = 1;
     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
     {
         if (DEBUG)
             *BRAM_log << "----- element type of : " << *tmp_type << " is "
-                      << *(array_T->getElementType()) << " and the number of its elements is "
+                      << *(array_T->getArrayElementType()) << " and the number of its elements is "
                       << (array_T->getNumElements()) << "\n";
         total_ele *= (array_T->getNumElements());
-        tmp_type = array_T->getElementType();
+        tmp_type = array_T->getArrayElementType();
     }
     int BW = 0;
     if (tmp_type->isIntegerTy())
@@ -1199,8 +1199,8 @@ HI_ArraySensitiveToLoopLevel::HI_ArrayInfo HI_ArraySensitiveToLoopLevel::getArra
     PointerType *ptr_type = dyn_cast<PointerType>(target->getType());
     if (DEBUG)
         *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: ["
-                  << *ptr_type->getElementType() << "]\n";
-    Type *tmp_type = ptr_type->getElementType();
+                  << *ptr_type->getArrayElementType() << "]\n";
+    Type *tmp_type = ptr_type->getArrayElementType();
     int total_ele = 1;
     int tmp_dim_size[10];
     int num_dims = 0;
@@ -1208,12 +1208,12 @@ HI_ArraySensitiveToLoopLevel::HI_ArrayInfo HI_ArraySensitiveToLoopLevel::getArra
     {
         if (DEBUG)
             *ArrayLog << "----- element type of : " << *tmp_type << " is "
-                      << *(array_T->getElementType()) << " and the number of its elements is "
+                      << *(array_T->getArrayElementType()) << " and the number of its elements is "
                       << (array_T->getNumElements()) << "\n";
         total_ele *= (array_T->getNumElements());
         tmp_dim_size[num_dims] = (array_T->getNumElements());
         num_dims++;
-        tmp_type = array_T->getElementType();
+        tmp_type = array_T->getArrayElementType();
     }
 
     HI_ArrayInfo res_array_info;
@@ -1412,8 +1412,6 @@ HI_ArraySensitiveToLoopLevel::getAccessInfoForAccessInst(Instruction *Load_or_St
            "The pointer should be checked by TryArrayAccessProcess() previously.");
     return AddressInst2AccessInfo[address_addI];
 }
-
-
 
 bool HI_ArraySensitiveToLoopLevel::checkAccessAlias(Instruction *I0, Instruction *I1)
 {
@@ -2271,7 +2269,7 @@ Optional<APInt> HI_ArraySensitiveToLoopLevel::computeConstantDifference(const SC
             if (LU->getValue() == LU->getValue())
             {
                 //*RemoveRedundantAccess_Log << "----- downgrade " << *nextI << " but no possibility
-                //of alias\n";
+                // of alias\n";
                 return computeConstantDifference(MA->getOperand(0), LA->getOperand(0));
             }
         }
@@ -2350,7 +2348,7 @@ bool HI_ArraySensitiveToLoopLevel::checkConstantAccessInLoop(const SCEV *ori_Mor
             if (LU->getValue() == LU->getValue())
             {
                 //*RemoveRedundantAccess_Log << "----- downgrade " << *nextI << " but no possibility
-                //of alias\n";
+                // of alias\n";
                 return checkConstantAccessInLoop(MA->getOperand(0), LA->getOperand(0), curLoop);
             }
         }
@@ -2381,7 +2379,7 @@ int HI_ArraySensitiveToLoopLevel::getStepLength(const SCEV *ori_More, const SCEV
             if (LU->getValue() == LU->getValue())
             {
                 //*RemoveRedundantAccess_Log << "----- downgrade " << *nextI << " but no possibility
-                //of alias\n";
+                // of alias\n";
                 return getStepLength(MA->getOperand(0), LA->getOperand(0));
             }
         }

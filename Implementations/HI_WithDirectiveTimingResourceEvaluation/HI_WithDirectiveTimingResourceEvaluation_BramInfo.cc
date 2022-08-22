@@ -38,7 +38,7 @@ void HI_WithDirectiveTimingResourceEvaluation::findMemoryDeclarationAndAnalyzeAc
             if (it->getType()->isPointerTy())
             {
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                if (tmp_PtrType->getElementType()->isArrayTy())
+                if (tmp_PtrType->getArrayElementType()->isArrayTy())
                 {
                     if (DEBUG)
                         *ArrayLog << "  get array information of [" << it->getName()
@@ -49,9 +49,9 @@ void HI_WithDirectiveTimingResourceEvaluation::findMemoryDeclarationAndAnalyzeAc
                     if (DEBUG)
                         *ArrayLog << Target2ArrayInfo[it] << "\n";
                 }
-                else if (tmp_PtrType->getElementType()->isIntegerTy() ||
-                         tmp_PtrType->getElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getElementType()->isDoubleTy())
+                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+                         tmp_PtrType->getArrayElementType()->isDoubleTy())
                 {
                     if (DEBUG)
                         *ArrayLog << "  get array information of [" << it->getName()
@@ -213,7 +213,7 @@ void HI_WithDirectiveTimingResourceEvaluation::TraceAccessForTarget(Value *cur_n
             {
                 Access2TargetMap[CallI].push_back(ori_node);
             }
-            for (int i = 0; i < CallI->getNumArgOperands(); ++i)
+            for (int i = 0; i < CallI->getNumOperands(); ++i)
             {
                 if (CallI->getArgOperand(i) == cur_node) // find which argument is exactly the pointer we are tracing
                 {
@@ -728,15 +728,15 @@ HI_WithDirectiveTimingResourceEvaluation::get_BRAM_Num_For(AllocaInst *alloca_I)
     if (DEBUG)
         *BRAM_log << "\n\nchecking allocation instruction [" << *alloca_I
                   << "] and its type is: " << *alloca_I->getType() << " and its ElementType is: ["
-                  << *alloca_I->getType()->getElementType() << "]\n";
-    Type *tmp_type = alloca_I->getType()->getElementType();
+                  << *alloca_I->getType()->getArrayElementType() << "]\n";
+    Type *tmp_type = alloca_I->getType()->getArrayElementType();
 
     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
     {
         if (DEBUG)
-            *BRAM_log << "----- element type of : " << *tmp_type << " is " << *(array_T->getElementType())
+            *BRAM_log << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
                       << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
-        tmp_type = array_T->getElementType();
+        tmp_type = array_T->getArrayElementType();
     }
 
     int eachPartitionDepth = getEachPartitionDepth(Target2ArrayInfo[alloca_I]);
@@ -780,16 +780,16 @@ HI_WithDirectiveTimingResourceEvaluation::get_BRAM_Num_For(Argument *ArgTarget)
 
     if (DEBUG)
         *BRAM_log << "\n\nchecking argument [" << *ArgTarget << "] and its type is: " << *ptrType
-                  << " and its ElementType is: [" << *ptrType->getElementType() << "]\n";
+                  << " and its ElementType is: [" << *ptrType->getArrayElementType() << "]\n";
     if (DEBUG)
         BRAM_log->flush();
-    Type *tmp_type = ptrType->getElementType();
+    Type *tmp_type = ptrType->getArrayElementType();
     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
     {
         if (DEBUG)
-            *BRAM_log << "----- element type of : " << *tmp_type << " is " << *(array_T->getElementType())
+            *BRAM_log << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
                       << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
-        tmp_type = array_T->getElementType();
+        tmp_type = array_T->getArrayElementType();
     }
 
     int eachPartitionDepth = getEachPartitionDepth(Target2ArrayInfo[ArgTarget]);
@@ -1312,21 +1312,21 @@ HI_WithDirectiveTimingResourceEvaluation::getArrayInfo(Value *target)
         assert(false && "wrong type for array target.");
     }
     if (DEBUG)
-        *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: [" << *ptr_type->getElementType()
+        *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: [" << *ptr_type->getArrayElementType()
                   << "]\n";
-    Type *tmp_type = ptr_type->getElementType();
+    Type *tmp_type = ptr_type->getArrayElementType();
     int total_ele = 1;
     int tmp_dim_size[10];
     int num_dims = 0;
     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
     {
         if (DEBUG)
-            *ArrayLog << "----- element type of : " << *tmp_type << " is " << *(array_T->getElementType())
+            *ArrayLog << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
                       << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
         total_ele *= (array_T->getNumElements());
         tmp_dim_size[num_dims] = (array_T->getNumElements());
         num_dims++;
-        tmp_type = array_T->getElementType();
+        tmp_type = array_T->getArrayElementType();
     }
 
     HI_ArrayInfo res_array_info;
@@ -1666,8 +1666,8 @@ HI_WithDirectiveTimingResourceEvaluation::getAccessInfoForAccessInst(Instruction
     }
     else
     {
-        address_addI = pointer_V; // the access may not need the calculation of address, take the
-                                  // pointer directly
+        address_addI = pointer_V;                                  // the access may not need the calculation of address, take the
+                                                                   // pointer directly
         if (Alias2Target.find(address_addI) != Alias2Target.end()) // it could be argument. We need to trace back to get
                                                                    // its original array declaration
         {
@@ -3002,7 +3002,7 @@ HI_WithDirectiveTimingResourceEvaluation::BRAMRelatedCostForTopFunction(Function
         if (it->getType()->isPointerTy())
         {
             PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-            if (tmp_PtrType->getElementType()->isArrayTy())
+            if (tmp_PtrType->getArrayElementType()->isArrayTy())
             {
                 if (DEBUG)
                     *Evaluating_log << "  get array information of [" << it->getName()
@@ -3021,8 +3021,8 @@ HI_WithDirectiveTimingResourceEvaluation::BRAMRelatedCostForTopFunction(Function
                         *Evaluating_log << " the BRAMs cost has been calculated in dataflow analyzis.\n";
                 }
             }
-            else if (tmp_PtrType->getElementType()->isIntegerTy() ||
-                     tmp_PtrType->getElementType()->isFloatingPointTy() || tmp_PtrType->getElementType()->isDoubleTy())
+            else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+                     tmp_PtrType->getArrayElementType()->isFloatingPointTy() || tmp_PtrType->getArrayElementType()->isDoubleTy())
             {
                 if (DEBUG)
                     *Evaluating_log << "  get array information of [" << it->getName()

@@ -204,7 +204,7 @@ HI_IntstructionMoveBackward::getInstructions_PhiIndependent(BasicBlock *cur_bloc
             }
             if (auto callI = dyn_cast<CallInst>(&I))
             {
-                for (int i = 0; i < callI->getNumArgOperands(); i++)
+                for (int i = 0; i < callI->getNumOperands(); i++)
                 {
                     if (auto tmpI = dyn_cast<Instruction>(callI->getArgOperand(i)))
                     {
@@ -218,7 +218,7 @@ HI_IntstructionMoveBackward::getInstructions_PhiIndependent(BasicBlock *cur_bloc
                         }
                     }
                 }
-                for (int i = 0; i < callI->getNumArgOperands(); i++)
+                for (int i = 0; i < callI->getNumOperands(); i++)
                 {
                     if (callI->getArgOperand(i)->getType()->isPointerTy())
                     {
@@ -285,7 +285,8 @@ bool HI_IntstructionMoveBackward::transferInstructionTo(Instruction *I, BasicBlo
 void HI_IntstructionMoveBackward::printFunction(Function *F)
 {
     if (DEBUG)
-        *BackwardLog << "\n\nThe Content of Function: " << F->getName() << " is \n" << *F;
+        *BackwardLog << "\n\nThe Content of Function: " << F->getName() << " is \n"
+                     << *F;
     if (DEBUG)
         *BackwardLog << "\n";
 }

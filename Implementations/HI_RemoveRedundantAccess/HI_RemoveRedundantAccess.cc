@@ -606,15 +606,15 @@ void HI_RemoveRedundantAccess::findMemoryDeclarationin(Function *F, bool isTopFu
             if (it->getType()->isPointerTy())
             {
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                if (tmp_PtrType->getElementType()->isArrayTy())
+                if (tmp_PtrType->getArrayElementType()->isArrayTy())
                 {
                     if (DEBUG)
                         *RemoveRedundantAccess_Log << " beging to trace arg: " << it << "\n";
                     TraceAccessForTarget(it, it);
                 }
-                else if (tmp_PtrType->getElementType()->isIntegerTy() ||
-                         tmp_PtrType->getElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getElementType()->isDoubleTy())
+                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+                         tmp_PtrType->getArrayElementType()->isDoubleTy())
                 {
                     if (DEBUG)
                         *RemoveRedundantAccess_Log << " beging to trace arg: " << it << "\n";
@@ -750,7 +750,7 @@ void HI_RemoveRedundantAccess::TraceAccessForTarget(Value *cur_node, Value *ori_
         {
             if (DEBUG)
                 *RemoveRedundantAccess_Log << "    is an CALL instruction: " << *CallI << "\n";
-            for (int i = 0; i < CallI->getNumArgOperands(); ++i)
+            for (int i = 0; i < CallI->getNumOperands(); ++i)
             {
                 if (CallI->getArgOperand(i) == cur_node) // find which argument is exactly the pointer we are tracing
                 {

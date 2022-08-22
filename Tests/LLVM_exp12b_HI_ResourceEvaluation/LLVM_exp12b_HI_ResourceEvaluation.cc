@@ -1,5 +1,5 @@
 #include "LLVM_exp12b_HI_ResourceEvaluation.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

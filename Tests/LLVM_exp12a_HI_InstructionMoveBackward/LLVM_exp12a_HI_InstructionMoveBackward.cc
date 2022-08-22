@@ -1,5 +1,5 @@
 #include "LLVM_exp12a_HI_InstructionMoveBackward.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

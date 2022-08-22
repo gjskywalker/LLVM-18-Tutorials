@@ -7,6 +7,7 @@
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/ScalarEvolution.h"
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/InstrTypes.h"
@@ -36,7 +37,7 @@ using namespace llvm;
 
 class HI_LoopInFormationCollect : public LoopPass
 {
-  public:
+public:
     HI_LoopInFormationCollect(const char *loopfile) : LoopPass(ID)
     {
         //  this->getAsPMDataManager();
@@ -150,12 +151,12 @@ class HI_LoopInFormationCollect : public LoopPass
 
 namespace llvm
 {
-// void initializeHI_LoopInFormationCollectPass(PassRegistry &);
-// void initializeHI_LoopInFormationCollectPassOnce(PassRegistry &);
+    // void initializeHI_LoopInFormationCollectPass(PassRegistry &);
+    // void initializeHI_LoopInFormationCollectPassOnce(PassRegistry &);
 
-// void initializeHI_LoopInFormationCollectPass(PassRegistry&);
-// void *initializeHI_LoopInFormationCollectPassOnce(PassRegistry &Registry);
-//  void initializeHI_LoopInFormationCollectPass(PassRegistry &Registry);
+    // void initializeHI_LoopInFormationCollectPass(PassRegistry&);
+    // void *initializeHI_LoopInFormationCollectPassOnce(PassRegistry &Registry);
+    //  void initializeHI_LoopInFormationCollectPass(PassRegistry &Registry);
 } // namespace llvm
 
 #endif

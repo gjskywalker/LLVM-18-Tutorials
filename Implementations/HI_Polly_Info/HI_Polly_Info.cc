@@ -7,7 +7,7 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 #include <ios>
 #include <stdio.h>
 #include <stdlib.h>

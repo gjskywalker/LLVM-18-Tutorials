@@ -36,6 +36,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -53,7 +54,7 @@ using namespace llvm;
 
 class HI_IntstructionMoveBackward : public FunctionPass
 {
-  public:
+public:
     HI_IntstructionMoveBackward(const char *BackwardLog_Name, bool DEBUG = 0) : FunctionPass(ID), DEBUG(DEBUG)
     {
         Instruction_Counter = 0;

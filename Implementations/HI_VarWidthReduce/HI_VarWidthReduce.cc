@@ -105,9 +105,9 @@ void HI_VarWidthReduce::Bitwidth_Analysis(Function *F)
                 if (I.getOperand(0)->getType()->isIntegerTy())
                 {
                     Instruction_id[&I] = ++Instruction_Counter;
-                    PointerType* PtrType = dyn_cast<PointerType>(I.getOperand(1)->getType());
+                    PointerType *PtrType = dyn_cast<PointerType>(I.getOperand(1)->getType());
                     assert(PtrType);
-                    Instruction_BitNeeded[&I] = PtrType->getElementType()->getIntegerBitWidth();
+                    Instruction_BitNeeded[&I] = PtrType->getArrayElementType()->getIntegerBitWidth();
                 }
             }
             else if (I.getType()->isIntegerTy())
@@ -246,7 +246,7 @@ bool HI_VarWidthReduce::InsturctionUpdate_WidthCast(Function *F)
                     if (DEBUG)
                         *VarWidthChangeLog << "\n\n\n find target instrction " << *I->getType()
                                            << ":" << I;
-                     if (DEBUG)
+                    if (DEBUG)
                         VarWidthChangeLog->flush();
 
                     // bypass cast operations
@@ -257,10 +257,11 @@ bool HI_VarWidthReduce::InsturctionUpdate_WidthCast(Function *F)
                     {
                         if (I->getOperand(0)->getType()->isIntegerTy())
                         {
-                            changed = 1;    
+                            changed = 1;
 
                             if (DEBUG)
-                                *VarWidthChangeLog << "\n" << *I->getType() << ":" << *I;
+                                *VarWidthChangeLog << "\n"
+                                                   << *I->getType() << ":" << *I;
 
                             if (DEBUG)
                                 VarWidthChangeLog->flush();
@@ -277,7 +278,6 @@ bool HI_VarWidthReduce::InsturctionUpdate_WidthCast(Function *F)
                                 take_action = 1;
                                 changed = 1;
                             }
-
                         }
                         continue;
                     }
@@ -286,7 +286,8 @@ bool HI_VarWidthReduce::InsturctionUpdate_WidthCast(Function *F)
                     {
                         changed = 1;
                         if (DEBUG)
-                            *VarWidthChangeLog << "\n" << *I->getType() << ":" << *I;
+                            *VarWidthChangeLog << "\n"
+                                               << *I->getType() << ":" << *I;
                         if (DEBUG)
                             *VarWidthChangeLog
                                 << "------- under processing (targetBW=" << Instruction_BitNeeded[I]
@@ -1002,10 +1003,10 @@ void HI_VarWidthReduce::Store_WidthCast(StoreInst *S_I)
     // VarWidthChangeLog->flush();
 
     // check whether an instruction involve PTI operation
-    PointerType* PtrType = dyn_cast<PointerType>(S_I->getPointerOperandType());
+    PointerType *PtrType = dyn_cast<PointerType>(S_I->getPointerOperandType());
     assert(PtrType);
-        
-    Instruction_BitNeeded[&I] = PtrType->getElementType()->getIntegerBitWidth();
+
+    Instruction_BitNeeded[&I] = PtrType->getArrayElementType()->getIntegerBitWidth();
 
     for (int i = 0; i <= 0;
          ++i) // check the operands to see whether a TRUNC/EXT is necessary
@@ -1085,7 +1086,7 @@ void HI_VarWidthReduce::Store_WidthCast(StoreInst *S_I)
     // are changed, the output of instrcution will be remained.
     std::string regNameS = "new" + std::to_string(changed_id);
     IRBuilder<> Builder(S_I);
-    StoreInst *newS_I =    Builder.CreateStore(S_I->getOperand(0), S_I->getOperand(1));
+    StoreInst *newS_I = Builder.CreateStore(S_I->getOperand(0), S_I->getOperand(1));
     if (DEBUG)
         *VarWidthChangeLog << "                         ------->  newS_I = " << *newS_I << "\n";
     // BOI->replaceAllUsesWith(newBOI) ;
@@ -1100,7 +1101,6 @@ void HI_VarWidthReduce::Store_WidthCast(StoreInst *S_I)
             << "                         ------->  accomplish erasing of original instruction.\n";
     // VarWidthChangeLog->flush();
 }
-
 
 // Forward Process of ICmpInst: check the bitwidth of operands and output of an instruction,
 // trunc/ext the operands, update the bitwidth of the instruction
@@ -1204,10 +1204,10 @@ void HI_VarWidthReduce::ICMP_WidthCast(ICmpInst *ICMP_I)
     // are changed, the output of instrcution will be remained.
     std::string regNameS = "new" + std::to_string(changed_id);
     ICmpInst *newCMP =
-        new ICmpInst(ICMP_I,                 ///< Where to insert
-                     ICMP_I->getPredicate(), ///< The predicate to use for the comparison
-                     ICMP_I->getOperand(0),  ///< The left-hand-side of the expression
-                     ICMP_I->getOperand(1),  ///< The right-hand-side of the expression
+        new ICmpInst(ICMP_I,                              ///< Where to insert
+                     ICMP_I->getPredicate(),              ///< The predicate to use for the comparison
+                     ICMP_I->getOperand(0),               ///< The left-hand-side of the expression
+                     ICMP_I->getOperand(1),               ///< The right-hand-side of the expression
                      "HI." + ICMP_I->getName() + regNameS ///< Name of the instruction
         );
     if (DEBUG)

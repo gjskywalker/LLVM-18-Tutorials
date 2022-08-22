@@ -1,5 +1,5 @@
 #include "LLVM_exp8_VarWidthReduce.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

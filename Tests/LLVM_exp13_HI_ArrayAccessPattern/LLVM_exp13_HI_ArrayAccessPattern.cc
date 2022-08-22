@@ -1,5 +1,5 @@
 #include "LLVM_exp13_HI_ArrayAccessPattern.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

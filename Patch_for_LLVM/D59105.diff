@@ -35,7 +35,7 @@ Index: include/clang/AST/RecursiveASTVisitor.h
 +++ include/clang/AST/RecursiveASTVisitor.h
 @@ -1103,6 +1103,15 @@
  
- DEF_TRAVERSE_TYPE(PipeType, { TRY_TO(TraverseType(T->getElementType())); })
+ DEF_TRAVERSE_TYPE(PipeType, { TRY_TO(TraverseType(T->getArrayElementType())); })
  
 +DEF_TRAVERSE_TYPE(ArbPrecIntType,
 +                  { TRY_TO(TraverseType(T->getUnderlyingType())); })
@@ -335,8 +335,8 @@ Index: lib/AST/ASTContext.cpp
                (uint64_t)(-1)/Size) &&
           "Overflow in array type char size evaluation");
    uint64_t Width = EltInfo.first.getQuantity() * Size;
-+  if (CAT->getElementType()->isArbPrecIntType() &&
-+      !llvm::isPowerOf2_64(Context.getTypeSize(CAT->getElementType())))
++  if (CAT->getArrayElementType()->isArbPrecIntType() &&
++      !llvm::isPowerOf2_64(Context.getTypeSize(CAT->getArrayElementType())))
 +    Width = llvm::alignTo(EltInfo.first.getQuantity(),
 +                          EltInfo.second.getQuantity()) *
 +            Size;
@@ -530,7 +530,7 @@ Index: lib/AST/ASTStructuralEquivalence.cpp
 --- lib/AST/ASTStructuralEquivalence.cpp
 +++ lib/AST/ASTStructuralEquivalence.cpp
 @@ -835,6 +835,27 @@
-                                   cast<PipeType>(T2)->getElementType()))
+                                   cast<PipeType>(T2)->getArrayElementType()))
        return false;
      break;
 +  case Type::ArbPrecInt: {
@@ -821,7 +821,7 @@ Index: lib/AST/Type.cpp
  
  Type::ScalarTypeKind Type::getScalarTypeKind() const {
 @@ -2012,6 +2058,8 @@
-     if (CT->getElementType()->isRealFloatingType())
+     if (CT->getArrayElementType()->isRealFloatingType())
        return STK_FloatingComplex;
      return STK_IntegralComplex;
 +  } else if (isa<ArbPrecIntType>(T)) {
@@ -840,7 +840,7 @@ Index: lib/AST/Type.cpp
 @@ -3659,6 +3708,8 @@
      return Cache::get(cast<AtomicType>(T)->getValueType());
    case Type::Pipe:
-     return Cache::get(cast<PipeType>(T)->getElementType());
+     return Cache::get(cast<PipeType>(T)->getArrayElementType());
 +  case Type::ArbPrecInt:
 +    return Cache::get(cast<ArbPrecIntType>(T)->getUnderlyingType());
    }
@@ -849,7 +849,7 @@ Index: lib/AST/Type.cpp
 @@ -3743,6 +3794,8 @@
      return computeTypeLinkageInfo(cast<AtomicType>(T)->getValueType());
    case Type::Pipe:
-     return computeTypeLinkageInfo(cast<PipeType>(T)->getElementType());
+     return computeTypeLinkageInfo(cast<PipeType>(T)->getArrayElementType());
 +  case Type::ArbPrecInt:
 +    return computeTypeLinkageInfo(cast<ArbPrecIntType>(T)->getUnderlyingType());
    }
@@ -919,7 +919,7 @@ Index: lib/CodeGen/CGDebugInfo.cpp
 --- lib/CodeGen/CGDebugInfo.cpp
 +++ lib/CodeGen/CGDebugInfo.cpp
 @@ -2648,6 +2648,18 @@
-   return getOrCreateType(Ty->getElementType(), U);
+   return getOrCreateType(Ty->getArrayElementType(), U);
  }
  
 +llvm::DIType *CGDebugInfo::CreateType(const ArbPrecIntType *Ty,
@@ -997,7 +997,7 @@ Index: lib/CodeGen/CGExprScalar.cpp
 +                                              const Twine &Name) {
 +  llvm::IntegerType *Ty;
 +  if (const auto *VT = dyn_cast<llvm::VectorType>(LHS->getType()))
-+    Ty = cast<llvm::IntegerType>(VT->getElementType());
++    Ty = cast<llvm::IntegerType>(VT->getArrayElementType());
 +  else
 +    Ty = cast<llvm::IntegerType>(LHS->getType());
 +
@@ -1045,7 +1045,7 @@ Index: lib/CodeGen/CodeGenFunction.cpp
      // Complexes.
 @@ -2157,6 +2158,10 @@
      case Type::Pipe:
-       type = cast<PipeType>(ty)->getElementType();
+       type = cast<PipeType>(ty)->getArrayElementType();
        break;
 +
 +    case Type::ArbPrecInt:
@@ -1099,7 +1099,7 @@ Index: lib/Sema/SemaChecking.cpp
 --- lib/Sema/SemaChecking.cpp
 +++ lib/Sema/SemaChecking.cpp
 @@ -9547,6 +9547,8 @@
-       T = CT->getElementType().getTypePtr();
+       T = CT->getArrayElementType().getTypePtr();
      if (const AtomicType *AT = dyn_cast<AtomicType>(T))
        T = AT->getValueType().getTypePtr();
 +    if (const auto *AP = dyn_cast<ArbPrecIntType>(T))
@@ -1345,7 +1345,7 @@ Index: lib/Sema/SemaLookup.cpp
 +++ lib/Sema/SemaLookup.cpp
 @@ -2773,6 +2773,12 @@
      case Type::Pipe:
-       T = cast<PipeType>(T)->getElementType().getTypePtr();
+       T = cast<PipeType>(T)->getArrayElementType().getTypePtr();
        continue;
 +    case Type::ArbPrecInt:
 +      // This likely doesn't do anything since we only permit

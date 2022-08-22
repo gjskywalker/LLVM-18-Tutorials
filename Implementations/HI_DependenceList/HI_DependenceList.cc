@@ -196,7 +196,7 @@ void HI_DependenceList::checkInstructionDependence(Instruction *I)
             {
                 *Dependence_out << " pointerTy type of type ";
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(I->getOperand(i)->getType());
-                tmp_PtrType->getElementType()->print(*Dependence_out);
+                tmp_PtrType->getArrayElementType()->print(*Dependence_out);
                 *Dependence_out << " )\n";
                 // tmp_PtrType->gettype
             }

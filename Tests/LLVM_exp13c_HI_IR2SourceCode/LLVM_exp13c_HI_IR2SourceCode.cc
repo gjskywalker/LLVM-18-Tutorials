@@ -1,5 +1,5 @@
 #include "LLVM_exp13c_HI_IR2SourceCode.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

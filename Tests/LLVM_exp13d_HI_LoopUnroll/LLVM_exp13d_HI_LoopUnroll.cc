@@ -1,5 +1,5 @@
 #include "LLVM_exp13d_HI_LoopUnroll.h"
-
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 using namespace llvm;
 using namespace polly;
 

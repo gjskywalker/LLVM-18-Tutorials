@@ -1034,7 +1034,8 @@ bool HI_SeparateConstOffsetFromGEP::runOnFunction(Function &F)
     }
 
     if (DEBUG)
-        *Sep_Log << "\n\n after constant hoisting, F=\n" << F << "\n================================\n";
+        *Sep_Log << "\n\n after constant hoisting, F=\n"
+                 << F << "\n================================\n";
     if (DEBUG)
         Sep_Log->flush();
 
@@ -1050,7 +1051,8 @@ bool HI_SeparateConstOffsetFromGEP::runOnFunction(Function &F)
     Changed |= reuniteExts(F);
 
     if (DEBUG)
-        *Sep_Log << "\n\n after GEP lowering, F=\n" << F << "\n================================\n";
+        *Sep_Log << "\n\n after GEP lowering, F=\n"
+                 << F << "\n================================\n";
     if (DEBUG)
         Sep_Log->flush();
 
@@ -1143,7 +1145,8 @@ void HI_SeparateConstOffsetFromGEP::verifyNoDeadCode(Function &F)
             {
                 std::string ErrMessage;
                 raw_string_ostream RSO(ErrMessage);
-                RSO << "Dead instruction detected!\n" << I << "\n";
+                RSO << "Dead instruction detected!\n"
+                    << I << "\n";
                 llvm_unreachable(RSO.str().c_str());
             }
         }
@@ -1244,7 +1247,7 @@ unsigned int HI_SeparateConstOffsetFromGEP::getLength(Type *TY)
 {
     if (ArrayType *VTy = dyn_cast<ArrayType>(TY))
     {
-        int numElements = VTy->getNumElements() * getLength(VTy->getElementType());
+        int numElements = VTy->getNumElements() * getLength(VTy->getArrayElementType());
         return numElements;
     }
     else

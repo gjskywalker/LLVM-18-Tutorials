@@ -537,7 +537,8 @@ int HI_WithDirectiveTimingResourceEvaluation::getStageTo(Instruction *I)
 int HI_WithDirectiveTimingResourceEvaluation::getStageNumOfBlock(BasicBlock *B)
 {
     if (DEBUG)
-        *Evaluating_log << "checking BLOCK:\n" << *B << "\n";
+        *Evaluating_log << "checking BLOCK:\n"
+                        << *B << "\n";
     int max_stage_num = -1;
     if (BlockLatency[B].latency == 0 && BlockLatency[B].timing < 0.00001)
         return 0;
@@ -563,7 +564,7 @@ void HI_WithDirectiveTimingResourceEvaluation::checkPtrInOperands(
 
     if (CallInst *callI = dyn_cast<CallInst>(I))
     {
-        for (int i = 0; i < callI->getNumArgOperands(); i++)
+        for (int i = 0; i < callI->getNumOperands(); i++)
         {
             if (callI->getArgOperand(i)->getType()->isPointerTy())
                 ptrInOperands.push_back(callI->getArgOperand(i));

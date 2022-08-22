@@ -37,7 +37,7 @@ void HI_MuxInsertionArrayPartition::findMemoryDeclarationAndAnalyzeAccessin(Func
             if (it->getType()->isPointerTy())
             {
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                if (tmp_PtrType->getElementType()->isArrayTy())
+                if (tmp_PtrType->getArrayElementType()->isArrayTy())
                 {
                     if (DEBUG)
                         *ArrayLog << "  get array information of [" << it->getName()
@@ -47,9 +47,9 @@ void HI_MuxInsertionArrayPartition::findMemoryDeclarationAndAnalyzeAccessin(Func
                     if (DEBUG)
                         *ArrayLog << Target2ArrayInfo[it] << "\n";
                 }
-                else if (tmp_PtrType->getElementType()->isIntegerTy() ||
-                         tmp_PtrType->getElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getElementType()->isDoubleTy())
+                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+                         tmp_PtrType->getArrayElementType()->isDoubleTy())
                 {
                     if (DEBUG)
                         *ArrayLog << "  get array information of [" << it->getName()
@@ -198,7 +198,7 @@ void HI_MuxInsertionArrayPartition::TraceAccessForTarget(Value *cur_node, Value 
         {
             if (DEBUG)
                 *BRAM_log << "    is an CALL instruction: " << *CallI << "\n";
-            for (int i = 0; i < CallI->getNumArgOperands(); ++i)
+            for (int i = 0; i < CallI->getNumOperands(); ++i)
             {
                 if (CallI->getArgOperand(i) == cur_node) // find which argument is exactly the pointer we are tracing
                 {
@@ -632,21 +632,21 @@ HI_MuxInsertionArrayPartition::HI_ArrayInfo HI_MuxInsertionArrayPartition::getAr
         assert(false && "wrong type for array target.");
     }
     if (DEBUG)
-        *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: [" << *ptr_type->getElementType()
+        *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: [" << *ptr_type->getArrayElementType()
                   << "]\n";
-    Type *tmp_type = ptr_type->getElementType();
+    Type *tmp_type = ptr_type->getArrayElementType();
     int total_ele = 1;
     int tmp_dim_size[10];
     int num_dims = 0;
     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
     {
         if (DEBUG)
-            *ArrayLog << "----- element type of : " << *tmp_type << " is " << *(array_T->getElementType())
+            *ArrayLog << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
                       << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
         total_ele *= (array_T->getNumElements());
         tmp_dim_size[num_dims] = (array_T->getNumElements());
         num_dims++;
-        tmp_type = array_T->getElementType();
+        tmp_type = array_T->getArrayElementType();
     }
 
     HI_ArrayInfo res_array_info;
@@ -868,8 +868,8 @@ HI_MuxInsertionArrayPartition::getAccessInfoForAccessInst(Instruction *Load_or_S
     }
     else
     {
-        address_addI = pointer_V; // the access may not need the calculation of address, take the
-                                  // pointer directly
+        address_addI = pointer_V;                                  // the access may not need the calculation of address, take the
+                                                                   // pointer directly
         if (Alias2Target.find(address_addI) != Alias2Target.end()) // it could be argument. We need to trace back to get
                                                                    // its original array declaration
         {
