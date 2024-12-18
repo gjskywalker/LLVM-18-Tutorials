@@ -20,7 +20,8 @@ bool HI_DependenceList::runOnFunction(
     Function &F) // The runOnModule declaration will overide the virtual one in ModulePass, which
                  // will be executed for each Module.
 {
-    *Dependence_out << "\n\n\n\n\n Printing Dominator Graph:\n";
+    *Dependence_out << "Printing Dominator Graph:\n\n\n";
+    *Dependence_out << "=================\n\n\n";
     auto DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
     for (auto node = GraphTraits<DominatorTree *>::nodes_begin(DT);
          node != GraphTraits<DominatorTree *>::nodes_end(DT); ++node)
@@ -59,8 +60,11 @@ bool HI_DependenceList::runOnFunction(
         *Dependence_out << "\n==============================\n";
         for (Instruction &I : B)
         {
-            // handle the dependence of current instruction
-            checkInstructionDependence(&I);
+            // For the following instructions, we do not need to check the dependence
+            if (I.getOpcode() == Instruction::Switch || I.getOpcode() == Instruction::Br || I.getOpcode() == Instruction::Ret || I.getOpcode() == Instruction::IndirectBr || I.getOpcode() == Instruction::Invoke || I.getOpcode() == Instruction::Resume || I.getOpcode() == Instruction::Unreachable || I.getOpcode() == Instruction::CleanupRet || I.getOpcode() == Instruction::CatchSwitch || I.getOpcode() == Instruction::CatchRet || I.getOpcode() == Instruction::CatchPad || I.getOpcode() == Instruction::CallBr || I.getOpcode() == Instruction::Invoke || I.getOpcode() == Instruction::Resume || I.getOpcode() == Instruction::Unreachable || I.getOpcode() == Instruction::CleanupRet || I.getOpcode() == Instruction::CatchSwitch || I.getOpcode() == Instruction::CatchRet || I.getOpcode() == Instruction::CatchPad || I.getOpcode() == Instruction::CallBr)
+                continue;
+            else
+                checkInstructionDependence(&I);
         }
     }
     return false;
@@ -140,7 +144,7 @@ void HI_DependenceList::checkInstructionDependence(Instruction *I)
                 Instruction_id[Suc_Inst] = ++Instruction_Counter;
             }
             tmp_vec_id->push_back(Instruction_id[Suc_Inst]);
-            *Dependence_out << Instruction_id[Suc_Inst] << " ";
+            *Dependence_out << "I" << Instruction_id[Suc_Inst] << " ";
 
             std::vector<int>
                 *tmp_vec_id_1; // add the instruction in the other instruction's presessor list
@@ -183,25 +187,31 @@ void HI_DependenceList::checkInstructionDependence(Instruction *I)
                 }
             }
         }
-        *Dependence_out << " (type=";
-        I->getOperand(i)->getType()->print(*Dependence_out);
-        *Dependence_out << " is ";
-        if (I->getOperand(i)->getType()->isArrayTy())
+        if (I->getOperand(i)->getType()->isIntegerTy())
         {
-            *Dependence_out << " array type)\n";
+            *Dependence_out << " (integer type of bit width " << I->getOperand(i)->getType()->getIntegerBitWidth() << ")\n";
         }
-        else
+        else if (I->getOperand(i)->getType()->isFloatTy())
         {
-            if (I->getOperand(i)->getType()->isPointerTy())
-            {
-                *Dependence_out << " pointerTy type of type ";
-                PointerType *tmp_PtrType = dyn_cast<PointerType>(I->getOperand(i)->getType());
-                tmp_PtrType->getArrayElementType()->print(*Dependence_out);
-                *Dependence_out << " )\n";
-                // tmp_PtrType->gettype
-            }
+            *Dependence_out << " (float type of bit width 32" << ")\n";
         }
-
+        else if (I->getOperand(i)->getType()->isDoubleTy())
+        {
+            *Dependence_out << " (double type of bit width 64" << ")\n";
+        }
+        else if (I->getOperand(i)->getType()->isArrayTy())
+        {
+            *Dependence_out << " (array type)\n";
+        }
+        else if (I->getOperand(i)->getType()->isPointerTy())
+        {
+            // errs() << *(I->getOperand(i)) << "\n";
+            *Dependence_out << " (pointerTy type of type " << ")\n";
+            // *Dependence_out << " pointerTy type of type ";
+            // PointerType *tmp_PtrType = dyn_cast<PointerType>(I->getOperand(i)->getType());
+            // tmp_PtrType->getArrayElementType()->print(*Dependence_out);
+            // *Dependence_out << " )\n";
+        }
         *Dependence_out << ".\n";
     }
 }

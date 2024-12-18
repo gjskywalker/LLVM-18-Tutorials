@@ -34,5 +34,6 @@
     "**/.*/**",
     "**/.vscode",
     "**/.vscode/**"
-  ]
+  ],
+  "cmake.sourceDirectory": "/home/eeuser/Desktop/LLVM-18-Tutorials/Implementations"
 }

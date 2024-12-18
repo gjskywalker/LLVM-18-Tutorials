@@ -5,11 +5,13 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
-      "args": [],
+      "args": [
+        "2mm.cc"
+      ],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/jacobge/Documents/HKUST_Intern/LLVM-11-Tutorials",
-      "program": "/home/jacobge/Documents/HKUST_Intern/LLVM-11-Tutorials/build/Debug/outDebug",
+      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp1_dependence_list/build",
+      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp1_dependence_list/build/LLVM_exp1_dependence",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
