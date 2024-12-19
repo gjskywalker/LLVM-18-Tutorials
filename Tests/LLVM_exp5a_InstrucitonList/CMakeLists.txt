@@ -1,6 +1,6 @@
-project(LLVM_exp0_InstrucitonList) 
+project(LLVM_exp5a_InstrucitonList) 
 
-set(Outputname "LLVM_exp0_InstrucitonList")
+set(Outputname "LLVM_exp5a_InstrucitonList")
 
 cmake_minimum_required(VERSION 3.10) 
 
@@ -40,7 +40,7 @@ execute_process(COMMAND ${MAKE_CMD}
 add_definitions(${LLVM_DEFINITIONS}) 
 add_definitions(${Polly_DEFINITIONS}) 
 
-add_executable(${Outputname} LLVM_exp0_InstrucitonList.cc) 
+add_executable(${Outputname} LLVM_exp5a_InstrucitonList.cc) 
 
 llvm_map_components_to_libnames(llvm_libs support core irreader engine nativecodegen) 
 
