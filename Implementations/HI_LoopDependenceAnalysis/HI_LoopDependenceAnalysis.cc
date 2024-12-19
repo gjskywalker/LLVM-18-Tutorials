@@ -76,7 +76,7 @@ void HI_LoopDependenceAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
     // AU.addRequired<ScalarEvolutionWrapperPass>();
     // AU.addRequired<LoopInfoWrapperPass>();
     // AU.addPreserved<LoopInfoWrapperPass>();
-    AU.addRequired<LoopAccessLegacyAnalysis>();
+    // AU.addRequired<LoopAccessLegacyAnalysis>();
     AU.addRequired<DominatorTreeWrapperPass>();
     // AU.addPreserved<DominatorTreeWrapperPass>();
     AU.addRequired<OptimizationRemarkEmitterWrapperPass>();

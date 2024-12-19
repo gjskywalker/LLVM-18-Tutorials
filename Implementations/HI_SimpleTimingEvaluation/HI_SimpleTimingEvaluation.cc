@@ -41,7 +41,7 @@ bool HI_SimpleTimingEvaluation::runOnModule(
                 {
                     SE = &getAnalysis<ScalarEvolutionWrapperPass>(F).getSE();
                     LI = &getAnalysis<LoopInfoWrapperPass>(F).getLoopInfo();
-                    LAA = &getAnalysis<LoopAccessLegacyAnalysis>(F);
+                    // LAA = &getAnalysis<LoopAccessLegacyAnalysis>(F);
                     getLoopBlockMap(&F);
                     getFunctionLatency(&F);
                 }
@@ -117,7 +117,7 @@ void HI_SimpleTimingEvaluation::getAnalysisUsage(AnalysisUsage &AU) const
     // AU.addRequired<ScalarEvolutionWrapperPass>();
     // AU.addRequired<LoopInfoWrapperPass>();
     // AU.addPreserved<LoopInfoWrapperPass>();
-    AU.addRequired<LoopAccessLegacyAnalysis>();
+    // AU.addRequired<LoopAccessLegacyAnalysis>();
     AU.addRequired<DominatorTreeWrapperPass>();
     // AU.addPreserved<DominatorTreeWrapperPass>();
     AU.addRequired<OptimizationRemarkEmitterWrapperPass>();

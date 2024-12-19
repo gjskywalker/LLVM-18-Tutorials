@@ -206,7 +206,7 @@ public:
     // some LLVM analysises could be involved
     ScalarEvolution *SE;
     LoopInfo *LI;
-    LoopAccessLegacyAnalysis *LAA;
+    // LoopAccessLegacyAnalysis *LAA;
 
     bool topFunctionFound = 0;
     //  std::map<>
