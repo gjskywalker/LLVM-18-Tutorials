@@ -15,18 +15,16 @@
 
 using namespace llvm;
 
-bool HI_Polly_Info::runOnModule(
-    Module &M) // The runOnModule declaration will overide the virtual one in ModulePass, which
-               // will be executed for each Module.
+bool HI_Polly_Info::runOnFunction(
+    Function &F) // The runOnModule declaration will overide the virtual one in ModulePass, which
+                 // will be executed for each Module.
 {
-    for (Function &F : M)
-    {
-        SE = &getAnalysis<ScalarEvolutionWrapperPass>(F).getSE();
-        LI = &getAnalysis<LoopInfoWrapperPass>(F).getLoopInfo();
-    }
+    // SE = &getAnalysis<ScalarEvolutionWrapperPass>(F).getSE();
+    // LI = &getAnalysis<LoopInfoWrapperPass>(F).getLoopInfo();
+    PolyhedralInfo *PI = &getAnalysis<polly::PolyhedralInfo>();
+    *Loop_out << "Printing analysis " << PI->getPassName() << " for function" << F.getName() << "\n";
+    PI->print(*Loop_out);
     // auto *LAA = &getAnalysis<LoopAccessLegacyAnalysis>();
-    auto PSD = &getAnalysis<polly::ScopDetectionWrapperPass>();
-    PSD->print(*Loop_out);
     return false;
 }
 
@@ -36,18 +34,21 @@ char HI_Polly_Info::ID =
 
 void HI_Polly_Info::getAnalysisUsage(AnalysisUsage &AU) const
 {
+    FunctionPass::getAnalysisUsage(AU);
+    AU.addRequired<PolyhedralInfo>();
     AU.setPreservesAll();
-    AU.addRequiredTransitive<LoopInfoWrapperPass>();
-    AU.addRequiredTransitive<ScalarEvolutionWrapperPass>();
-    // AU.addRequired<LoopAccessLegacyAnalysis>();
-    AU.addRequiredTransitive<DominatorTreeWrapperPass>();
-    //  AU.addPreserved<DominatorTreeWrapperPass>();
-    AU.addRequiredTransitive<OptimizationRemarkEmitterWrapperPass>();
-    AU.addRequiredTransitive<polly::DependenceInfoWrapperPass>();
-    // AU.addRequired<LoopInfoWrapperPass>();
-    AU.addRequiredTransitive<polly::ScopInfoWrapperPass>();
-    AU.addRequiredTransitive<polly::PolyhedralInfo>();
-    AU.addRequiredTransitive<polly::ScopDetectionWrapperPass>();
-    // Ensure all required analyses are declared
-    // AU.addPreserved<GlobalsAAWrapperPass>();
+
+    // AU.addRequiredTransitive<LoopInfoWrapperPass>();
+    // AU.addRequiredTransitive<ScalarEvolutionWrapperPass>();
+    // // AU.addRequired<LoopAccessLegacyAnalysis>();
+    // AU.addRequiredTransitive<DominatorTreeWrapperPass>();
+    // //  AU.addPreserved<DominatorTreeWrapperPass>();
+    // AU.addRequiredTransitive<OptimizationRemarkEmitterWrapperPass>();
+    // AU.addRequiredTransitive<polly::DependenceInfoWrapperPass>();
+    // // AU.addRequired<LoopInfoWrapperPass>();
+    // AU.addRequiredTransitive<polly::ScopInfoWrapperPass>();
+    // AU.addRequiredTransitive<polly::PolyhedralInfo>();
+    // AU.addRequiredTransitive<polly::ScopDetectionWrapperPass>();
+    // // Ensure all required analyses are declared
+    // // AU.addPreserved<GlobalsAAWrapperPass>();
 }

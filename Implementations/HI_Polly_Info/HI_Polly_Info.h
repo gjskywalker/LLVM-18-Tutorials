@@ -43,12 +43,11 @@
 
 using namespace llvm;
 using namespace polly;
-class HI_Polly_Info : public ModulePass
+class HI_Polly_Info : public FunctionPass
 {
 public:
-    HI_Polly_Info(const char *Loop_out_file) : ModulePass(ID)
+    HI_Polly_Info(const char *Loop_out_file) : FunctionPass(ID)
     {
-        Loop_Counter = 0;
         Loop_out = new raw_fd_ostream(Loop_out_file, ErrInfo, sys::fs::OF_None);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
     ~HI_Polly_Info()
@@ -62,16 +61,10 @@ public:
         return false;
     }
     void getAnalysisUsage(AnalysisUsage &AU) const;
-    virtual bool runOnModule(Module &M);
+    virtual bool runOnFunction(Function &F);
 
     static char ID;
 
-    ScalarEvolution *SE;
-    LoopInfo *LI;
-    int Loop_Counter;
-
-    std::map<Loop *, int> Loop_id;
-    std::map<Loop *, std::vector<BasicBlock *> *> Loop2Blocks;
     std::error_code ErrInfo;
     raw_ostream *Loop_out;
 
