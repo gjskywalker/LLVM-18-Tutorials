@@ -1,5 +1,6 @@
 #ifndef _HI_HI_POLLY_INFO
 #define _HI_HI_POLLY_INFO
+
 // related headers should be included.
 #include "HI_print.h"
 #include "polly/DependenceInfo.h"
@@ -7,6 +8,8 @@
 #include "polly/Options.h"
 #include "polly/PolyhedralInfo.h"
 #include "polly/ScopInfo.h"
+#include "polly/ScopDetection.h"
+
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/LoopAccessAnalysis.h"
 #include "llvm/Analysis/LoopInfo.h"
@@ -30,6 +33,7 @@
 #include "llvm/Transforms/Utils/LoopUtils.h"
 #include "llvm/Transforms/Utils/LoopVersioning.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
+
 #include <bits/stl_map.h>
 #include <ios>
 #include <stdio.h>
@@ -38,11 +42,11 @@
 #include <sys/time.h>
 
 using namespace llvm;
-
-class HI_Polly_Info : public FunctionPass
+using namespace polly;
+class HI_Polly_Info : public ModulePass
 {
-  public:
-    HI_Polly_Info(const char *Loop_out_file) : FunctionPass(ID)
+public:
+    HI_Polly_Info(const char *Loop_out_file) : ModulePass(ID)
     {
         Loop_Counter = 0;
         Loop_out = new raw_fd_ostream(Loop_out_file, ErrInfo, sys::fs::OF_None);
@@ -58,10 +62,12 @@ class HI_Polly_Info : public FunctionPass
         return false;
     }
     void getAnalysisUsage(AnalysisUsage &AU) const;
-    virtual bool runOnFunction(Function &F);
+    virtual bool runOnModule(Module &M);
 
     static char ID;
 
+    ScalarEvolution *SE;
+    LoopInfo *LI;
     int Loop_Counter;
 
     std::map<Loop *, int> Loop_id;

@@ -3,6 +3,7 @@
 #include "HI_LoopInFormationCollect.h"
 #include "HI_SysExec.h"
 #include "HI_print.h"
+#include "HI_Polly_Info.h"
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SetOperations.h"
@@ -24,6 +25,8 @@
 #include "llvm/Analysis/ScalarEvolutionExpressions.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/Analysis/RegionInfo.h"
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
@@ -61,5 +64,7 @@
 #include <stdlib.h>
 #include <string>
 // #include "polly/LinkAllPasses.h"
-#include "HI_Polly_Info.h"
 #include "polly/PolyhedralInfo.h"
+#include "polly/ScopDetection.h"
+#include "polly/ScopInfo.h"
+#include "polly/DependenceInfo.h"

@@ -6,12 +6,12 @@
       "type": "cppdbg",
       "request": "launch",
       "args": [
-        "2mm.cc"
+        "2mm.bc"
       ],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp1_dependence_list/build",
-      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp1_dependence_list/build/LLVM_exp1_dependence",
+      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp4_polly_info/build",
+      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp4_polly_info/build/LLVM_exp4_polly_info",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

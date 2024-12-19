@@ -15,15 +15,18 @@
 
 using namespace llvm;
 
-bool HI_Polly_Info::runOnFunction(
-    Function &F) // The runOnModule declaration will overide the virtual one in ModulePass, which
-                 // will be executed for each Module.
+bool HI_Polly_Info::runOnModule(
+    Module &M) // The runOnModule declaration will overide the virtual one in ModulePass, which
+               // will be executed for each Module.
 {
-
-    auto &SE = getAnalysis<ScalarEvolutionWrapperPass>().getSE();
-    auto &LI = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-    auto *LAA = &getAnalysis<LoopAccessLegacyAnalysis>();
-    auto *PI = &getAnalysis<polly::PolyhedralInfo>();
+    for (Function &F : M)
+    {
+        SE = &getAnalysis<ScalarEvolutionWrapperPass>(F).getSE();
+        LI = &getAnalysis<LoopInfoWrapperPass>(F).getLoopInfo();
+    }
+    // auto *LAA = &getAnalysis<LoopAccessLegacyAnalysis>();
+    auto PSD = &getAnalysis<polly::ScopDetectionWrapperPass>();
+    PSD->print(*Loop_out);
     return false;
 }
 
@@ -34,19 +37,17 @@ char HI_Polly_Info::ID =
 void HI_Polly_Info::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.setPreservesAll();
-    AU.addRequired<LoopInfoWrapperPass>();
-    AU.addRequired<ScalarEvolutionWrapperPass>();
-
-    // AU.addRequired<ScalarEvolutionWrapperPass>();
-    // AU.addRequired<LoopInfoWrapperPass>();
-    // AU.addPreserved<LoopInfoWrapperPass>();
-    AU.addRequired<LoopAccessLegacyAnalysis>();
-    AU.addRequired<DominatorTreeWrapperPass>();
+    AU.addRequiredTransitive<LoopInfoWrapperPass>();
+    AU.addRequiredTransitive<ScalarEvolutionWrapperPass>();
+    // AU.addRequired<LoopAccessLegacyAnalysis>();
+    AU.addRequiredTransitive<DominatorTreeWrapperPass>();
     //  AU.addPreserved<DominatorTreeWrapperPass>();
-    AU.addRequired<OptimizationRemarkEmitterWrapperPass>();
+    AU.addRequiredTransitive<OptimizationRemarkEmitterWrapperPass>();
     AU.addRequiredTransitive<polly::DependenceInfoWrapperPass>();
-    AU.addRequired<LoopInfoWrapperPass>();
+    // AU.addRequired<LoopInfoWrapperPass>();
     AU.addRequiredTransitive<polly::ScopInfoWrapperPass>();
-    AU.addRequired<polly::PolyhedralInfo>();
+    AU.addRequiredTransitive<polly::PolyhedralInfo>();
+    AU.addRequiredTransitive<polly::ScopDetectionWrapperPass>();
+    // Ensure all required analyses are declared
     // AU.addPreserved<GlobalsAAWrapperPass>();
 }

@@ -1,5 +1,5 @@
 #include "LLVM_exp4_polly_info.h"
-#include "llvm/Analysis/OptimizationRemarkEmitter.h"
+
 using namespace llvm;
 using namespace polly;
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     PM.add(new LoopInfoWrapperPass());
     PM.add(new RegionInfoPass());
     PM.add(new ScalarEvolutionWrapperPass());
-    PM.add(new LoopAccessLegacyAnalysis());
+    // PM.add(new LoopAccessLegacyAnalysis());
     PM.add(new DominatorTreeWrapperPass());
     PM.add(new OptimizationRemarkEmitterWrapperPass());
 
@@ -47,9 +47,9 @@ int main(int argc, char **argv)
     // PM.add(LPPM);
 
     print_info("Enable LoopSimplify Pass");
-    print_info("Enable IndVarSimplify Pass");
+    // print_info("Enable IndVarSimplify Pass");
     PM.add(createLoopSimplifyPass());
-    PM.add(createIndVarSimplifyPass());
+    // PM.add(createIndVarSimplifyPass());
 
     print_info("Enable HI_LoopInFormationCollect Pass");
     PM.add(new HI_LoopInFormationCollect("Loops"));
@@ -67,9 +67,11 @@ int main(int argc, char **argv)
     print_info("Enable DependenceInfoWrapperPass Pass");
     PM.add(new DependenceInfoWrapperPass());
     print_info("Enable PolyhedralInfo Pass");
+    PM.add(new ScopDetectionWrapperPass());
     PM.add(new PolyhedralInfo());
     print_info("Enable PollyInformation Pass");
-    PM.add(new HI_Polly_Info("PollyInformation"));
+    auto hipollyinfo = new HI_Polly_Info("PollyInformation");
+    PM.add(hipollyinfo);
     // AU.addRequiredTransitive<polly::DependenceInfoWrapperPass>();
     // AU.addRequiredTransitive<polly::ScopInfoWrapperPass>();
 

@@ -122,7 +122,8 @@ public:
 
     ScalarEvolution *SE;
     LoopInfo *LI;
-    LoopAccessLegacyAnalysis *LAA;
+    // In the new version of LLVM, the LoopAccessAnalysis is replace by LoopAccessAnalysis,while the API is different.
+    // LoopAccessLegacyAnalysis *LAA;
 
     void solveDependency(legacy::PassManager &PM)
     {
@@ -133,8 +134,8 @@ public:
         auto scalarevolutionwrapperpass = new ScalarEvolutionWrapperPass();
         PM.add(scalarevolutionwrapperpass);
 
-        auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
-        PM.add(loopaccesslegacyanalysis);
+        // auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
+        // PM.add(loopaccesslegacyanalysis);
 
         auto dominatortreewrapperpass = new DominatorTreeWrapperPass();
         PM.add(dominatortreewrapperpass);

@@ -21,7 +21,7 @@ bool HI_LoopInFormationCollect::runOnLoop(
 
     SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
     LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-    LAA = &getAnalysis<LoopAccessLegacyAnalysis>();
+    // LAA = &getAnalysis<LoopAccessLegacyAnalysis>();
     if (Loop_id.find(L) ==
         Loop_id.end()) // traverse instructions in the block assign instruction ID
     {
@@ -43,8 +43,23 @@ bool HI_LoopInFormationCollect::runOnLoop(
     // <<Loop_id[L]<<"--getLoopEstimatedTripCount="<<getLoopEstimatedTripCount(L)<<"\n";
     *Loop_out << "-----------Loop content---------------\n";
     *Loop_out << *L;
-    *Loop_out << "---------------Loop report----------------\n";
-    LAA->getInfo(L).print(*Loop_out);
+
+    // *Loop_out << "---------------Loop report----------------\n";
+    // errs() << "Loop-ID: " << Loop_id[L] << "\n";
+    // errs() << "Loop Depth: " << L->getLoopDepth() << "\n";
+    // errs() << "Loop Header: " << L->getHeader()->getName() << "\n";
+    // if (L->getLoopPreheader())
+    //     errs() << "Loop PreHeader: " << L->getLoopPreheader()->getName() << "\n";
+    // errs() << "Loop Blocks: ";
+    // for (auto BinL : L->getBlocks())
+    // {
+    //     errs() << BinL->getName() << " ";
+    // }
+    // errs() << "\n";
+    // L->print(*Loop_out);
+    // Since the LAA API is removed in the new LLVM-18, the following code is commented.
+    // LAA->getInfo(L).print(*Loop_out);
+
     *Loop_out << "---------------Loop Header----------------\n";
     *Loop_out << L->getHeader()->getName() << "\n";
     *Loop_out << "---------------Loop PreHeader----------------\n";
@@ -104,12 +119,9 @@ void HI_LoopInFormationCollect::getAnalysisUsage(AnalysisUsage &AU) const
     AU.setPreservesAll();
     AU.addRequired<LoopInfoWrapperPass>();
     AU.addRequired<ScalarEvolutionWrapperPass>();
-    // AU.addRequired<ScalarEvolutionWrapperPass>();
-    // AU.addRequired<LoopInfoWrapperPass>();
-    // AU.addPreserved<LoopInfoWrapperPass>();
-    AU.addRequired<LoopAccessLegacyAnalysis>();
     AU.addRequired<DominatorTreeWrapperPass>();
-    // AU.addPreserved<DominatorTreeWrapperPass>();
     AU.addRequired<OptimizationRemarkEmitterWrapperPass>();
+    // Ensure all required analyses are declared
+    // AU.addRequired<LoopAccessLegacyAnalysis>();
     // AU.addPreserved<GlobalsAAWrapperPass>();
 }

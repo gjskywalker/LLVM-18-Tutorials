@@ -41,11 +41,12 @@ int main(int argc, char **argv)
     PM.add(hi_dependencelist);
 
     print_info("Enable LoopSimplify Pass");
-    print_info("Enable IndVarSimplify Pass");
     auto loopsimplifypass = createLoopSimplifyPass();
     PM.add(createLoopSimplifyPass());
-    auto indvarsimplifypass = createIndVarSimplifyPass();
-    PM.add(createIndVarSimplifyPass());
+
+    // print_info("Enable IndVarSimplify Pass");
+    // auto indvarsimplifypass = createIndVarSimplifyPass();
+    // PM.add(createIndVarSimplifyPass());
 
     print_info("Enable HI_LoopInFormationCollect Pass");
     auto hi_loopinformationcollect = new HI_LoopInFormationCollect("Loops");

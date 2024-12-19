@@ -102,10 +102,12 @@ int main(int argc, char **argv)
     // LPPassManager *LPPM = new LPPassManager();
     // LPPM->add(new IndVarSimplifyPass());
     // PM.add(LPPM);
+    // To use more loop processing passes, we can find them in llvm/Transforms/Utils.h
     print_info("Enable LoopSimplify Pass");
-    print_info("Enable IndVarSimplify Pass");
     PM.add(createLoopSimplifyPass());
-    PM.add(createIndVarSimplifyPass());
+    // They removed this pass from the new version of LLVM
+    // PM.add(createIndVarSimplifyPass());
+    // print_info("Enable IndVarSimplify Pass");
     print_status("Start LLVM processing");
     PM.run(*Mod);
     print_status("Accomplished LLVM processing");
