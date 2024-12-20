@@ -100,14 +100,16 @@ void HI_VarWidthReduce::Bitwidth_Analysis(Function *F)
     {
         for (Instruction &I : B)
         {
+            // store i32 0, ptr i32* %arrayidx, align 4, !tbaa !1
             if (I.getOpcode() == Instruction::Store)
             {
                 if (I.getOperand(0)->getType()->isIntegerTy())
                 {
                     Instruction_id[&I] = ++Instruction_Counter;
-                    PointerType *PtrType = dyn_cast<PointerType>(I.getOperand(1)->getType());
-                    assert(PtrType);
-                    Instruction_BitNeeded[&I] = PtrType->getArrayElementType()->getIntegerBitWidth();
+                    Instruction_BitNeeded[&I] = I.getOperand(0)->getType()->getIntegerBitWidth();
+                    // PointerType *PtrType = dyn_cast<PointerType>(I.getOperand(1)->getType());
+                    // assert(PtrType);
+                    // Instruction_BitNeeded[&I] = PtrType->getArrayElementType()->getIntegerBitWidth();
                 }
             }
             else if (I.getType()->isIntegerTy())
@@ -849,7 +851,7 @@ unsigned int HI_VarWidthReduce::bitNeededFor(ConstantRange CR)
         return CR.getBitWidth();
     if (CR.getLower().isNonNegative())
     {
-        // do no consider the leading zero, if the range is non-negative
+        // do not consider the leading zero, if the range is non-negative
         unsigned int lowerNeedBits = CR.getLower().getActiveBits();
         unsigned int upperNeedBits = CR.getUpper().getActiveBits();
 
@@ -861,8 +863,8 @@ unsigned int HI_VarWidthReduce::bitNeededFor(ConstantRange CR)
     else
     {
         // consider the leading zero/ones, if the range is negative
-        unsigned int lowerNeedBits = CR.getLower().getMinSignedBits();
-        unsigned int upperNeedBits = CR.getUpper().getMinSignedBits();
+        unsigned int lowerNeedBits = CR.getLower().getSignificantBits();
+        unsigned int upperNeedBits = CR.getUpper().getSignificantBits();
 
         if (lowerNeedBits > upperNeedBits)
             return lowerNeedBits;
@@ -1003,10 +1005,11 @@ void HI_VarWidthReduce::Store_WidthCast(StoreInst *S_I)
     // VarWidthChangeLog->flush();
 
     // check whether an instruction involve PTI operation
-    PointerType *PtrType = dyn_cast<PointerType>(S_I->getPointerOperandType());
-    assert(PtrType);
+    // PointerType *PtrType = dyn_cast<PointerType>(S_I->getPointerOperandType());
+    // assert(PtrType);
 
-    Instruction_BitNeeded[&I] = PtrType->getArrayElementType()->getIntegerBitWidth();
+    // Instruction_BitNeeded[&I] = PtrType->getArrayElementType()->getIntegerBitWidth();
+    Instruction_BitNeeded[&I] = (cast<IntegerType>(I.getType()))->getBitWidth();
 
     for (int i = 0; i <= 0;
          ++i) // check the operands to see whether a TRUNC/EXT is necessary
@@ -1407,7 +1410,7 @@ const ConstantRange HI_VarWidthReduce::HI_getSignedRangeRef(const SCEV *S)
 
     // If the value has known zeros, the maximum value will have those known zeros
     // as well.
-    uint32_t TZ = SE->GetMinTrailingZeros(S);
+    uint32_t TZ = SE->getMinTrailingZeros(S);
     if (TZ != 0)
     {
         ConservativeResult = ConstantRange(APInt::getSignedMinValue(BitWidth),
@@ -1637,7 +1640,7 @@ const ConstantRange HI_VarWidthReduce::HI_getUnsignedRangeRef(const SCEV *S)
 
     // If the value has known zeros, the maximum value will have those known zeros
     // as well.
-    uint32_t TZ = SE->GetMinTrailingZeros(S);
+    uint32_t TZ = SE->getMinTrailingZeros(S);
     if (TZ != 0)
     {
         ConservativeResult = ConstantRange(APInt::getSignedMinValue(BitWidth),

@@ -56,9 +56,9 @@ int main(int argc, char **argv)
     auto loopsimplifypass = createLoopSimplifyPass();
     PM.add(loopsimplifypass);
 
-    auto indvarsimplifypass = createIndVarSimplifyPass();
-    PM.add(indvarsimplifypass);
-    print_info("Enable IndVarSimplifyPass Pass");
+    // auto indvarsimplifypass = createIndVarSimplifyPass();
+    // PM.add(indvarsimplifypass);
+    // print_info("Enable IndVarSimplifyPass Pass");
 
     PM.add(createTargetTransformInfoWrapperPass(TargetIRAnalysis()));
     print_info("Enable TargetIRAnalysis Pass");
@@ -75,17 +75,17 @@ int main(int argc, char **argv)
     PM.add(lazyvalueinfowrapperpass);
     print_info("Enable LazyValueInfoWrapperPass Pass");
 
-    auto hi_varwidthreduce = new HI_VarWidthReduce("VarWidth");
+    auto hi_varwidthreduce = new HI_VarWidthReduce("VarWidth", true);
     PM.add(hi_varwidthreduce);
     print_info("Enable HI_VarWidthReduce Pass");
 
-    PM.add(createCorrelatedValuePropagationPass());
-    print_info("Enable CorrelatedValuePropagation Pass");
+    // PM.add(createCorrelatedValuePropagationPass());
+    // print_info("Enable CorrelatedValuePropagation Pass");
 
     PM.add(createStraightLineStrengthReducePass());
     print_info("Enable StraightLineStrengthReduce Pass");
 
-    auto instructioncombiningpass = createInstructionCombiningPass(true);
+    auto instructioncombiningpass = createInstructionCombiningPass();
     PM.add(instructioncombiningpass);
     print_info("Enable InstructionCombiningPass Pass");
 
@@ -105,9 +105,9 @@ int main(int argc, char **argv)
     PM.add(scalarevolutionwrapperpass);
     print_info("Enable ScalarEvolutionWrapperPass Pass");
 
-    auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
-    PM.add(loopaccesslegacyanalysis);
-    print_info("Enable LoopAccessLegacyAnalysis Pass");
+    // auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
+    // PM.add(loopaccesslegacyanalysis);
+    // print_info("Enable LoopAccessLegacyAnalysis Pass");
 
     auto dominatortreewrapperpass = new DominatorTreeWrapperPass();
     PM.add(dominatortreewrapperpass);

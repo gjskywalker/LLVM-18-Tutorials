@@ -6,12 +6,13 @@
       "type": "cppdbg",
       "request": "launch",
       "args": [
-        "2mm.bc"
+        "2mm.cc",
+        "kernel_2mm"
       ],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp4_polly_info/build",
-      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp4_polly_info/build/LLVM_exp4_polly_info",
+      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp8_VarWidthReduce/build",
+      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp8_VarWidthReduce/build/LLVM_exp8_VarWidthReduce",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
