@@ -3,7 +3,8 @@
     "*.inc": "cpp",
     "string": "cpp",
     "*.tcc": "cpp",
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "*.def": "cpp"
   },
   "editor.formatOnSave": true,
   "C_Cpp_Runner.cCompilerPath": "gcc",

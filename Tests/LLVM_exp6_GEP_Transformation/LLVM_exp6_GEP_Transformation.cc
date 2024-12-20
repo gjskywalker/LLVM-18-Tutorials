@@ -1,5 +1,5 @@
 #include "LLVM_exp6_GEP_Transformation.h"
-#include "llvm/Analysis/OptimizationRemarkEmitter.h"
+
 using namespace llvm;
 using namespace polly;
 
@@ -56,9 +56,9 @@ int main(int argc, char **argv)
     auto loopsimplifypass = createLoopSimplifyPass();
     PM.add(loopsimplifypass);
 
-    auto indvarsimplifypass = createIndVarSimplifyPass();
-    PM.add(indvarsimplifypass);
-    print_info("Enable IndVarSimplifyPass Pass");
+    // auto indvarsimplifypass = createIndVarSimplifyPass();
+    // PM.add(indvarsimplifypass);
+    // print_info("Enable IndVarSimplifyPass Pass");
 
     PM.add(createTargetTransformInfoWrapperPass(TargetIRAnalysis()));
     print_info("Enable TargetIRAnalysis Pass");
@@ -70,7 +70,8 @@ int main(int argc, char **argv)
     PM.add(createStraightLineStrengthReducePass());
     print_info("Enable StraightLineStrengthReduce Pass");
 
-    auto instructioncombiningpass = createInstructionCombiningPass(true);
+    // auto instructioncombiningpass = createInstructionCombiningPass(true);
+    auto instructioncombiningpass = createInstructionCombiningPass();
     PM.add(instructioncombiningpass);
     print_info("Enable InstructionCombiningPass Pass");
 
@@ -90,9 +91,9 @@ int main(int argc, char **argv)
     PM.add(scalarevolutionwrapperpass);
     print_info("Enable ScalarEvolutionWrapperPass Pass");
 
-    auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
-    PM.add(loopaccesslegacyanalysis);
-    print_info("Enable LoopAccessLegacyAnalysis Pass");
+    // auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
+    // PM.add(loopaccesslegacyanalysis);
+    // print_info("Enable LoopAccessLegacyAnalysis Pass");
 
     auto dominatortreewrapperpass = new DominatorTreeWrapperPass();
     PM.add(dominatortreewrapperpass);

@@ -1,3 +1,5 @@
+# LLVM Exp7 DuplicateInstRemove
+
 LLVM_exp7_DuplicateInstRemove is used to test the pass HI_DuplicateInstRm
 
 The pass is a transformation pass and remove the duplicated instructions in a block.
