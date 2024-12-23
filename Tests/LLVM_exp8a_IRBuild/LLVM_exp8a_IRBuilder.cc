@@ -1,7 +1,6 @@
-#include "LLVM_exp9_HI_SepConstGEP.h"
-#include "llvm/Analysis/OptimizationRemarkEmitter.h"
+#include "LLVM_exp8a_IRBuilder.h"
+
 using namespace llvm;
-using namespace polly;
 
 int main(int argc, char **argv)
 {
@@ -17,7 +16,7 @@ int main(int argc, char **argv)
     // Compile the source code into IR and Parse the input LLVM IR file into a module
     SMDiagnostic Err;
     LLVMContext Context;
-    std::string cmd_str = "clang -O1 -emit-llvm -S " + std::string(argv[1]) + " -o top.bc 2>&1";
+    std::string cmd_str = "clang -cc1 -O1  " + std::string(argv[1]) + " -emit-llvm -o top.bc 2>&1";
     std::string top_str = std::string(argv[2]);
     print_cmd(cmd_str.c_str());
     bool result = sysexec(cmd_str.c_str());
@@ -63,25 +62,13 @@ int main(int argc, char **argv)
     PM.add(createTargetTransformInfoWrapperPass(TargetIRAnalysis()));
     print_info("Enable TargetIRAnalysis Pass");
 
-    auto hi_separateconstoffsetfromgep =
-        new HI_SeparateConstOffsetFromGEP("HI_SeparateConstOffsetFromGEP", true, true);
-    PM.add(hi_separateconstoffsetfromgep);
-    print_info("Enable HI_SeparateConstOffsetFromGEP Pass");
-    // auto separateconstoffsetfromgep = createSeparateConstOffsetFromGEPPass(true);
-    // PM.add(separateconstoffsetfromgep);
-    // print_info("Enable SeparateConstOffsetFromGEP Pass");
+    auto separateconstoffsetfromgep = createSeparateConstOffsetFromGEPPass(true);
+    PM.add(separateconstoffsetfromgep);
+    print_info("Enable SeparateConstOffsetFromGEP Pass");
 
     auto hi_duplicateinstrm = new HI_DuplicateInstRm("rmInsts");
     PM.add(hi_duplicateinstrm);
     print_info("Enable HI_DuplicateInstRm Pass");
-
-    // auto lazyvalueinfowrapperpass = new LazyValueInfoWrapperPass();
-    // PM.add(lazyvalueinfowrapperpass);
-    // print_info("Enable LazyValueInfoWrapperPass Pass");
-
-    auto hi_varwidthreduce = new HI_VarWidthReduce("VarWidth");
-    PM.add(hi_varwidthreduce);
-    print_info("Enable HI_VarWidthReduce Pass");
 
     // PM.add(createCorrelatedValuePropagationPass());
     // print_info("Enable CorrelatedValuePropagation Pass");
@@ -100,10 +87,6 @@ int main(int argc, char **argv)
     auto loopinfowrapperpass = new LoopInfoWrapperPass();
     PM.add(loopinfowrapperpass);
     print_info("Enable LoopInfoWrapperPass Pass");
-
-    auto regioninfopass = new RegionInfoPass();
-    PM.add(regioninfopass);
-    print_info("Enable RegionInfoPass Pass");
 
     auto scalarevolutionwrapperpass = new ScalarEvolutionWrapperPass();
     PM.add(scalarevolutionwrapperpass);
@@ -125,41 +108,17 @@ int main(int argc, char **argv)
     print_info("Enable AAResultsWrapperPass Pass");
     PM.add(aaresultswrapperpass);
 
-    auto scopdetectionwrapperpass = new ScopDetectionWrapperPass();
-    print_info("Enable ScopDetectionWrapperPass Pass");
-    PM.add(scopdetectionwrapperpass);
-
     auto assumptioncachetracker = new AssumptionCacheTracker();
     print_info("Enable AssumptionCacheTracker Pass");
     PM.add(assumptioncachetracker);
 
-    auto scopinfowrapperpass = new ScopInfoWrapperPass();
-    print_info("Enable ScopInfoWrapperPass Pass");
-    PM.add(scopinfowrapperpass);
-
-    auto scopinforegionpass = new ScopInfoRegionPass();
-    print_info("Enable ScopInfoRegionPass Pass");
-    PM.add(scopinforegionpass);
-
-    auto dependenceinfowrapperpass = new DependenceInfoWrapperPass();
-    print_info("Enable DependenceInfoWrapperPass Pass");
-    PM.add(dependenceinfowrapperpass);
-
-    auto polyhedralinfo = new PolyhedralInfo();
-    print_info("Enable PolyhedralInfo Pass");
-    PM.add(polyhedralinfo);
-
-    auto hi_polly_info = new HI_Polly_Info("PollyInformation");
-    print_info("Enable PollyInformation Pass");
-    PM.add(hi_polly_info);
+    auto hi_loopdependenceanalysis = new HI_LoopDependenceAnalysis("HI_LoopDependenceAnalysis");
+    print_info("Enable HI_LoopDependenceAnalysis Pass");
+    PM.add(hi_loopdependenceanalysis);
 
     auto hi_loopinformationcollect = new HI_LoopInFormationCollect("Loops");
     PM.add(hi_loopinformationcollect);
     print_info("Enable HI_LoopInFormationCollect Pass");
-
-    auto hi_loopdependenceanalysis = new HI_LoopDependenceAnalysis("HI_LoopDependenceAnalysis");
-    print_info("Enable HI_LoopDependenceAnalysis Pass");
-    PM.add(hi_loopdependenceanalysis);
 
     auto hi_simpletimingevaluation =
         new HI_SimpleTimingEvaluation("HI_SimpleTimingEvaluation", top_str.c_str());
@@ -172,6 +131,12 @@ int main(int argc, char **argv)
     PM.add(hi_findfunction);
     auto hi_dependencelist = new HI_DependenceList("Instructions", "Instruction_Dep");
     PM.add(hi_dependencelist);
+
+    print_info("Enable HI_IRBuilder Pass");
+    auto hi_irbuilder = new HI_IRBuilder();
+    PM.add(hi_irbuilder);
+    // AU.addRequiredTransitive<polly::DependenceInfoWrapperPass>();
+    // AU.addRequiredTransitive<polly::ScopInfoWrapperPass>();
 
     print_status("Start LLVM processing");
     PM.run(*Mod);

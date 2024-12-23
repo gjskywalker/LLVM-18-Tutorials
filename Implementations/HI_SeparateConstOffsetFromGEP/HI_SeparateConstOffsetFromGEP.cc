@@ -219,7 +219,9 @@ bool HI_ConstantOffsetExtractor::CanTraceInto(bool SignExtended, bool ZeroExtend
     // don't have common bits, (LHS | RHS) is equivalent to (LHS + RHS).
     // FIXME: this does not appear to be covered by any tests
     //        (with x86/aarch64 backends at least)
-    if (BO->getOpcode() == Instruction::Or && !haveNoCommonBitsSet(LHS, RHS, DL, nullptr, BO, DT))
+    const SimplifyQuery &SQ = SimplifyQuery(DL).getWithInstruction(BO);
+    // getWithInstruction(BO);
+    if (BO->getOpcode() == Instruction::Or && !haveNoCommonBitsSet(LHS, RHS, SQ))
         return false;
 
     // In addition, tracing into BO requires that its surrounding s/zext (if
