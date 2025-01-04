@@ -1,6 +1,6 @@
 project(LLVM_exp10_HI_LoopLabeler) 
 
-set(Outputname "LLVM_exp10_HI_LoopLabeler")
+set(Outputname "LLVM_exp10a_HI_LoopLabeler")
 
 cmake_minimum_required(VERSION 3.10) 
 
@@ -48,7 +48,7 @@ execute_process(COMMAND ${MAKE_CMD}
 add_definitions(${LLVM_DEFINITIONS}) 
 add_definitions(${Polly_DEFINITIONS}) 
 
-add_executable(${Outputname} LLVM_exp10_HI_LoopLabeler.cc) 
+add_executable(${Outputname} LLVM_exp10a_HI_LoopLabeler.cc) 
 
 llvm_map_components_to_libnames(llvm_libs support core irreader engine nativecodegen) 
 

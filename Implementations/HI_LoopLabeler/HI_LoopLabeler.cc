@@ -28,8 +28,7 @@ void HI_LoopLabeler_Visitor::printTypeInfo(const clang::Type *T)
         TemplateName TN = TST->getTemplateName();
         TN.print(*parseLog, PP());
         *parseLog << " with args: ";
-        auto Args = llvm::makeArrayRef(TST->getArgs(), TST->getNumArgs());
-        for (auto arg : Args)
+        for (const auto &arg : TST->template_arguments())
         {
             arg.print(PP(), *parseLog, 0);
             *parseLog << " ";
