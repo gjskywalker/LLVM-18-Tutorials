@@ -4,7 +4,9 @@
     "string": "cpp",
     "*.tcc": "cpp",
     "ostream": "cpp",
-    "*.def": "cpp"
+    "*.def": "cpp",
+    "stdio.h": "c",
+    "stddef.h": "c"
   },
   "editor.formatOnSave": true,
   "C_Cpp_Runner.cCompilerPath": "gcc",

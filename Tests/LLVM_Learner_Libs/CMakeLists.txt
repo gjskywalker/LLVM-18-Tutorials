@@ -61,5 +61,5 @@ include_directories(./ ../../Implementations/
 ../../Implementations/HI_FaddOrderOpt
 )
 
-add_subdirectory(../../Implementations/HI_IRBuilder ./building)
+add_subdirectory(../../Implementations/HI_APIntSrcAnalysis ./building)
 

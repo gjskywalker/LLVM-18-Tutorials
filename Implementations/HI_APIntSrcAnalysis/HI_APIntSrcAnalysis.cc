@@ -1,4 +1,3 @@
-
 #include "HI_APIntSrcAnalysis.h"
 
 // print the detailed information of the type
@@ -28,8 +27,7 @@ void HI_APIntSrcAnalysis_Visitor::printTypeInfo(const Type *T)
         TemplateName TN = TST->getTemplateName();
         TN.print(*parseLog, PP());
         *parseLog << " with args: ";
-        auto Args = llvm::makeArrayRef(TST->getArgs(), TST->getNumArgs());
-        for (auto arg : Args)
+        for (const auto &arg : TST->template_arguments())
         {
             arg.print(PP(), *parseLog, 0);
             *parseLog << " ";
@@ -50,7 +48,7 @@ bool HI_APIntSrcAnalysis_Visitor::isAPInt(VarDecl *VD)
     return false;
 }
 
-// get tht template name
+// get the template name
 std::string HI_APIntSrcAnalysis_Visitor::getAPIntName(VarDecl *VD)
 {
     const Type *T = VD->getType().getTypePtr();

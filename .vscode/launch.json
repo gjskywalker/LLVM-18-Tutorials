@@ -6,13 +6,12 @@
       "type": "cppdbg",
       "request": "launch",
       "args": [
-        "2mm.cc",
-        "kernel_2mm"
+        "test.c"
       ],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp8_VarWidthReduce/build",
-      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp8_VarWidthReduce/build/LLVM_exp8_VarWidthReduce",
+      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp10_HI_APIntegerAnalysis/build",
+      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp10_HI_APIntegerAnalysis/build/LLVM_exp10_HI_APIntegerAnalysis",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

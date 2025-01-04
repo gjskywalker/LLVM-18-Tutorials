@@ -6,6 +6,8 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <nlohmann/json.hpp> // Include the JSON for Modern C++ library
+#include <filesystem>        // Include filesystem for current_path()
 
 void ReplaceAll(std::string &strSource, const std::string &strOld, const std::string &strNew)
 {
@@ -55,6 +57,37 @@ void pathAdvice()
               << std::endl;
 }
 
+void compile_cmd_generate(const std::string &filename)
+{
+    nlohmann::json root = nlohmann::json::array();
+    nlohmann::json entry;
+
+    // Set the directory where the compilation is happening
+    entry["directory"] = std::filesystem::current_path().string();
+
+    // Set the command to compile the file, including additional include paths
+    entry["command"] = "clang++ -std=c++17 "
+                       "-I/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12 "
+                       "-I/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12 "
+                       "-I/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward "
+                       "-I/usr/local/lib/clang/18/include "
+                       "-I/usr/local/include "
+                       "-I/usr/include/x86_64-linux-gnu "
+                       "-I/usr/include " +
+                       filename;
+
+    // Set the file being compiled
+    entry["file"] = filename;
+
+    // Add the entry to the root array
+    root.push_back(entry);
+
+    // Write the JSON to a file
+    std::ofstream file("compile_commands.json");
+    file << root.dump(4); // Pretty-print with an indent of 4 spaces
+    file.close();
+}
+
 using namespace clang;
 using namespace clang::driver;
 using namespace clang::tooling;
@@ -63,14 +96,30 @@ static llvm::cl::OptionCategory StatSampleCategory("Stat Sample");
 
 int main(int argc, const char **argv)
 {
-
     pathAdvice();
 
-    // parse the command-line args passed to your code
-    CommonOptionsParser op(argc, argv, StatSampleCategory);
+    if (argc > 1)
+    {
+        std::string filename = argv[1];
+        compile_cmd_generate(filename);
+    }
+    else
+    {
+        llvm::errs() << "Error: No input file specified.\n";
+        return 1;
+    }
 
-    // create a new Clang Tool instance (a LibTooling environment)
-    ClangTool Tool(op.getCompilations(), op.getSourcePathList());
+    auto ExpectedParser = CommonOptionsParser::create(argc, argv, StatSampleCategory);
+    if (!ExpectedParser)
+    {
+        llvm::errs() << ExpectedParser.takeError();
+        return 1;
+    }
+    CommonOptionsParser &OptionsParser = *ExpectedParser;
+
+    // Create a Clang Tool instance
+    ClangTool Tool(OptionsParser.getCompilations(), OptionsParser.getSourcePathList());
+
     Rewriter TheRewriter;
 
     // run the Clang Tool, creating a new FrontendAction, which will run the AST consumer
