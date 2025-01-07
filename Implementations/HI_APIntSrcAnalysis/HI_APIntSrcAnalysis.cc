@@ -38,6 +38,8 @@ void HI_APIntSrcAnalysis_Visitor::printTypeInfo(const Type *T)
 }
 
 // check whether it is a template structure like XXXX<X>
+// Since in LLVM, APInt is a template structure, we can instantiate it as llvm::APInt a(32, 4), which
+// means a 32-bit integer with value 4.
 bool HI_APIntSrcAnalysis_Visitor::isAPInt(VarDecl *VD)
 {
     const Type *T = VD->getType().getTypePtr();
