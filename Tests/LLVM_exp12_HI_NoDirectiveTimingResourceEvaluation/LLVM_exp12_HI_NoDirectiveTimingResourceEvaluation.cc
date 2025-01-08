@@ -1,13 +1,14 @@
 #include "LLVM_exp12_HI_NoDirectiveTimingResourceEvaluation.h"
 #include "llvm/Analysis/OptimizationRemarkEmitter.h"
+
 using namespace llvm;
 using namespace polly;
 
 int main(int argc, char **argv)
 {
-    if (argc < 4)
+    if (argc < 3)
     {
-        errs() << "Usage: " << argv[0] << " <C/C++ file> <Top_Function_Name> <Config_File_Path>\n";
+        errs() << "Usage: " << argv[0] << " <Top_Function_Name> <Config_File_Path> <test_File>\n";
         return 1;
     }
 
@@ -17,13 +18,12 @@ int main(int argc, char **argv)
     // Compile the source code into IR and Parse the input LLVM IR file into a module
     SMDiagnostic Err;
     LLVMContext Context;
-    std::string cmd_str = "clang -O1 -emit-llvm -S " + std::string(argv[1]) + " -o top.bc 2>&1";
-    std::string top_str = std::string(argv[2]);
-    std::string configFile_str = std::string(argv[3]);
+    std::string cmd_str = "clang -O1 -emit-llvm -S " + std::string(argv[3]) + " -o top.bc 2>&1";
+    std::string top_str = std::string(argv[1]);
+    std::string configFile_str = std::string(argv[2]);
     print_cmd(cmd_str.c_str());
     bool result = sysexec(cmd_str.c_str());
-    assert(result); // ensure the cmd is executed successfully
-                    // system(cmd_str.c_str());
+    assert(result);
 
     std::unique_ptr<Module> Mod(parseIRFile("top.bc", Err, Context));
     if (!Mod)
@@ -53,14 +53,6 @@ int main(int argc, char **argv)
     TargetLibraryInfoImpl TLII(ModuleTriple);
     PM1.add(new TargetLibraryInfoWrapperPass(TLII));
 
-    print_info("Enable LoopSimplify Pass");
-    auto loopsimplifypass = createLoopSimplifyPass();
-    PM1.add(loopsimplifypass);
-
-    auto indvarsimplifypass = createIndVarSimplifyPass();
-    PM1.add(indvarsimplifypass);
-    print_info("Enable IndVarSimplifyPass Pass");
-
     PM1.add(createTargetTransformInfoWrapperPass(TargetIRAnalysis()));
     print_info("Enable TargetIRAnalysis Pass");
 
@@ -68,28 +60,10 @@ int main(int argc, char **argv)
         new HI_SeparateConstOffsetFromGEP("HI_SeparateConstOffsetFromGEP", true);
     PM1.add(hi_separateconstoffsetfromgep);
     print_info("Enable HI_SeparateConstOffsetFromGEP Pass");
-    // auto separateconstoffsetfromgep = createSeparateConstOffsetFromGEPPass(true);
-    // PM.add(separateconstoffsetfromgep);
-    // print_info("Enable SeparateConstOffsetFromGEP Pass");
 
-    auto hi_duplicateinstrm = new HI_DuplicateInstRm("rmInsts");
-    PM1.add(hi_duplicateinstrm);
-    print_info("Enable HI_DuplicateInstRm Pass");
-
-    auto loopstrengthreducepass = createLoopStrengthReducePass();
-    PM1.add(loopstrengthreducepass);
-    print_info("Enable LoopStrengthReducePass Pass");
-
-    // auto lazyvalueinfowrapperpass = new LazyValueInfoWrapperPass();
-    // PM.add(lazyvalueinfowrapperpass);
-    // print_info("Enable LazyValueInfoWrapperPass Pass");
-
-    auto hi_varwidthreduce = new HI_VarWidthReduce("VarWidth");
-    PM1.add(hi_varwidthreduce);
-    print_info("Enable HI_VarWidthReduce Pass");
-
-    // PM.add(createCorrelatedValuePropagationPass());
-    // print_info("Enable CorrelatedValuePropagation Pass");
+    // auto hi_duplicateinstrm = new HI_DuplicateInstRm("rmInsts");
+    // PM1.add(hi_duplicateinstrm);
+    // print_info("Enable HI_DuplicateInstRm Pass");
 
     PM1.run(*Mod);
 
@@ -98,20 +72,34 @@ int main(int argc, char **argv)
     WriteBitcodeToFile(*Mod, OS1);
     OS1.flush();
 
-    auto hi_duplicateinstrm1 = new HI_DuplicateInstRm("rmInsts");
-    PM.add(hi_duplicateinstrm1);
-    print_info("Enable HI_DuplicateInstRm Pass");
+    /*
+        We use the following passes to create canonical loop form to simplify trip count analysis.
+        https://llvm.org/docs/LoopTerminology.html
+    */
+    print_info("Enable LoopSimplify Pass");
+    auto loopsimplifypass = createLoopSimplifyPass();
+    PM.add(loopsimplifypass);
 
-    // PM.add(createStraightLineStrengthReducePass());
-    // print_info("Enable StraightLineStrengthReduce Pass");
+    auto loopstrengthreducepass = createLoopStrengthReducePass();
+    PM.add(loopstrengthreducepass);
+    print_info("Enable LoopStrengthReducePass Pass");
 
-    // auto instructioncombiningpass = createInstructionCombiningPass(true);
-    // PM.add(instructioncombiningpass);
-    // print_info("Enable InstructionCombiningPass Pass");
+    auto looprotatepass = createLoopRotatePass();
+    PM.add(looprotatepass);
 
-    // auto loopstrengthreducepass = createLoopStrengthReducePass();
-    // PM.add(loopstrengthreducepass);
-    // print_info("Enable LoopStrengthReducePass Pass");
+    auto unifyloopexitspass = createUnifyLoopExitsPass();
+    PM.add(unifyloopexitspass);
+
+    auto loopsimplifycfgpass = createLoopSimplifyCFGPass();
+    PM.add(loopsimplifycfgpass);
+
+    print_info("Enable Mem2Reg Pass");
+    auto mem2regpass = createPromoteMemoryToRegisterPass();
+    PM.add(mem2regpass);
+
+    // auto hi_duplicateinstrm = new HI_DuplicateInstRm("rmInsts");
+    // PM.add(hi_duplicateinstrm);
+    // print_info("Enable HI_DuplicateInstRm Pass");
 
     auto loopinfowrapperpass = new LoopInfoWrapperPass();
     PM.add(loopinfowrapperpass);
@@ -120,14 +108,6 @@ int main(int argc, char **argv)
     auto regioninfopass = new RegionInfoPass();
     PM.add(regioninfopass);
     print_info("Enable RegionInfoPass Pass");
-
-    auto scalarevolutionwrapperpass = new ScalarEvolutionWrapperPass();
-    PM.add(scalarevolutionwrapperpass);
-    print_info("Enable ScalarEvolutionWrapperPass Pass");
-
-    auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
-    PM.add(loopaccesslegacyanalysis);
-    print_info("Enable LoopAccessLegacyAnalysis Pass");
 
     auto dominatortreewrapperpass = new DominatorTreeWrapperPass();
     PM.add(dominatortreewrapperpass);
@@ -161,29 +141,17 @@ int main(int argc, char **argv)
     print_info("Enable DependenceInfoWrapperPass Pass");
     PM.add(dependenceinfowrapperpass);
 
-    auto polyhedralinfo = new PolyhedralInfo();
-    print_info("Enable PolyhedralInfo Pass");
-    PM.add(polyhedralinfo);
+    auto scalarevolutionwrapperpass = new ScalarEvolutionWrapperPass();
+    PM.add(scalarevolutionwrapperpass);
+    print_info("Enable ScalarEvolutionWrapperPass Pass");
 
-    auto hi_polly_info = new HI_Polly_Info("PollyInformation");
-    print_info("Enable PollyInformation Pass");
-    PM.add(hi_polly_info);
-
-    auto hi_loopinformationcollect = new HI_LoopInFormationCollect("Loops");
-    PM.add(hi_loopinformationcollect);
-    print_info("Enable HI_LoopInFormationCollect Pass");
-
-    auto hi_loopdependenceanalysis = new HI_LoopDependenceAnalysis("HI_LoopDependenceAnalysis");
-    print_info("Enable HI_LoopDependenceAnalysis Pass");
-    PM.add(hi_loopdependenceanalysis);
-
-    // auto hi_simpletimingevaluation = new
-    // HI_SimpleTimingEvaluation("HI_SimpleTimingEvaluation",top_str.c_str()); print_info("Enable
-    // HI_SimpleTimingEvaluation Pass"); PM.add(hi_simpletimingevaluation);
+    llvm::raw_fd_ostream OS2("top_output1.bc", EC, llvm::sys::fs::OF_None);
+    WriteBitcodeToFile(*Mod, OS2);
+    OS2.flush();
 
     auto hi_nodirectivetimingresourceevaluation = new HI_NoDirectiveTimingResourceEvaluation(
         configFile_str.c_str(), "HI_NoDirectiveTimingResourceEvaluation", "BRAM_info",
-        top_str.c_str());
+        top_str.c_str(), 1);
     print_info("Enable HI_NoDirectiveTimingResourceEvaluation Pass");
     PM.add(hi_nodirectivetimingresourceevaluation);
 
@@ -193,22 +161,6 @@ int main(int argc, char **argv)
     PM.add(hi_findfunction);
     auto hi_dependencelist = new HI_DependenceList("Instructions", "Instruction_Dep");
     PM.add(hi_dependencelist);
-
-    // while (1)
-    // {
-    //     int opBitWid, outBitWid;
-    //     std::string ClockPerid,opcode;
-    //     std::cin >> opcode >> opBitWid >> outBitWid >> ClockPerid;
-    //     if (opcode=="end")
-    //       break;
-    //     // int DSP = testObj->get_N_DSP(opcode, opBitWid , outBitWid, ClockPerid);
-    //     // int FF = testObj->get_N_FF(opcode, opBitWid , outBitWid, ClockPerid);
-    //     // int LUT = testObj->get_N_LUT(opcode, opBitWid , outBitWid, ClockPerid);
-    //     // int Lat = testObj->get_N_Lat(opcode, opBitWid , outBitWid, ClockPerid);
-    //     // double Delay = testObj->get_N_Delay(opcode, opBitWid , outBitWid, ClockPerid);
-    //     hi_nodirectivetimingresourceevaluation->get_inst_info(opcode, opBitWid , outBitWid,
-    //     ClockPerid).print();
-    // }
 
     print_status("Start LLVM processing");
     PM.run(*Mod);
@@ -223,10 +175,5 @@ int main(int argc, char **argv)
     WriteBitcodeToFile(*Mod, OS);
     OS.flush();
 
-    print_status("Translate the IR to be readable one");
-    cmd_str = "llvm-dis top_output.bc 2>&1";
-    print_cmd(cmd_str.c_str());
-    result = sysexec(cmd_str.c_str());
-    assert(result); // ensure the cmd is executed successfully
     return 0;
 }

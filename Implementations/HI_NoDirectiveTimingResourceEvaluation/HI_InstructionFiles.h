@@ -11,7 +11,7 @@
 // WARNING!!!!!!!
 // WARNING!!!!!!!
 
-const int instructionInfoNum = 35; // should refer to Instruction_list.h
+const int instructionInfoNum = 36; // should refer to Instruction_list.h
 
 // The instruction opcodes which are included in the path specified
 extern std::string instructionNames[100];

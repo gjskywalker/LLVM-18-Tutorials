@@ -209,8 +209,11 @@ HI_NoDirectiveTimingResourceEvaluation::analyzeOuterLoop(Loop *outerL)
                 max_critial_path_in_curLoop = tmp_it.second;
 
         // (3) get the total latency by TripCount * IterationLatency
-        tmp_total_latency = SE->getSmallConstantMaxTripCount(cur_Loop) * max_critial_path_in_curLoop;
-
+        tmp_total_latency = getLoopTripCount(SE, cur_Loop) * max_critial_path_in_curLoop;
+        if(getLoopTripCount(SE, cur_Loop) == 0)
+        {
+            valid = 0;
+        }
         // COMMENT because preheader is not in the loop enity and if the prehearder is calculated,
         // it is actually duplicated calculation. but just need to add one cycle, as it seems that
         // in VivadoHLS, Loops are regarded as function and the "call" will take one cycle if
@@ -230,11 +233,12 @@ HI_NoDirectiveTimingResourceEvaluation::analyzeOuterLoop(Loop *outerL)
 
         LoopEvaluated.insert(cur_Loop->getHeader());
 
-        *Evaluating_log << "Trip Count for Loop " << cur_Loop->getName() << " is "
-                        << SE->getSmallConstantMaxTripCount(cur_Loop) << "\n";
+        *Evaluating_log << "Loop Name : " << cur_Loop->getName() << " Exit Block Name : " << cur_Loop->getExitBlock() << "\n";
+        *Evaluating_log << "Trip Count for Loop " << cur_Loop->getName() << " is " << getLoopTripCount(SE, cur_Loop) << "\n";
         *Evaluating_log << "Done evaluation Loop Latency for Loop " << cur_Loop->getName() << " and its latency is "
                         << tmp_total_latency
                         << " cycles and its resource cost is: " << LoopResource[cur_Loop->getHeader()] << ".\n\n\n";
+
         Evaluating_log->flush();
         // (1) iteratively handle the most inner loop
         cur_Loop = getInnerUnevaluatedLoop(outerL);
@@ -394,4 +398,78 @@ void HI_NoDirectiveTimingResourceEvaluation::MarkBlock_traversFromHeaderToExitin
             MarkBlock_traversFromHeaderToExitingBlocks(total_latency, L, B);
         }
     }
+}
+
+int HI_NoDirectiveTimingResourceEvaluation::getLoopTripCount(ScalarEvolution *SE, Loop *L)
+{
+    int tripcount;
+    tripcount = SE->getSmallConstantTripCount(L);
+    if(tripcount == 0)
+    {
+        int loop_bound = 0;
+        int loop_strid = 1;
+        int i=0, j=0;
+        BasicBlock* LoopBody = L->getExitingBlock();
+        // errs() << LoopBody->getName() << "\n";
+        Instruction* tmpI = LoopBody->getTerminator();
+        // errs() << *tmpI << "\n";
+        if(BranchInst *Br = dyn_cast<BranchInst>(tmpI))
+        {
+            Value *op0 = Br->getOperand(0);
+            // errs() << op0->getName() << "\n";
+            if(ICmpInst *ICI = dyn_cast<ICmpInst>(op0))
+            {
+                int num = ICI->getNumOperands();
+                for(i=0; i<num; i++)
+                {
+                    if(ConstantInt* bound = dyn_cast<ConstantInt>(ICI->getOperand(i)))
+                    {
+                        loop_bound = bound->getSExtValue();
+                        break;
+                    }
+                    else if(PHINode *PHI = dyn_cast<PHINode>(ICI->getOperand(i)))
+                    {
+                        // errs() << *PHI << "\n";
+                        int n = PHI->getNumOperands();
+                        for(j=0; j<n; j++)
+                        {
+                            if(ConstantInt* bound = dyn_cast<ConstantInt>(PHI->getOperand(j)))
+                            {
+                                loop_bound = bound->getSExtValue();
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                if(i == num)
+                {
+                    /*
+                        It means the loop induce variable is not a cannonical one. And LLVM API can't solve this problem.
+                    */
+                    return 0;
+                }
+                else
+                {
+                    if(Instruction *op = dyn_cast<Instruction>(ICI->getOperand(1-i)))
+                    {
+                        if(BinaryOperator *BIO = dyn_cast<BinaryOperator>(op))
+                        {
+                            int num = BIO->getNumOperands();
+                            for(i=0; i<num; i++)
+                            {
+                                if(ConstantInt* strid = dyn_cast<ConstantInt>(BIO->getOperand(i)))
+                                {
+                                    loop_strid = strid->getSExtValue();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        tripcount = std::ceil(loop_bound / loop_strid);
+    }
+    return std::abs(tripcount);
 }

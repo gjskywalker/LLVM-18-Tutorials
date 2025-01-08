@@ -23,12 +23,11 @@ using namespace llvm;
 HI_NoDirectiveTimingResourceEvaluation::timingBase
 HI_NoDirectiveTimingResourceEvaluation::BlockLatencyResourceEvaluation(BasicBlock *B)
 {
-    *Evaluating_log << "---- Evaluating Block Latency for Block: " << B->getName() << ":\n";
-
+        *Evaluating_log << "---- Evaluating Block Latency for Block: " << B->getName() << ":\n";
     if (BlockLatency.find(B) != BlockLatency.end())
     {
-        *Evaluating_log << "---- Done evaluation of Block Latency for Block: " << B->getName()
-                        << " and the latency is " << BlockLatency[B] << "\n";
+            *Evaluating_log << "---- Done evaluation of Block Latency for Block: " << B->getName()
+                            << " and the latency is " << BlockLatency[B] << "\n";
         return BlockLatency[B] * 1; // if B is evaluated, return directly.
     }
 
@@ -42,11 +41,13 @@ HI_NoDirectiveTimingResourceEvaluation::BlockLatencyResourceEvaluation(BasicBloc
     resourceBase resourceAccmulator(0, 0, 0, clock_period);
 
     // (1) iterate the instructions in the block
-    if (B->getInstList().size() > 1) // ignore block with only branch instruction
+    if (B->sizeWithoutDebug() > 1) // Becareful! This is not evaluated whether it's the same meaning to getInstList()
+    // if (B->getInstList().size() > 1) // ignore block with only branch instruction
     {
         for (Instruction &rI : *B)
         {
             Instruction *I = &rI;
+            // errs() << rI << "\n";
             timingBase tmp_I_latency = getInstructionLatency(I);
             cur_InstructionCriticalPath[I] = origin_path + tmp_I_latency;
             bool Chained = 0;
@@ -125,7 +126,14 @@ HI_NoDirectiveTimingResourceEvaluation::BlockLatencyResourceEvaluation(BasicBloc
             }
             // accmulate the cost of resource
             if (!Chained)
+            {
+                // std::cout << "===================" << std::endl;
+                // std::cout << resourceAccmulator.clock_period << std::endl;
+                // std::cout << getInstructionResource(I).clock_period << std::endl;
+                // errs() << *I << "\n";
+                // errs() << I->getOpcode() << "\n";
                 resourceAccmulator = resourceAccmulator + getInstructionResource(I);
+            }
 
             resourceBase FF_Num(0, 0, 0, clock_period);
             resourceBase PHI_LUT_Num(0, 0, 0, clock_period);
@@ -152,6 +160,7 @@ HI_NoDirectiveTimingResourceEvaluation::BlockLatencyResourceEvaluation(BasicBloc
                             << (Chained ? (resourceBase(0, 0, 0, clock_period))
                                         : (getInstructionResource(I) + PHI_LUT_Num))
                             << " + reg_FF: [" << FF_Num.FF << "] ";
+            InstructionCP[I] = cur_InstructionCriticalPath[I];
             if (Chained)
                 *Evaluating_log << "(Chained))";
             else
@@ -194,6 +203,11 @@ bool HI_NoDirectiveTimingResourceEvaluation::BlockContain(BasicBlock *B, Instruc
 */
 int HI_NoDirectiveTimingResourceEvaluation::getFunctionLatencyInPath(Instruction *I)
 {
+    /*
+        %retval.0517 = phi i32 [ undef, %for.end ], [ %retval.0517, %for.inc155 ]
+        There will be case like the above one.
+    */
+    // errs() << *I << "\n";
     int res = 0;
 
     if (CallInst *callI = dyn_cast<CallInst>(I))
@@ -205,10 +219,10 @@ int HI_NoDirectiveTimingResourceEvaluation::getFunctionLatencyInPath(Instruction
         return res;
 
     Instruction *preI = Inst2LatestOperand[I];
-
+    if (preI == I)
+        return res;
     if (preI->getParent() != I->getParent())
         return res;
-
     return res + getFunctionLatencyInPath(preI);
 }
 
@@ -226,7 +240,8 @@ int HI_NoDirectiveTimingResourceEvaluation::getStageTo(Instruction *I)
 // get the number of stage in the block
 int HI_NoDirectiveTimingResourceEvaluation::getStageNumOfBlock(BasicBlock *B)
 {
-    *Evaluating_log << "checking BLOCK:\n" << *B << "\n";
+    *Evaluating_log << "checking BLOCK:\n"
+                    << *B << "\n";
     int max_stage_num = -1;
     if (BlockLatency[B].latency == 0 && BlockLatency[B].timing < 0.00001)
         return 0;

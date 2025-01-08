@@ -6,12 +6,14 @@
       "type": "cppdbg",
       "request": "launch",
       "args": [
-        "test.c"
+        "do_math",
+        "../config.txt",
+        "test.cc"
       ],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp10_HI_APIntegerAnalysis/build",
-      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp10_HI_APIntegerAnalysis/build/LLVM_exp10_HI_APIntegerAnalysis",
+      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp12_HI_NoDirectiveTimingResourceEvaluation/build",
+      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp12_HI_NoDirectiveTimingResourceEvaluation/build//LLVM_exp12_HI_NoDirectiveTimingResourceEvaluation",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

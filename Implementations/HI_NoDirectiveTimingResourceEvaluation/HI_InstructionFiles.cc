@@ -12,7 +12,7 @@ std::string instructionNames[100] = {
     "add",    "ashr",  "br",     "dcmp",   "dmul", "fcmp", "fmul", "fptoui", "getelementptr",
     "load",   "mac",   "or",     "shl",    "srem", "udiv", "urem", "and",    "dadd",
     "ddiv",   "fadd",  "fdiv",   "fptosi", "icmp", "lshr", "mul",  "ret",    "sdiv",
-    "sitofp", "store", "uitofp", "xor",    "sub",  "fsub", "dsub", "tadd"};
+    "sitofp", "store", "uitofp", "xor",    "sub",  "fsub", "dsub", "tadd", "dmuladd"};
 
 bool instructionHasMappingFile[100] = {
     1, // "add", // ID=1
@@ -79,8 +79,9 @@ bool instructionHasMappingFile[100] = {
     1, // "srem", // ID=22
     1, // "uitofp", // ID=23
     1, // "urem", // ID=24
-    1, // ""sub""
-    1, // "fsub"
-    1, // "dsub"
-    1  // "tadd"
+    1, // "sub",  // ID=25
+    1, // "fsub", 
+    1, // "dsub",
+    1, // "tadd",
+    1  // "dmuladd",
 };

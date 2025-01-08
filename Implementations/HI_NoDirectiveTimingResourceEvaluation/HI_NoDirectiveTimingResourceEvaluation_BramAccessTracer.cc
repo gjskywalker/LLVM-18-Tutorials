@@ -32,18 +32,19 @@ void HI_NoDirectiveTimingResourceEvaluation::findMemoryDeclarationin(Function *F
             // llvm::errs() << *it << "\n";
             if (it->getType()->isPointerTy())
             {
-                PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                // llvm::errs() << *(tmp_PtrType->getArrayElementType()) << "\n";
-                if (tmp_PtrType->getArrayElementType()->isArrayTy())
-                {
-                    TraceAccessForTarget(it, it);
-                }
-                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
-                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getArrayElementType()->isDoubleTy())
-                {
-                    TraceAccessForTarget(it, it);
-                }
+                TraceAccessForTarget(it, it);
+                // PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
+                // // llvm::errs() << *(tmp_PtrType->getArrayElementType()) << "\n";
+                // if (tmp_PtrType->isArrayTy())
+                // {
+                //     TraceAccessForTarget(it, it);
+                // }
+                // else if (tmp_PtrType->isIntegerTy() ||
+                //          tmp_PtrType->isFloatingPointTy() ||
+                //          tmp_PtrType->isDoubleTy())
+                // {
+                //     TraceAccessForTarget(it, it);
+                // }
             }
         }
     }
@@ -125,51 +126,62 @@ void HI_NoDirectiveTimingResourceEvaluation::TraceAccessForTarget(Value *cur_nod
     // }
 
     // Trace the uses of the pointer value or integer generaed by PtrToInt
-    for (auto it = cur_node->use_begin(), ie = cur_node->use_end(); it != ie; ++it)
+    for (auto it = cur_node->user_begin(), ie = cur_node->user_end(); it != ie; ++it)
     {
-        *BRAM_log << "    find user of " << ori_node->getName() << " --> " << *it->getUser()
+        *BRAM_log << "    find user of " << ori_node->getName() << " --> " << **it
                   << "\n";
-
         // Load and Store Instructions are leaf nodes in the DFS
-        if (LoadInst *LoadI = dyn_cast<LoadInst>(it->getUser()))
+        if (LoadInst *LoadI = dyn_cast<LoadInst>(*it))
         {
-            if (Access2TargetMap.find(LoadI) == Access2TargetMap.end())
+            Type * LoadType = LoadI->getType();
+            if(LoadType->isPointerTy())
             {
-                *BRAM_log << "    is an LOAD instruction: " << *LoadI << "\n";
-                std::vector<Value *> tmp_vec;
-                tmp_vec.push_back(ori_node);
-                Access2TargetMap.insert(
-                    std::pair<Instruction *, std::vector<Value *>>(LoadI, tmp_vec));
+                // errs() << *LoadI << "\n";
+                TraceAccessForTarget(LoadI, ori_node);
+                Access2TargetMap[LoadI].insert(ori_node);
             }
-            else
+            else 
             {
-                Access2TargetMap[LoadI].push_back(ori_node);
+                if (Access2TargetMap.find(LoadI) == Access2TargetMap.end())
+                {
+                    *BRAM_log << "    is an LOAD instruction: " << *LoadI << "\n";
+                    std::set<Value *> tmp_vec;
+                    tmp_vec.insert(ori_node);
+                    Access2TargetMap.insert(
+                        std::pair<Instruction *, std::set<Value *>>(LoadI, tmp_vec));
+                }
+                else
+                {
+                    Access2TargetMap[LoadI].insert(ori_node);
+                }
             }
         }
-        else if (StoreInst *StoreI = dyn_cast<StoreInst>(it->getUser()))
+        else if (StoreInst *StoreI = dyn_cast<StoreInst>(*it))
         {
             if (Access2TargetMap.find(StoreI) == Access2TargetMap.end())
             {
                 *BRAM_log << "    is an STORE instruction: " << *StoreI << "\n";
-                std::vector<Value *> tmp_vec;
-                tmp_vec.push_back(ori_node);
+                std::set<Value *> tmp_vec;
+                tmp_vec.insert(ori_node);
                 Access2TargetMap.insert(
-                    std::pair<Instruction *, std::vector<Value *>>(StoreI, tmp_vec));
+                    std::pair<Instruction *, std::set<Value *>>(StoreI, tmp_vec));
             }
             else
             {
-                Access2TargetMap[StoreI].push_back(ori_node);
+                Access2TargetMap[StoreI].insert(ori_node);
             }
         }
         // if a pointer of arrray is passed as sub-function's argument, handle it
-        else if (CallInst *CallI = dyn_cast<CallInst>(it->getUser()))
+        else if (CallInst *CallI = dyn_cast<CallInst>(*it))
         {
             *BRAM_log << "    is an CALL instruction: " << *CallI << "\n";
-            for (int i = 0; i < CallI->getNumOperands(); ++i)
+            for (int i = 0; i < CallI->arg_size(); i++)
             {
+                //*Debug_log << "i = " << i << "\n";
                 if (CallI->getArgOperand(i) ==
                     cur_node) // find which argument is exactly the pointer we are tracing
                 {
+                    //*Debug_log << "This is the arg_size of this Call instruction" << CallI->arg_size() << "\n";
                     auto arg_it = CallI->getCalledFunction()->arg_begin();
                     auto arg_ie = CallI->getCalledFunction()->arg_end();
                     for (int j = 0;; ++j, ++arg_it)
@@ -185,8 +197,8 @@ void HI_NoDirectiveTimingResourceEvaluation::TraceAccessForTarget(Value *cur_nod
         }
         else
         {
-            *BRAM_log << "    is an general instruction: " << *it->getUser() << "\n";
-            TraceAccessForTarget(it->getUser(), ori_node);
+            *BRAM_log << "    is an general instruction: " << **it << "\n";
+            TraceAccessForTarget(*it, ori_node);
         }
     }
     ValueVisited.erase(cur_node);
@@ -199,12 +211,12 @@ HI_NoDirectiveTimingResourceEvaluation::scheduleBRAMAccess(
     Instruction *access, BasicBlock *cur_block,
     HI_NoDirectiveTimingResourceEvaluation::timingBase cur_Timing)
 {
-    if (Access2TargetMap.find(access) == Access2TargetMap.end())
+    if (Access2TargetMap.find(access) == Access2TargetMap.end() && isNotPoison(access))
         llvm::errs() << "BramAccessTracer:171" << *access
                      << " in Block: " << access->getParent()->getName()
                      << " of Function: " << access->getParent()->getParent()->getName() << "\n";
-
-    assert(Access2TargetMap.find(access) != Access2TargetMap.end() &&
+    // To omit store poison null ptr
+    assert((Access2TargetMap.find(access) != Access2TargetMap.end() | (!isNotPoison(access))) &&
            "The access should be recorded in the BRAM access info.\n");
     timingBase res(0, 0, 1, clock_period);
     for (auto target : Access2TargetMap[access])
@@ -351,7 +363,7 @@ bool HI_NoDirectiveTimingResourceEvaluation::checkBRAMAvailabilty(
 // record the schedule information
 void HI_NoDirectiveTimingResourceEvaluation::insertBRAMAccessInfo(Value *target,
                                                                   BasicBlock *cur_block,
-                                                                  int cur_latency,
+                                                                  long long cur_latency,
                                                                   Instruction *access)
 {
     *BRAM_log << "       inserting the access to the target [" << target->getName()
@@ -470,8 +482,8 @@ HI_NoDirectiveTimingResourceEvaluation::get_BRAM_Num_For(AllocaInst *alloca_I)
     resourceBase res(0, 0, 0, 0, clock_period);
     *BRAM_log << "\n\nchecking allocation instruction [" << *alloca_I
               << "] and its type is: " << *alloca_I->getType() << " and its ElementType is: ["
-              << *alloca_I->getType()->getArrayElementType() << "]\n";
-    Type *tmp_type = alloca_I->getType()->getArrayElementType();
+              << *alloca_I->getAllocatedType() << "]\n";
+    Type *tmp_type = alloca_I->getAllocatedType();
     int total_ele = 1;
     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
     {
@@ -488,6 +500,9 @@ HI_NoDirectiveTimingResourceEvaluation::get_BRAM_Num_For(AllocaInst *alloca_I)
         BW = 32;
     else if (tmp_type->isDoubleTy())
         BW = 64;
+    // TODO: This case is a little difficult to deal with, since in llvm-17 the pointer doesn't have bitwdith
+    else if (tmp_type->isPointerTy())
+        BW = 1;
     assert(BW != 0 && "we should get BW for the basic element type.\n");
     res = get_BRAM_Num_For(BW, total_ele);
     *BRAM_log << "checked allocation instruction [" << *alloca_I
@@ -510,6 +525,7 @@ HI_NoDirectiveTimingResourceEvaluation::get_BRAM_Num_For(int width, int depth)
     // therefore, we need to set the depth and bidwith for each unit BRAM
     int width_uint = 1;
     int depth_uint = 1;
+    // The following configuration is based on BRAM18
     if (width <= 1 || depth > 16 * 1024)
     {
         width_uint = 1;
@@ -594,54 +610,74 @@ bool HI_NoDirectiveTimingResourceEvaluation::hasRAWHazard(Instruction *loadI, in
         {
             break;
         }
-        if (getTargetFromInst(loadI) == getTargetFromInst(preI))
+        if (preI->getOpcode() == Instruction::Store)
         {
-            if (preI->getOpcode() == Instruction::Store)
+            for (auto load_target : Access2TargetMap[loadI])
             {
-                // Redundant load with alias access should have been removed
-                // therefore, this could be potential conflict, reject the access
-                if (Inst_Schedule[preI].second >= cycle)
+                for (auto store_target : Access2TargetMap[preI])
                 {
-                    *BRAM_log << "\nload instruction: " << *loadI
-                              << " RAW hazard with store instruction: " << *preI << " at cycle#"
-                              << Inst_Schedule[preI].second << "\n";
-                    return true;
+                    if (Inst_Schedule[preI].second >= cycle)
+                    {
+                        *BRAM_log << "\nload instruction: " << *loadI
+                                << " RAW hazard with store instruction: " << *preI << " at cycle#"
+                                << Inst_Schedule[preI].second << "\n";
+                        return true;
+                    }
                 }
             }
         }
+        // if (getTargetFromInst(loadI) == getTargetFromInst(preI))
+        // {
+        //     if (preI->getOpcode() == Instruction::Store)
+        //     {
+        //         // Redundant load with alias access should have been removed
+        //         // therefore, this could be potential conflict, reject the access
+        //         if (Inst_Schedule[preI].second >= cycle)
+        //         {
+        //             *BRAM_log << "\nload instruction: " << *loadI
+        //                       << " RAW hazard with store instruction: " << *preI << " at cycle#"
+        //                       << Inst_Schedule[preI].second << "\n";
+        //             return true;
+        //         }
+        //     }
+        // }
     }
     return false;
 }
 
-Value *HI_NoDirectiveTimingResourceEvaluation::getTargetFromInst(Instruction *accessI)
-{
-    // assert(Access2TargetMap[accessI].size()==1 && "currently, we do not support
-    // 1-access-multi-target.");
-    if (Access2TargetMap[accessI].size() > 1)
-    {
-        Value *reftarget = Access2TargetMap[accessI][0];
-        for (auto target : Access2TargetMap[accessI])
-        {
-
-            Value *tmp_target = target, *tmp_reftarget = reftarget;
-            if (Alias2Target.find(target) != Alias2Target.end())
-                tmp_target = Alias2Target[target];
-            if (Alias2Target.find(reftarget) != Alias2Target.end())
-                tmp_reftarget = Alias2Target[reftarget];
-            if (tmp_target != tmp_reftarget)
-            {
-                llvm::errs() << *accessI << " has multi-targets: \n";
-                llvm::errs() << *tmp_target << "  is different form " << *tmp_reftarget << "\n";
-                for (auto target : Access2TargetMap[accessI])
-                    llvm::errs() << "    " << *target << "\n";
-            }
-            assert(tmp_target == tmp_reftarget &&
-                   "currently, we do not support 1-access-multi-target.");
-        }
-    }
-    Value *target = Access2TargetMap[accessI][0];
-    if (Alias2Target.find(target) == Alias2Target.end())
-        return target;
-    else
-        return Alias2Target[target];
+bool HI_NoDirectiveTimingResourceEvaluation::isNotPoison(Instruction* instr) {
+    llvm::Metadata* md = instr->getMetadata("llvm.mem.parallel_loop_access.not_unsafe");
+    return md != nullptr;
 }
+// Value *HI_NoDirectiveTimingResourceEvaluation::getTargetFromInst(Instruction *accessI)
+// {
+//     // assert(Access2TargetMap[accessI].size()==1 && "currently, we do not support
+//     // 1-access-multi-target.");
+//     if (Access2TargetMap[accessI].size() > 1)
+//     {
+//         Value *reftarget = *(Access2TargetMap[accessI].begin());
+//         for (auto target : Access2TargetMap[accessI])
+//         {
+
+//             Value *tmp_target = target, *tmp_reftarget = reftarget;
+//             if (Alias2Target.find(target) != Alias2Target.end())
+//                 tmp_target = Alias2Target[target];
+//             if (Alias2Target.find(reftarget) != Alias2Target.end())
+//                 tmp_reftarget = Alias2Target[reftarget];
+//             if (tmp_target != tmp_reftarget)
+//             {
+//                 llvm::errs() << *accessI << " has multi-targets: \n";
+//                 llvm::errs() << *tmp_target << "  is different form " << *tmp_reftarget << "\n";
+//                 for (auto target : Access2TargetMap[accessI])
+//                     llvm::errs() << "    " << *target << "\n";
+//             }
+//             assert(tmp_target == tmp_reftarget &&
+//                    "currently, we do not support 1-access-multi-target.");
+//         }
+//     }
+//     Value *target = *(Access2TargetMap[accessI].begin());
+//     if (Alias2Target.find(target) == Alias2Target.end())
+//         return target;
+//     else
+//         return Alias2Target[target];
+// }

@@ -34,6 +34,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/GraphWriter.h"
@@ -62,11 +63,11 @@ using namespace llvm;
 // Pass for simple evluation of the latency of the top function, without considering HLS directives
 class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
 {
-  public:
+public:
     // Pass for simple evluation of the latency of the top function, without considering HLS
     // directives
     HI_NoDirectiveTimingResourceEvaluation(const char *config_file_name, const char *evaluating_log_name,
-                                           const char *BRAM_log_name, const char *top_function)
+                                           const char *BRAM_log_name, const char *top_function, bool verbose)
         : ModulePass(ID)
     {
         BlockEvaluated.clear();
@@ -74,14 +75,34 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
         FunctionEvaluated.clear();
         Loop_id.clear();
         Loop_Counter = 0;
+        valid = 1;
         config_file = new std::ifstream(config_file_name);
-        Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::OF_None);
-        BRAM_log = new raw_fd_ostream(BRAM_log_name, ErrInfo, sys::fs::OF_None);
+        
         top_function_name = std::string(top_function);
-        FF_log = new raw_fd_ostream("FF_LOG", ErrInfo, sys::fs::OF_None);
+        // Debug_log = new raw_fd_ostream("DEBUG_LOG", ErrInfo, sys::fs::OF_None);
+        if(verbose)
+        {   
+            Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::OF_None);
+
+            BRAM_log = new raw_fd_ostream(BRAM_log_name, ErrInfo, sys::fs::OF_None);
+
+            FF_log = new raw_fd_ostream("FF_LOG", ErrInfo, sys::fs::OF_None);
+
+            // use this log to collect the result of scheduling;
+            Scheduling_log = new raw_fd_ostream("Scheduling_log", ErrInfo, sys::fs::OF_None);
+
+            // use this log to collect the result of ram;
+            Ram_log = new raw_fd_ostream("Ram_log", ErrInfo, sys::fs::OF_None);
+
+            // Cycle_Result
+            Cycle_Result = new raw_fd_ostream("Cycle_Result", ErrInfo, sys::fs::OF_None);
+
+        }
 
         // get the configureation from the file, e.g. clock period
         Parse_Config();
+
+        verbose = verbose;
 
         // load the HLS database of timing and resource
         Load_Instruction_Info();
@@ -97,8 +118,21 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
         {
             delete ele.second;
         }
-        Evaluating_log->flush();
-        delete Evaluating_log;
+        if(verbose)
+        {
+            Evaluating_log->flush();
+            delete Evaluating_log;
+            BRAM_log->flush();
+            delete BRAM_log;
+            FF_log->flush();
+            delete FF_log;
+            Scheduling_log->flush();
+            delete Scheduling_log;
+            Ram_log->flush();
+            delete Ram_log;
+            Cycle_Result->flush();
+            delete Cycle_Result;
+        }
     }
 
     virtual bool doInitialization(Module &M)
@@ -106,6 +140,7 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
 
         print_status("Initilizing HI_NoDirectiveTimingResourceEvaluation pass.");
         Loop_id.clear();
+        InstructionCP.clear();
         LoopLatency.clear();
         BlockLatency.clear();
         FunctionLatency.clear();
@@ -118,9 +153,11 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
         FunctionEvaluated.clear();
         InstructionEvaluated.clear();
         BlockVisited.clear();
+        ValueVisited.clear();
         Func_BlockVisited.clear();
         Instruction_FFAssigned.clear();
         Function2OuterLoops.clear();
+        Access2TargetMap.clear();
         Block2EvaluatedLoop.clear();
         BlockCriticalPath_inLoop.clear();
         tmp_BlockCriticalPath_inFunc.clear();
@@ -134,6 +171,14 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
 
     class timingBase;
     class resourceBase;
+
+    bool verbose;
+
+    // use this function to get the Scheduling result
+    void getSchedulingResult();
+
+    // use this function to get the RAM access result
+    void getRAMResult();
 
     // set the dependence of Passes
     void getAnalysisUsage(AnalysisUsage &AU) const;
@@ -167,11 +212,19 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
     // information
     timingBase analyzeLoop_InnerChecked(Loop *L);
 
+    std::string validorinvalid(bool valid);
+
     static char ID;
 
     int Loop_Counter;
 
     std::map<Loop *, int> Loop_id;
+
+    // args of a function
+    std::set<Value *> funargs;
+
+    // the CP of each instruction
+    std::map<Instruction *, timingBase> InstructionCP;
 
     // the latency of each loop
     std::map<BasicBlock *, timingBase> LoopLatency;
@@ -197,11 +250,10 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
     std::set<BasicBlock *> LoopEvaluated;
     std::set<Function *> FunctionEvaluated;
     std::set<Instruction *> InstructionEvaluated;
-    std::set<Instruction *> Instruction_FFAssigned;
     std::set<BasicBlock *> BlockVisited;
     std::set<BasicBlock *> Func_BlockVisited;
     std::set<Value *> ValueVisited;
-
+    std::set<Instruction *> Instruction_FFAssigned;
     // record the information of the processing
     raw_ostream *Evaluating_log;
 
@@ -210,6 +262,16 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
 
     // record the information of the BRAMs and related accesses to BRAMs
     raw_ostream *FF_log;
+
+    // record the information of Scheduling
+    raw_ostream *Scheduling_log;
+
+    // record the information of access ram
+    raw_ostream *Ram_log;
+    // we use this log to record information needed by debuggin
+    // raw_ostream *Debug_log;
+
+    raw_ostream *Cycle_Result;
 
     std::error_code ErrInfo;
     std::ifstream *config_file;
@@ -239,7 +301,8 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
 
     // record the critical path to the end of sub-loops in the loop
     std::map<BasicBlock *, timingBase> tmp_BlockCriticalPath_inLoop;
-
+    
+    int getLoopTripCount(ScalarEvolution *SE, Loop *L);
     // record the critical path from the outter loop header to the end of the specific sub-loop
     std::map<Loop *, timingBase> tmp_SubLoop_CriticalPath;
 
@@ -287,6 +350,7 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
     */
     int getFunctionLatencyInPath(Instruction *I);
 
+    int getPointerBitwidth(Instruction *I);
     // get the number of stage in the block
     int getStageNumOfBlock(BasicBlock *B);
 
@@ -303,6 +367,8 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
 
     // mark the block in loop with latency by traversing from the header to the exiting blocks
     void MarkBlock_traversFromHeaderToExitingBlocks(timingBase total_latency, Loop *L, BasicBlock *curBlock);
+
+    bool isNotPoison(Instruction* instr);
 
     // evaluate the block latency and resource by traversing the instructions
     timingBase BlockLatencyResourceEvaluation(BasicBlock *B);
@@ -332,13 +398,14 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
     // some LLVM analysises could be involved
     ScalarEvolution *SE;
     LoopInfo *LI;
-    LoopAccessLegacyAnalysis *LAA;
 
     bool topFunctionFound = 0;
 
+    bool valid = 1;
+
     float clock_period = 10.0;
 
-    int top_function_latency;
+    long long top_function_latency;
 
     std::string clock_period_str = "10.0";
 
@@ -350,7 +417,7 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
     // A unit class to store the information of timing and resource for instruction
     class inst_timing_resource_info
     {
-      public:
+    public:
         // resource
         int FF;
         int DSP;
@@ -373,6 +440,7 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
             delay = input.delay;
             II = input.II;
             core_name = input.core_name;
+            return *this;
         }
 
         inst_timing_resource_info(const inst_timing_resource_info &input)
@@ -407,15 +475,15 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
     // A unit class to record the timing and latency for a(n) instruction/block/function/loop
     class timingBase
     {
-      public:
-        timingBase(int l, double t, int i, double p)
+    public:
+        timingBase(long long l, double t, int i, double p)
         {
             latency = l;
             timing = t;
             clock_period = p;
             II = i;
         }
-        int latency;
+        long long latency;
         int II;
         double timing;
         double clock_period;
@@ -427,6 +495,7 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
             timing = input.timing;
             clock_period = input.clock_period;
             strict_timing = input.strict_timing;
+            return *this;
         }
 
         timingBase(const timingBase &input)
@@ -462,7 +531,7 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
             {
                 if (lhs.clock_period - lhs.timing > Strict_LoadStore_Thredhold)
                 {
-                    lhs.timing = rhs.timing;
+                    lhs.timing = rhs.timing; // rhs.timing = Strict_LoadStore_Thredhold
                     lhs.latency++;
                     return lhs;
                 }
@@ -556,15 +625,15 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
 
     friend raw_ostream &operator<<(raw_ostream &stream, const timingBase &tb)
     {
-        stream << " [latency=" << tb.latency << ", timing=" << tb.timing << "] ";
+        stream << " {" << tb.latency << "~" << tb.timing << "} ";
         return stream;
     }
 
     // A unit class to record the FPGA resource for a(n) instruction/block/function/loop
     class resourceBase
     {
-      public:
-        resourceBase(int D, int F, int L, double C)
+    public:
+        resourceBase(int D, long long F, long long L, double C)
         {
             DSP = D;
             FF = F;
@@ -572,7 +641,7 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
             clock_period = C;
             BRAM = 0;
         }
-        resourceBase(int B, int D, int F, int L, double C)
+        resourceBase(int B, int D, long long F, long long L, double C)
         {
             DSP = D;
             FF = F;
@@ -580,7 +649,8 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
             clock_period = C;
             BRAM = B;
         }
-        int DSP, FF, LUT;
+        int DSP;
+        long long FF, LUT;
         int BRAM = 0;
         double clock_period;
 
@@ -591,6 +661,7 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
             LUT = input.LUT;
             BRAM = input.BRAM;
             clock_period = input.clock_period;
+            return *this;
         }
 
         resourceBase(const resourceBase &input)
@@ -716,7 +787,7 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
     //////////////////// Declaration related to Memory Access Tracing ////////////////////
 
     // record which target arrays the instruction may access
-    std::map<Instruction *, std::vector<Value *>> Access2TargetMap;
+    std::map<Instruction *, std::set<Value *>> Access2TargetMap;
 
     // record that in the basic block, which instruction access which array at which cycle
     std::map<Value *, std::map<BasicBlock *, std::vector<std::pair<int, Instruction *>>>> target2LastAccessCycleInBlock;
@@ -760,7 +831,7 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
     timingBase handleBRAMAccessFor(Instruction *access, Value *target, BasicBlock *cur_block, timingBase cur_Timing);
 
     // record the schedule information
-    void insertBRAMAccessInfo(Value *target, BasicBlock *cur_block, int cur_latency, Instruction *access);
+    void insertBRAMAccessInfo(Value *target, BasicBlock *cur_block, long long cur_latency, Instruction *access);
 
     // evaluate the number of LUT needed by the BRAM Mux
     resourceBase BRAM_MUX_Evaluate();
@@ -769,6 +840,8 @@ class HI_NoDirectiveTimingResourceEvaluation : public ModulePass
     bool checkLoadOpRegisterReusable(Instruction *Load_I, int time_point);
 
     bool hasRAWHazard(Instruction *loadI, int cycle);
+
+    int getTripCountAsInt(ScalarEvolution *SE, Loop *L);
 
     Value *getTargetFromInst(Instruction *accessI);
     /*

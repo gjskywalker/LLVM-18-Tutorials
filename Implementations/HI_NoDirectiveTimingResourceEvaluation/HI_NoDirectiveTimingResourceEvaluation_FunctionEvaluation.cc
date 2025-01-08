@@ -279,5 +279,7 @@ HI_NoDirectiveTimingResourceEvaluation::getFunctionResource(Function *F)
     if (F->getName().find("HIPartitionMux") !=
         std::string::npos) // bypass the "llvm.xxx" functions..
         return resourceBase(0, 0, 0, clock_period);
+    if (F->getName().find("sqrt") != std::string::npos)
+        return resourceBase(0, 0, 0, clock_period);
     return FunctionResource[F];
 }

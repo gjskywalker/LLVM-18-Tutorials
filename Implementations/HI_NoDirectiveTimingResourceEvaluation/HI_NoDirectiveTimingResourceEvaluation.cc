@@ -6,6 +6,7 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Analysis/LoopAccessAnalysis.h"
 #include "llvm/Analysis/OptimizationRemarkEmitter.h"
 #include <ios>
 #include <sstream>
@@ -29,7 +30,42 @@ bool HI_NoDirectiveTimingResourceEvaluation::runOnModule(
 
     analyzeTopFunction(M);
 
+    getSchedulingResult();
+
+    getRAMResult();
+
+    *Evaluating_log << " =======================  the information of FF_Assign ====================\n";
+    for (auto *it : Instruction_FFAssigned)
+    {
+        *Evaluating_log << *it << "\n";
+    }
+
     return false;
+}
+
+void HI_NoDirectiveTimingResourceEvaluation::getSchedulingResult()
+{
+    for (auto &it : BlockLatency)
+    {
+        *Scheduling_log << it.first->getName().str() << "$" << it.second << "\n";
+    }
+    for (auto &ii : InstructionCP)
+    {
+        *Scheduling_log << *(ii.first) << "$" << ii.second << "\n";
+    }
+}
+
+void HI_NoDirectiveTimingResourceEvaluation::getRAMResult()
+{
+    for (auto it : Access2TargetMap)
+    {
+        *Ram_log << *it.first << "$";
+        for (auto tmpI : it.second)
+        {
+            *Ram_log << " {" << tmpI->getName() << "} ";
+        }
+        *Ram_log << "\n";
+    }
 }
 
 bool HI_NoDirectiveTimingResourceEvaluation::CheckDependencyFesilility(Function &F)
@@ -40,13 +76,18 @@ bool HI_NoDirectiveTimingResourceEvaluation::CheckDependencyFesilility(Function 
             {
                 if (FunctionLatency.find(CI->getCalledFunction()) == FunctionLatency.end())
                 {
-
+                    /*
+                        Actually this is very unaccurate in new llvm IR, since there will be case like:
+                        %112 = call double @llvm.fmuladd.f64(double %neg84, double 1.000000e-02, double %111)
+                    */
                     if (CI->getCalledFunction()->getName().find("llvm.") != std::string::npos ||
                         CI->getCalledFunction()->getName().find("HIPartitionMux") !=
-                            std::string::npos)
+                            std::string::npos ||
+                        F.getName().find("sqrtf") != std::string::npos)
                     {
                         timingBase tmp(0, 0, 1, clock_period);
                         FunctionLatency[CI->getCalledFunction()] = tmp;
+                        return false;
                     }
                     else
                         return false;
@@ -68,15 +109,12 @@ void HI_NoDirectiveTimingResourceEvaluation::getAnalysisUsage(AnalysisUsage &AU)
     AU.addRequiredTransitive<ScalarEvolutionWrapperPass>();
 
     // AU.addRequired<ScalarEvolutionWrapperPass>();
-    // AU.addRequired<LoopInfoWrapperPass>();
-    // AU.addPreserved<LoopInfoWrapperPass>();
 
-    AU.addRequired<LoopAccessLegacyAnalysis>();
+    // AU.addRequired<LoopAccessAnalysis>();
     AU.addRequired<DominatorTreeWrapperPass>();
     // AU.addPreserved<DominatorTreeWrapperPass>();
     AU.addRequired<OptimizationRemarkEmitterWrapperPass>();
     // AU.addRequiredTransitive<polly::DependenceInfoWrapperPass>();
-    // AU.addRequired<LoopInfoWrapperPass>();
     // AU.addRequiredTransitive<polly::ScopInfoWrapperPass>();
     // AU.addRequired<polly::PolyhedralInfo>();
     // AU.addPreserved<GlobalsAAWrapperPass>();
@@ -116,14 +154,20 @@ void HI_NoDirectiveTimingResourceEvaluation::AnalyzeFunctions(Module &M)
         {
             *Evaluating_log << "CHECKING FUNCTION " << F.getName() << "\n";
             Evaluating_log->flush();
+            for (auto it = F.arg_begin(), ie = F.arg_end(); it != ie; ++it)
+                funargs.insert(&(*it));
             if (FunctionLatency.find(&F) != FunctionLatency.end())
             {
                 continue;
             }
             else
             {
+                /*
+                    In some cases, the LoopInfoPass can triger some bugs when the function defined in the standard library,
+                    like, std::sqrt, std::sin, std::cos, etc. So we need to bypass these functions.
+                */
                 if (F.getName().find("llvm.") != std::string::npos ||
-                    F.getName().find("HIPartitionMux") != std::string::npos)
+                    F.getName().find("HIPartitionMux") != std::string::npos || F.getName().find("sqrtf") != std::string::npos)
                 {
                     timingBase tmp(0, 0, 1, clock_period);
                     FunctionLatency[&F] = tmp;
@@ -132,7 +176,11 @@ void HI_NoDirectiveTimingResourceEvaluation::AnalyzeFunctions(Module &M)
                 all_processed = 0;
                 if (CheckDependencyFesilility(F))
                 {
-                    LAA = &getAnalysis<LoopAccessLegacyAnalysis>(F);
+                    /*
+                        In some cases, the LoopInfoPass can triger some bugs when the function defined in the standard library,
+                        like, std::sqrt, std::sin, std::cos, etc. So we need to bypass these functions.
+                    */
+                    llvm::errs() << F.getName().str() << "\n";
                     LI = &getAnalysis<LoopInfoWrapperPass>(F).getLoopInfo();
                     SE = &getAnalysis<ScalarEvolutionWrapperPass>(F).getSE();
                     getLoopBlockMap(&F);
@@ -172,13 +220,19 @@ void HI_NoDirectiveTimingResourceEvaluation::analyzeTopFunction(Module &M)
             printOut =
                 "Done latency evaluation of top function: [" + demangled_name +
                 "] and its latency is " + std::to_string(top_function_latency) +
+                validorinvalid(valid) +
                 " the state num is: " + std::to_string(state_total_num) +
                 " and its resource cost is [DSP=" + std::to_string(FunctionResource[&F].DSP) +
                 ", FF=" + std::to_string(FunctionResource[&F].FF + FF_needed_by_FSM) +
                 ", LUT=" + std::to_string(FunctionResource[&F].LUT + LUT_needed_by_FSM) +
                 ", BRAM=" + std::to_string(FunctionResource[&F].BRAM) + "]";
+            *Cycle_Result << std::to_string(top_function_latency) << "\n";
             *Evaluating_log << printOut << "\n";
-            print_info(printOut);
+
+            print_info("Done latency evaluation of top function: [" + demangled_name +
+                       "] and its latency is " + std::to_string(top_function_latency) +
+                       validorinvalid(valid) +
+                       " the state num is: " + std::to_string(state_total_num));
         }
     }
 }
@@ -197,7 +251,8 @@ void HI_NoDirectiveTimingResourceEvaluation::TraceMemoryDeclarationinModule(Modu
     {
         if (F.getName().find("llvm.") != std::string::npos ||
             F.getName().find("HIPartitionMux") !=
-                std::string::npos) // bypass the "llvm.xxx" functions..
+                std::string::npos ||
+            F.getName().find("sqrt") != std::string::npos) // bypass the "llvm.xxx" functions..
             continue;
         std::string mangled_name = F.getName().str();
         std::string demangled_name;
@@ -211,7 +266,9 @@ void HI_NoDirectiveTimingResourceEvaluation::TraceMemoryDeclarationinModule(Modu
             F.getName().find("HIPartitionMux") !=
                 std::string::npos) // bypass the "llvm.xxx" functions..
             continue;
-        AliasAnalysis &AA = getAnalysis<AAResultsWrapperPass>(F).getAAResults();
+        // Alias Analysis is a class of techniques which attempt to determine whether or not
+        // two pointers ever can point to the same object in memory.
+        // AliasAnalysis &AA = getAnalysis<AAResultsWrapperPass>(F).getAAResults();
     }
 }
 
@@ -233,7 +290,8 @@ int HI_NoDirectiveTimingResourceEvaluation::getTotalStateNum(Module &M)
     {
         if (F.getName().find("llvm.") != std::string::npos ||
             F.getName().find("HIPartitionMux") !=
-                std::string::npos) // bypass the "llvm.xxx" functions..
+                std::string::npos ||
+            F.getName().find("sqrt") != std::string::npos) // bypass the "llvm.xxx" functions..
             continue;
         BasicBlock *Func_Entry = &(F.getEntryBlock()); // get the entry of the function
         timingBase origin_path_in_F(0, 0, 1, clock_period);
@@ -246,9 +304,18 @@ int HI_NoDirectiveTimingResourceEvaluation::getTotalStateNum(Module &M)
     return state_total + 2; // TODO: check +2 is for function or module (reset/idle)
 }
 
+// I don't think this is a proper way to caculate LUT for FSM
 int HI_NoDirectiveTimingResourceEvaluation::LUT_for_FSM(int stateNum)
 {
     double x = stateNum;
     double y = -0.44444444444444475 * x * x + 10.555555555555559 * x - 14.11111111111112;
     return round(y);
+}
+
+std::string HI_NoDirectiveTimingResourceEvaluation::validorinvalid(bool valid)
+{
+    if (valid)
+        return " (valid result)";
+    else
+        return " (invalid result loop trip count unreadable)";
 }
