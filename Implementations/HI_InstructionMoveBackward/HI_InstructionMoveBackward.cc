@@ -1,4 +1,4 @@
-#include "HI_IntstructionMoveBackward.h"
+#include "HI_InstructionMoveBackward.h"
 #include "HI_print.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/IR/Function.h"
@@ -17,11 +17,11 @@
 
 using namespace llvm;
 
-bool HI_IntstructionMoveBackward::runOnFunction(
+bool HI_InstructionMoveBackward::runOnFunction(
     Function &F) // The runOnModule declaration will overide the virtual one in ModulePass, which
                  // will be executed for each Module.
 {
-    print_status("Running HI_IntstructionMoveBackward pass.");
+    print_status("Running HI_InstructionMoveBackward pass.");
     DominatorTree &DT = getAnalysis<DominatorTreeWrapperPass>().getDomTree();
     LoopInfo &LI = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
     bool changed = false;
@@ -116,11 +116,11 @@ bool HI_IntstructionMoveBackward::runOnFunction(
     return changed;
 }
 
-char HI_IntstructionMoveBackward::ID =
+char HI_InstructionMoveBackward::ID =
     0; // the ID for pass should be initialized but the value does not matter, since LLVM uses the
        // address of this variable as label instead of its value.
 
-void HI_IntstructionMoveBackward::getAnalysisUsage(AnalysisUsage &AU) const
+void HI_InstructionMoveBackward::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.addRequired<DominatorTreeWrapperPass>();
     AU.addRequired<LoopInfoWrapperPass>();
@@ -128,7 +128,7 @@ void HI_IntstructionMoveBackward::getAnalysisUsage(AnalysisUsage &AU) const
 }
 
 // print out the graph of dominator tree
-void HI_IntstructionMoveBackward::printDominatorTree(DominatorTree &DT)
+void HI_InstructionMoveBackward::printDominatorTree(DominatorTree &DT)
 {
     if (DEBUG)
         *BackwardLog << "\n\n\n\n\n Printing Dominator Graph:\n";
@@ -148,7 +148,7 @@ void HI_IntstructionMoveBackward::printDominatorTree(DominatorTree &DT)
 }
 
 // find the lowest unprocessed block in the dominator tree
-BasicBlock *HI_IntstructionMoveBackward::findUnprocessedLowestBlock(DominatorTree &DT)
+BasicBlock *HI_InstructionMoveBackward::findUnprocessedLowestBlock(DominatorTree &DT)
 {
     if (DEBUG)
         *BackwardLog << "findUnprocessedLowestBlock:\n";
@@ -177,7 +177,7 @@ BasicBlock *HI_IntstructionMoveBackward::findUnprocessedLowestBlock(DominatorTre
 
 // find the instructions independent with the PHI nodes
 std::vector<Instruction *>
-HI_IntstructionMoveBackward::getInstructions_PhiIndependent(BasicBlock *cur_block)
+HI_InstructionMoveBackward::getInstructions_PhiIndependent(BasicBlock *cur_block)
 {
     if (DEBUG)
         *BackwardLog << "\ngetInstructions_PhiIndependent\n";
@@ -273,7 +273,7 @@ HI_IntstructionMoveBackward::getInstructions_PhiIndependent(BasicBlock *cur_bloc
 }
 
 // move the Instruction to another block
-bool HI_IntstructionMoveBackward::transferInstructionTo(Instruction *I, BasicBlock *To_B)
+bool HI_InstructionMoveBackward::transferInstructionTo(Instruction *I, BasicBlock *To_B)
 {
     if (DEBUG)
         *BackwardLog << "moving instruction: " << *I << " from block: " << I->getParent()->getName()
@@ -283,7 +283,7 @@ bool HI_IntstructionMoveBackward::transferInstructionTo(Instruction *I, BasicBlo
     return true;
 }
 
-void HI_IntstructionMoveBackward::printFunction(Function *F)
+void HI_InstructionMoveBackward::printFunction(Function *F)
 {
     if (DEBUG)
         *BackwardLog << "\n\nThe Content of Function: " << F->getName() << " is \n"

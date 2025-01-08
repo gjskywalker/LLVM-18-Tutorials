@@ -52,10 +52,10 @@
 
 using namespace llvm;
 
-class HI_IntstructionMoveBackward : public FunctionPass
+class HI_InstructionMoveBackward : public FunctionPass
 {
 public:
-    HI_IntstructionMoveBackward(const char *BackwardLog_Name, bool DEBUG = 0) : FunctionPass(ID), DEBUG(DEBUG)
+    HI_InstructionMoveBackward(const char *BackwardLog_Name, bool DEBUG = 1) : FunctionPass(ID), DEBUG(DEBUG)
     {
         Instruction_Counter = 0;
         Function_Counter = 0;
@@ -66,7 +66,7 @@ public:
         tmp_stream = new raw_string_ostream(tmp_stream_str);
     } // define a pass, which can be inherited from ModulePass, LoopPass, FunctionPass and etc.
 
-    ~HI_IntstructionMoveBackward()
+    ~HI_InstructionMoveBackward()
     {
         for (auto it : Block_Successors)
         {
@@ -84,7 +84,7 @@ public:
 
     virtual bool doInitialization(llvm::Module &M)
     {
-        print_status("Initilizing HI_IntstructionMoveBackward pass.");
+        print_status("Initilizing HI_InstructionMoveBackward pass.");
         for (auto it : Block_Successors)
         {
             delete it.second;

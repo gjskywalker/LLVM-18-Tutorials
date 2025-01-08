@@ -68,7 +68,7 @@
 // #include "polly/LinkAllPasses.h"
 #include "HI_AggressiveLSR_MUL.h"
 #include "HI_HLSDuplicateInstRm.h"
-#include "HI_IntstructionMoveBackward.h"
+#include "HI_InstructionMoveBackward.h"
 #include "HI_LoopDependenceAnalysis.h"
 #include "HI_NoDirectiveTimingResourceEvaluation.h"
 #include "HI_Polly_Info.h"

@@ -10,8 +10,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -std=c++17")
 include_directories(${LLVM_INCLUDE_DIRS}) 
 add_definitions(${LLVM_DEFINITIONS}) 
 
-aux_source_directory(. DIR_HI_IntstructionMoveBackward_SRCS)
-add_library(HI_IntstructionMoveBackward ${DIR_HI_IntstructionMoveBackward_SRCS})
+aux_source_directory(. DIR_HI_InstructionMoveBackward_SRCS)
+add_library(HI_InstructionMoveBackward ${DIR_HI_InstructionMoveBackward_SRCS})
 
 
 # set(llvm_libs "")

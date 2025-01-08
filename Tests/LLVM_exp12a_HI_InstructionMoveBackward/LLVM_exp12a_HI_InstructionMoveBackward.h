@@ -5,6 +5,8 @@
 #include "HI_SeparateConstOffsetFromGEP.h"
 #include "HI_SysExec.h"
 #include "HI_print.h"
+#include "HI_InstructionMoveBackward.h"
+
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SetOperations.h"
@@ -65,7 +67,6 @@
 #include <stdlib.h>
 #include <string>
 // #include "polly/LinkAllPasses.h"
-#include "HI_IntstructionMoveBackward.h"
 #include "HI_LoopDependenceAnalysis.h"
 #include "HI_NoDirectiveTimingResourceEvaluation.h"
 #include "HI_Polly_Info.h"

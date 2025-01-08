@@ -1,3 +1,5 @@
+# HI_AggressiveLSR_MUL
+
 The HI_AggressiveLSR_MUL pass is used to remove unnecessary multiplications 
 which can be transformed into addition operations if they are actually related 
 to loop induction variables. These multiplications are usally the array index

@@ -1,12 +1,9 @@
-The HI_IntstructionMoveBackward pass is tested by LLVM_exp12a_HI_InstructionMoveBackward.
+# HI_InstructionMoveBackward
 
-The pass is used to move the instructions from the original block to the dominator block if possible, so in HLS, the parallelism can be improved.
+The HI_InstructionMoveBackward pass is used to move the instructions from the original block to the dominator block if possible, so in HLS, the parallelism can be improved.
 
 This pass is based on the DominatorTreeWrapperPass in LLVM. As for the problem, what is dominator tree, please refer to https://en.wikipedia.org/wiki/Dominator_(graph_theory).
 
-The test can be run with the following command:
-
-      ./LLVM_expxxxxx <C/C++ file> <Top_Function_Name> <Config_File_Path>
 
 the rought implementation idea is shown below:
 
