@@ -140,12 +140,12 @@ bool HI_AggressiveLSR_MUL::LSR_Add(Instruction *I, ScalarEvolution *SE)
             {
                 if (const SCEVConstant *step_V = dyn_cast<SCEVConstant>(SARE->getOperand(1)))
                 {
-                    // int start_val = start_V->getAPInt().getSExtValue();
-                    // int step_val = step_V->getAPInt().getSExtValue();
-                    // APInt start_val_APInt = start_V->getAPInt();
-                    // APInt step_val_APInt = step_V->getAPInt();
-                    // LSR_Process(I, start_val_APInt, step_val_APInt);
-                    // return true;
+                    int start_val = start_V->getAPInt().getSExtValue();
+                    int step_val = step_V->getAPInt().getSExtValue();
+                    APInt start_val_APInt = start_V->getAPInt();
+                    APInt step_val_APInt = step_V->getAPInt();
+                    LSR_Process(I, start_val_APInt, step_val_APInt);
+                    return true;
                 }
             }
         }
@@ -159,12 +159,12 @@ bool HI_AggressiveLSR_MUL::LSR_Add(Instruction *I, ScalarEvolution *SE)
             {
                 if (const SCEVConstant *step_V = dyn_cast<SCEVConstant>(SARE->getOperand(1)))
                 {
-                    // int start_val = start_V->getAPInt().getSExtValue();
-                    // int step_val = step_V->getAPInt().getSExtValue();
-                    // APInt start_val_APInt = start_V->getAPInt();
-                    // APInt step_val_APInt = step_V->getAPInt();
-                    // LSR_Process(I, start_val_APInt, step_val_APInt);
-                    // return true;
+                    int start_val = start_V->getAPInt().getSExtValue();
+                    int step_val = step_V->getAPInt().getSExtValue();
+                    APInt start_val_APInt = start_V->getAPInt();
+                    APInt step_val_APInt = step_V->getAPInt();
+                    LSR_Process(I, start_val_APInt, step_val_APInt);
+                    return true;
                 }
             }
         }

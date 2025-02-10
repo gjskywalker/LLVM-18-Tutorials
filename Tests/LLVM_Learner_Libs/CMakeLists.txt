@@ -36,7 +36,7 @@ include_directories(./ ../../Implementations/
 ../../Implementations/HI_SeparateConstOffsetFromGEP
 ../../Implementations/HI_APIntSrcAnalysis
 ../../Implementations/HI_NoDirectiveTimingResourceEvaluation
-../../Implementations/HI_IntstructionMoveBackward
+../../Implementations/HI_InstructionMoveBackward
 ../../Implementations/HI_HLSDuplicateInstRm
 ../../Implementations/HI_AggressiveLSR_MUL
 ../../Implementations/HI_ArrayAccessPattern
@@ -61,5 +61,5 @@ include_directories(./ ../../Implementations/
 ../../Implementations/HI_FaddOrderOpt
 )
 
-add_subdirectory(../../Implementations/HI_InstructionMoveBackward ./building)
+add_subdirectory(../../Implementations/HI_HLSDuplicateInstRm ./building)
 
