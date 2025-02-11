@@ -252,25 +252,70 @@ void HI_ArrayAccessPattern::TraceAccessForTarget(Value *cur_node)
     ArrayValueVisited.erase(cur_node);
 }
 
+// HI_ArrayAccessPattern::ArrayInfo HI_ArrayAccessPattern::getArrayInfo(Value *target)
+// {
+
+//     PointerType *ptr_type = dyn_cast<PointerType>(target->getType());
+//     *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: ["
+//               << *ptr_type->getArrayElementType() << "]\n";
+//     Type *tmp_type = ptr_type->getArrayElementType();
+//     int total_ele = 1;
+//     int tmp_dim_size[10];
+//     int num_dims = 0;
+//     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
+//     {
+//         *ArrayLog << "----- element type of : " << *tmp_type << " is "
+//                   << *(array_T->getArrayElementType()) << " and the number of its elements is "
+//                   << (array_T->getNumElements()) << "\n";
+//         total_ele *= (array_T->getNumElements());
+//         tmp_dim_size[num_dims] = (array_T->getNumElements());
+//         num_dims++;
+//         tmp_type = array_T->getArrayElementType();
+//     }
+
+//     ArrayInfo res_array_info;
+//     res_array_info.num_dims = num_dims;
+//     for (int i = 0; i < num_dims; i++)
+//     {
+//         res_array_info.dim_size[i] = tmp_dim_size[num_dims - i - 1];
+//     }
+
+//     res_array_info.sub_element_num[0] = 1;
+//     for (int i = 1; i < num_dims; i++)
+//     {
+//         res_array_info.sub_element_num[i] =
+//             res_array_info.sub_element_num[i - 1] * res_array_info.dim_size[i - 1];
+//     }
+
+//     if (auto arg_v = dyn_cast<Argument>(target))
+//     {
+//         res_array_info.sub_element_num[num_dims] =
+//             res_array_info.sub_element_num[num_dims - 1] * res_array_info.dim_size[num_dims - 1];
+//         res_array_info.dim_size[num_dims] = 100000000; // set to nearly infinite
+//         res_array_info.num_dims++;
+//         res_array_info.isArgument = 1;
+//     }
+
+//     res_array_info.elementType = tmp_type;
+//     res_array_info.target = target;
+//     return res_array_info;
+// }
+
 HI_ArrayAccessPattern::ArrayInfo HI_ArrayAccessPattern::getArrayInfo(Value *target)
 {
-
-    PointerType *ptr_type = dyn_cast<PointerType>(target->getType());
-    *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: ["
-              << *ptr_type->getArrayElementType() << "]\n";
-    Type *tmp_type = ptr_type->getArrayElementType();
+    Type *tmp_type = target->getType();
     int total_ele = 1;
     int tmp_dim_size[10];
     int num_dims = 0;
     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
     {
         *ArrayLog << "----- element type of : " << *tmp_type << " is "
-                  << *(array_T->getArrayElementType()) << " and the number of its elements is "
+                  << *(array_T->getElementType()) << " and the number of its elements is "
                   << (array_T->getNumElements()) << "\n";
         total_ele *= (array_T->getNumElements());
         tmp_dim_size[num_dims] = (array_T->getNumElements());
         num_dims++;
-        tmp_type = array_T->getArrayElementType();
+        tmp_type = array_T->getElementType();
     }
 
     ArrayInfo res_array_info;
@@ -301,7 +346,6 @@ HI_ArrayAccessPattern::ArrayInfo HI_ArrayAccessPattern::getArrayInfo(Value *targ
     return res_array_info;
 }
 
-// find the array declaration in the function F and trace the accesses to them
 void HI_ArrayAccessPattern::findMemoryDeclarationin(Function *F, bool isTopFunction)
 {
     *ArrayLog << "\n\nchecking the BRAM information in Function: " << F->getName() << "\n";
@@ -313,14 +357,10 @@ void HI_ArrayAccessPattern::findMemoryDeclarationin(Function *F, bool isTopFunct
                   << "\n";
         for (auto it = F->arg_begin(), ie = F->arg_end(); it != ie; ++it)
         {
-            if (it->getType()->isPointerTy())
+            if (it->getType()->isArrayTy())
             {
-                PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                if (tmp_PtrType->getArrayElementType()->isArrayTy())
-                {
-                    Target2ArrayInfo[it] = getArrayInfo(it);
-                    *ArrayLog << Target2ArrayInfo[it] << "\n";
-                }
+                Target2ArrayInfo[it] = getArrayInfo(it);
+                *ArrayLog << Target2ArrayInfo[it] << "\n";
             }
         }
     }
@@ -344,6 +384,50 @@ void HI_ArrayAccessPattern::findMemoryDeclarationin(Function *F, bool isTopFunct
     }
     ArrayLog->flush();
 }
+
+// find the array declaration in the function F and trace the accesses to them
+// void HI_ArrayAccessPattern::findMemoryDeclarationin(Function *F, bool isTopFunction)
+// {
+//     *ArrayLog << "\n\nchecking the BRAM information in Function: " << F->getName() << "\n";
+
+//     // for top function in HLS, arrays in interface may involve BRAM
+//     if (isTopFunction)
+//     {
+//         *ArrayLog << " is Top function "
+//                   << "\n";
+//         for (auto it = F->arg_begin(), ie = F->arg_end(); it != ie; ++it)
+//         {
+//             if (it->getType()->isPointerTy())
+//             {
+//                 PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
+//                 if (tmp_PtrType->getArrayElementType()->isArrayTy())
+//                 {
+//                     Target2ArrayInfo[it] = getArrayInfo(it);
+//                     *ArrayLog << Target2ArrayInfo[it] << "\n";
+//                 }
+//             }
+//         }
+//     }
+//     else
+//     {
+//         *ArrayLog << " is not top function "
+//                   << "\n";
+//     }
+
+//     // for general function in HLS, arrays in functions are usually declared with alloca instruction
+//     for (auto &B : *F)
+//     {
+//         for (auto &I : B)
+//         {
+//             if (AllocaInst *allocI = dyn_cast<AllocaInst>(&I))
+//             {
+//                 Target2ArrayInfo[allocI] = getArrayInfo(allocI);
+//                 *ArrayLog << Target2ArrayInfo[allocI] << "\n";
+//             }
+//         }
+//     }
+//     ArrayLog->flush();
+// }
 
 std::string HI_ArrayAccessPattern::demangleFunctionName(std::string mangled_name)
 {

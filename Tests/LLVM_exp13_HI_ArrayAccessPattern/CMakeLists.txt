@@ -33,7 +33,7 @@ include_directories(./
 ../../Implementations/HI_VarWidthReduce
 ../../Implementations/HI_SeparateConstOffsetFromGEP
 ../../Implementations/HI_NoDirectiveTimingResourceEvaluation
-../../Implementations/HI_IntstructionMoveBackward
+../../Implementations/HI_InstructionMoveBackward
 ../../Implementations/HI_HLSDuplicateInstRm
 ../../Implementations/HI_AggressiveLSR_MUL
 ../../Implementations/HI_ArrayAccessPattern
@@ -65,7 +65,7 @@ HI_DuplicateInstRm
 HI_VarWidthReduce 
 HI_SeparateConstOffsetFromGEP
 HI_NoDirectiveTimingResourceEvaluation
-HI_IntstructionMoveBackward
+HI_InstructionMoveBackward
 HI_HLSDuplicateInstRm
 HI_AggressiveLSR_MUL
 HI_ArrayAccessPattern

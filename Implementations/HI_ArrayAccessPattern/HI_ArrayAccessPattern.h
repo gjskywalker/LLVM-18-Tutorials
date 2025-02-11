@@ -10,8 +10,8 @@
 #include "llvm/ADT/EquivalenceClasses.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/Hashing.h"
-#include "llvm/ADT/None.h"
-#include "llvm/ADT/Optional.h"
+// #include "llvm/ADT/None.h"
+// #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/ScopeExit.h"
@@ -202,6 +202,7 @@ public:
                 dim_size[i] = input.dim_size[i];
             for (int i = 0; i < num_dims; i++)
                 sub_element_num[i] = input.sub_element_num[i];
+            return *this;
         }
     };
 
@@ -273,6 +274,7 @@ public:
                 sub_element_num[i] = input.sub_element_num[i];
             for (int i = 0; i < num_dims; i++)
                 index[i] = input.index[i];
+            return *this;
         }
         HI_AccessInfo &operator=(const ArrayInfo &input)
         {
@@ -290,6 +292,7 @@ public:
                 dim_size[i] = input.dim_size[i];
             for (int i = 0; i < num_dims; i++)
                 sub_element_num[i] = input.sub_element_num[i];
+            return *this;
         }
     };
 

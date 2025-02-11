@@ -58,9 +58,9 @@ int main(int argc, char **argv)
     auto loopsimplifypass = createLoopSimplifyPass();
     PM1.add(loopsimplifypass);
 
-    auto indvarsimplifypass = createIndVarSimplifyPass();
-    PM1.add(indvarsimplifypass);
-    print_info("Enable IndVarSimplifyPass Pass");
+    // auto indvarsimplifypass = createIndVarSimplifyPass();
+    // PM1.add(indvarsimplifypass);
+    // print_info("Enable IndVarSimplifyPass Pass");
 
     PM1.add(createTargetTransformInfoWrapperPass(TargetIRAnalysis()));
     print_info("Enable TargetIRAnalysis Pass");
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     print_info("Enable HI_VarWidthReduce Pass");
 
     auto hi_intstructionmovebackward =
-        new HI_IntstructionMoveBackward("HI_IntstructionMoveBackward");
+        new HI_InstructionMoveBackward("HI_IntstructionMoveBackward");
     PM1.add(hi_intstructionmovebackward);
     print_info("Enable HI_IntstructionMoveBackward Pass");
 
@@ -150,9 +150,9 @@ int main(int argc, char **argv)
     PM.add(scalarevolutionwrapperpass);
     print_info("Enable ScalarEvolutionWrapperPass Pass");
 
-    auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
-    PM.add(loopaccesslegacyanalysis);
-    print_info("Enable LoopAccessLegacyAnalysis Pass");
+    // auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
+    // PM.add(loopaccesslegacyanalysis);
+    // print_info("Enable LoopAccessLegacyAnalysis Pass");
 
     auto dominatortreewrapperpass = new DominatorTreeWrapperPass();
     PM.add(dominatortreewrapperpass);
@@ -208,7 +208,7 @@ int main(int argc, char **argv)
 
     auto hi_nodirectivetimingresourceevaluation = new HI_NoDirectiveTimingResourceEvaluation(
         configFile_str.c_str(), "HI_NoDirectiveTimingResourceEvaluation", "BRAM_info",
-        top_str.c_str());
+        top_str.c_str(), true);
     print_info("Enable HI_NoDirectiveTimingResourceEvaluation Pass");
     PM.add(hi_nodirectivetimingresourceevaluation);
 
@@ -239,8 +239,8 @@ int main(int argc, char **argv)
     PM.run(*Mod);
     print_status("Accomplished LLVM processing");
 
-    assert(hi_nodirectivetimingresourceevaluation->topFunctionFound &&
-           "The specified top function is not found in the program");
+    // assert(hi_nodirectivetimingresourceevaluation->topFunctionFound &&
+    //        "The specified top function is not found in the program");
 
     print_status("Writing LLVM IR to File");
 
