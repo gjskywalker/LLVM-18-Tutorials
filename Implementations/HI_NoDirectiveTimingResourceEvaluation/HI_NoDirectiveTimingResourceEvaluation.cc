@@ -19,10 +19,12 @@ bool HI_NoDirectiveTimingResourceEvaluation::runOnModule(
     Module &M) // The runOnFunction declaration will overide the virtual one in ModulePass, which
                // will be executed for each Function.
 {
-
-    *Evaluating_log << " ======================= the module begin =======================\n";
-    *Evaluating_log << M;
-    *Evaluating_log << " ======================= the module end =======================\n";
+    if (verbose)
+    {
+        *Evaluating_log << " ======================= the module begin =======================\n";
+        *Evaluating_log << M;
+        *Evaluating_log << " ======================= the module end =======================\n";
+    }
 
     TraceMemoryDeclarationinModule(M);
 
@@ -34,7 +36,11 @@ bool HI_NoDirectiveTimingResourceEvaluation::runOnModule(
 
     getRAMResult();
 
-    *Evaluating_log << " =======================  the information of FF_Assign ====================\n";
+    if (verbose)
+    {
+        *Evaluating_log << " =======================  the information of FF_Assign ====================\n";
+    }
+
     for (auto *it : Instruction_FFAssigned)
     {
         *Evaluating_log << *it << "\n";
