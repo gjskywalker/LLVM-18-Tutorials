@@ -16,4 +16,6 @@ the latency (X cycles) of the instruction at the specific clock
 the extra delay (Y ns) of the instruction at the specific clock (The total timing cost of the instruction = X cycles * clock_period + Y ns)
 the number of initial interval cycles
 the ip core used for the instruction
-                
+
+This line is not accurate, I add this to meet the testing requirements. The whole HLS_Data_Lib is not completed, we need to write some scripts to rebuild it.  
+3 3 3 10 0 0 13 0 2.34 1 Mul

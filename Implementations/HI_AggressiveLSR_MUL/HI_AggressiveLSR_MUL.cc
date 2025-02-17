@@ -19,6 +19,19 @@ using namespace llvm;
 bool HI_AggressiveLSR_MUL::runOnFunction(Function &F) // The runOnModule declaration will overide the virtual one in
                                                       // ModulePass, which will be executed for each Module.
 {
+    if (F.getName().find("llvm.") != std::string::npos || F.getName().find("HIPartitionMux") != std::string::npos || F.getName().find("sqrt") != std::string::npos) // bypass the "llvm.xxx" functions..
+    {
+        return false;
+    }
+    if (DEBUG)
+    {
+        *AggrLSRLog << "Running HI_AggressiveLSR_MUL pass on Function" << F.getName() << "\n";
+        *AggrLSRLog << "-------------------------------------------------"
+                    << "\n\n\n\n";
+        *AggrLSRLog << F << "\n";
+        *AggrLSRLog << "-------------------------------------------------"
+                    << "\n\n\n\n";
+    }
     print_status("Running HI_AggressiveLSR_MUL pass.");
     ScalarEvolution &SE = getAnalysis<ScalarEvolutionWrapperPass>().getSE();
     bool changed = false;
@@ -31,10 +44,11 @@ bool HI_AggressiveLSR_MUL::runOnFunction(Function &F) // The runOnModule declara
         ActionTaken = false;
         for (auto &B : F)
         {
-            for (auto &I : B)
+            for (auto it = B.begin(), end = B.end(); it != end; ++it)
             {
+                Instruction &I = *it;
                 ActionTaken = LSR_Mul(&I, &SE);
-                LSR_Add(&I, &SE);
+                // LSR_Add(&I, &SE);
                 changed |= ActionTaken;
                 if (ActionTaken)
                     break;
@@ -44,7 +58,15 @@ bool HI_AggressiveLSR_MUL::runOnFunction(Function &F) // The runOnModule declara
         }
     }
 
-    // return false;
+    if (DEBUG)
+    {
+        *AggrLSRLog << "After running HI_AggressiveLSR_MUL pass on Function" << F.getName() << "\n";
+        *AggrLSRLog << "-------------------------------------------------"
+                    << "\n\n\n\n";
+        *AggrLSRLog << F << "\n";
+        *AggrLSRLog << "-------------------------------------------------"
+                    << "\n\n\n\n";
+    }
     return changed;
 }
 
@@ -189,7 +211,8 @@ void HI_AggressiveLSR_MUL::LSR_Process(Instruction *Mul_I, APInt start_val, APIn
     LSR_PHI_Name += ".PHI";
     std::string LSR_Add_Name = Mul_I->getName().str();
     LSR_Add_Name += ".Add";
-    IRBuilder<> Builder(Mul_I->getParent()->getFirstNonPHI());
+    IRBuilder<> Builder(PHI_I->getParent()->getFirstNonPHI());
+    // IRBuilder<> Builder(Mul_I->getParent()->getFirstNonPHI());
     // BasicBlock *CurBlock = Mul_I->getParent();
 
     // 2.  insert a new PHI (carefully select the initial constant)
@@ -211,6 +234,8 @@ void HI_AggressiveLSR_MUL::LSR_Process(Instruction *Mul_I, APInt start_val, APIn
     {
         if (auto opI_val = dyn_cast<Instruction>(PHI_I->getOperand(i)))
         {
+            // Add_I_for_LSR_Mul is created in the same block as PHI_I_for_LSR_Mul, so there is no need to herit the old incoming block
+            // PHI_I_for_LSR_Mul->addIncoming(Add_I_for_LSR_Mul, PHI_I->getParent());
             PHI_I_for_LSR_Mul->addIncoming(Add_I_for_LSR_Mul, PHI_I->getIncomingBlock(i));
         }
     }

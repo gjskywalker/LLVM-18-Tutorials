@@ -205,7 +205,7 @@ HI_InstructionMoveBackward::getInstructions_PhiIndependent(BasicBlock *cur_block
             }
             if (auto callI = dyn_cast<CallInst>(&I))
             {
-                for (int i = 0; i < callI->getNumOperands(); i++)
+                for (int i = 0; i < callI->arg_size(); i++)
                 {
                     if (auto tmpI = dyn_cast<Instruction>(callI->getArgOperand(i)))
                     {
@@ -219,7 +219,7 @@ HI_InstructionMoveBackward::getInstructions_PhiIndependent(BasicBlock *cur_block
                         }
                     }
                 }
-                for (int i = 0; i < callI->getNumOperands(); i++)
+                for (int i = 0; i < callI->arg_size(); i++)
                 {
                     if (callI->getArgOperand(i)->getType()->isPointerTy())
                     {

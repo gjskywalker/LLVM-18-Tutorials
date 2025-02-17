@@ -10,8 +10,9 @@
 #include "llvm/ADT/EquivalenceClasses.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/Hashing.h"
-#include "llvm/ADT/None.h"
-#include "llvm/ADT/Optional.h"
+#include <optional>
+// #include "llvm/ADT/None.h"
+// #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/ScopeExit.h"
@@ -155,7 +156,7 @@ public:
     bool checkOperandsAreAddress(Instruction *I);
     bool checkUseInMemoryAccess(Instruction *I);
     void From_SelectAccess_To_AccessSelect(Instruction *I);
-    Instruction *getAccessInst(Instruction *I);
+    std::optional<Instruction *> getAccessInst(Instruction *I);
 
     int callCounter;
     int Instruction_Counter;

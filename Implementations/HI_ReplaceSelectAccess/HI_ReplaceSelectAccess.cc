@@ -115,7 +115,7 @@ bool HI_ReplaceSelectAccess::checkUseInMemoryAccess(Instruction *I)
     }
 }
 
-Instruction *HI_ReplaceSelectAccess::getAccessInst(Instruction *I)
+std::optional<Instruction *> HI_ReplaceSelectAccess::getAccessInst(Instruction *I)
 {
     assert(I->hasOneUse()); // currently, we only consider the 2-1 select for
 
@@ -129,6 +129,7 @@ Instruction *HI_ReplaceSelectAccess::getAccessInst(Instruction *I)
     {
         return StoreI;
     }
+    return std::nullopt;
 }
 
 void HI_ReplaceSelectAccess::From_SelectAccess_To_AccessSelect(Instruction *I)
@@ -139,7 +140,8 @@ void HI_ReplaceSelectAccess::From_SelectAccess_To_AccessSelect(Instruction *I)
 
     assert(selectI && "The instruction has to be selectInst for this process.");
 
-    Instruction *accessI = getAccessInst(I);
+    std::optional<Instruction *> accessI = getAccessInst(I);
+    // Instruction *accessI = getAccessInst(I);
     IRBuilder<> Builder(I->getNextNode());
     std::string op0str = I->getName().str();
     op0str += ".access0";
@@ -149,7 +151,7 @@ void HI_ReplaceSelectAccess::From_SelectAccess_To_AccessSelect(Instruction *I)
     selectNewStr += ".accessSelect";
 
     Value *ResultPtr = nullptr;
-    if (accessI->getOpcode() == Instruction::Load)
+    if ((*accessI)->getOpcode() == Instruction::Load)
     {
         Type *Ty;
         Value *op0 = Builder.CreateLoad(Ty, selectI->getOperand(1), op0str.c_str());
@@ -162,8 +164,8 @@ void HI_ReplaceSelectAccess::From_SelectAccess_To_AccessSelect(Instruction *I)
             Builder.CreateSelect(selectI->getOperand(0), op0, op1, selectNewStr.c_str());
         if (DEBUG)
             *ReplaceSelectAccess_Log << "newSelect:" << *newSelect << "\n";
-        accessI->replaceAllUsesWith(newSelect);
-        accessI->eraseFromParent();
+        (*accessI)->replaceAllUsesWith(newSelect);
+        (*accessI)->eraseFromParent();
         selectI->eraseFromParent();
     }
 }

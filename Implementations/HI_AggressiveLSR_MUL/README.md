@@ -13,7 +13,7 @@ variables.
 example:
 
 --------------------------------------------------------------
-from 
+from
 --------------------------------------------------------------
 for.cond31.preheader:                             ; preds = %for.inc62, %for.cond31.preheader.preheader
   %HI.lsr.iv1new26 = phi i9 [ 0, %for.cond31.preheader.preheader ], [ %HI.lsr.iv.next2new49, %for.inc62 ]
@@ -39,4 +39,4 @@ for.cond31.preheader:                             ; preds = %for.inc62, %for.con
   %HI.exitcond107new50 = icmp eq i5 %HI.indvars.iv.next106new48, -16
   br label %for.body33
 
-  ---------------------------------------------------
+--------------------------------------------------------------

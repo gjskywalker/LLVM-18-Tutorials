@@ -12,8 +12,8 @@
       ],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp13_HI_ArrayAccessPattern/build",
-      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp13_HI_ArrayAccessPattern/build/LLVM_exp13_HI_ArrayAccessPattern",
+      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp12c_HI_AggressiveLSR_MUL/build",
+      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp12c_HI_AggressiveLSR_MUL/build/LLVM_exp12c_HI_AggressiveLSR_MUL",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

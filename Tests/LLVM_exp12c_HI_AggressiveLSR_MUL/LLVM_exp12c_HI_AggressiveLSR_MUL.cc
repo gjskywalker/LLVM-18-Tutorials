@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     // Compile the source code into IR and Parse the input LLVM IR file into a module
     SMDiagnostic Err;
     LLVMContext Context;
-    std::string cmd_str = "clang -O1 -emit-llvm -S " + std::string(argv[1]) + " -o top.bc 2>&1";
+    std::string cmd_str = "clang -O1 -emit-llvm -S -g " + std::string(argv[1]) + " -o top.bc 2>&1";
     std::string top_str = std::string(argv[2]);
     std::string configFile_str = std::string(argv[3]);
     print_cmd(cmd_str.c_str());
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
     PM1.add(hi_duplicateinstrm);
     print_info("Enable HI_DuplicateInstRm Pass");
 
-    auto hi_aggressivelsr_mul = new HI_AggressiveLSR_MUL("AggressiveLSR");
+    auto hi_aggressivelsr_mul = new HI_AggressiveLSR_MUL("AggressiveLSR", true);
     PM.add(hi_aggressivelsr_mul);
     print_info("Enable HI_AggressiveLSR_MUL Pass");
 
@@ -96,10 +96,10 @@ int main(int argc, char **argv)
     PM1.add(hi_varwidthreduce);
     print_info("Enable HI_VarWidthReduce Pass");
 
-    auto hi_intstructionmovebackward =
-        new HI_InstructionMoveBackward("HI_IntstructionMoveBackward");
-    PM1.add(hi_intstructionmovebackward);
-    print_info("Enable HI_IntstructionMoveBackward Pass");
+    auto hi_instructionmovebackward =
+        new HI_InstructionMoveBackward("HI_InstructionMoveBackward");
+    PM1.add(hi_instructionmovebackward);
+    print_info("Enable HI_InstructionMoveBackward Pass");
 
     // don't remove chained operations
     auto hi_hlsduplicateinstrm = new HI_HLSDuplicateInstRm("HLSrmInsts");
