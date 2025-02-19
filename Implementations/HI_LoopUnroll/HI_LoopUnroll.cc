@@ -18,9 +18,9 @@ LoopUnrollResult HI_LoopUnroll::tryToUnrollLoop(Loop *L, DominatorTree &DT, Loop
                                                 const TargetTransformInfo &TTI, AssumptionCache &AC,
                                                 OptimizationRemarkEmitter &ORE, bool PreserveLCSSA, int OptLevel,
                                                 bool OnlyWhenForced, unsigned int ProvidedCount,
-                                                Optional<unsigned> ProvidedThreshold,
-                                                Optional<bool> ProvidedAllowPartial, Optional<bool> ProvidedRuntime,
-                                                Optional<bool> ProvidedUpperBound, Optional<bool> ProvidedAllowPeeling)
+                                                std::optional<unsigned> ProvidedThreshold,
+                                                std::optional<bool> ProvidedAllowPartial, std::optional<bool> ProvidedRuntime,
+                                                std::optional<bool> ProvidedUpperBound, std::optional<bool> ProvidedAllowPeeling)
 {
 
     (*LoopUnrollLog << "Loop Unrolling: F[" << L->getHeader()->getParent()->getName() << "] Loop %"
@@ -45,7 +45,7 @@ LoopUnrollResult HI_LoopUnroll::tryToUnrollLoop(Loop *L, DominatorTree &DT, Loop
     TargetTransformInfo::UnrollingPreferences UP = gatherUnrollingPreferences(
         L, SE, TTI, nullptr, nullptr, ORE, OptLevel, ProvidedThreshold, ProvidedCount, ProvidedAllowPartial, ProvidedRuntime,
         ProvidedUpperBound,
-        None); // /*ProvidedAllowProfileBasedPeeling*/);//, ProvidedFullUnrollMaxCount);
+        std::nullopt); // /*ProvidedAllowProfileBasedPeeling*/);//, ProvidedFullUnrollMaxCount);
 
     // Exit early if unrolling is disabled.
     if (UP.Threshold == 0 && (!UP.Partial || UP.PartialThreshold == 0))
@@ -180,19 +180,21 @@ LoopUnrollResult HI_LoopUnroll::tryToUnrollLoop(Loop *L, DominatorTree &DT, Loop
     {
         *LoopUnrollLog << "\n\n Loop Unroll remainder \n\n"
                        << *RemainderLoop << "\n";
-        Optional<MDNode *> RemainderLoopID =
+        std::optional<MDNode *> RemainderLoopID =
             makeFollowupLoopID(OrigLoopID, {LLVMLoopUnrollFollowupAll, LLVMLoopUnrollFollowupRemainder});
-        if (RemainderLoopID.hasValue())
-            RemainderLoop->setLoopID(RemainderLoopID.getValue());
+        if (RemainderLoopID.has_value())
+            RemainderLoop->setLoopID(*RemainderLoopID);
+        // RemainderLoop->setLoopID(RemainderLoopID.getValue());
     }
 
     if (UnrollResult != LoopUnrollResult::FullyUnrolled)
     {
-        Optional<MDNode *> NewLoopID =
+        std::optional<MDNode *> NewLoopID =
             makeFollowupLoopID(OrigLoopID, {LLVMLoopUnrollFollowupAll, LLVMLoopUnrollFollowupUnrolled});
-        if (NewLoopID.hasValue())
+        if (NewLoopID.has_value())
         {
-            L->setLoopID(NewLoopID.getValue());
+            L->setLoopID(*NewLoopID);
+            // L->setLoopID(*NewLoopID.getValue());
 
             // Do not setLoopAlreadyUnrolled if loop attributes have been specified
             // explicitly.
@@ -260,6 +262,21 @@ bool HI_LoopUnroll::runOnLoop(Loop *L, LPPassManager &LPM)
         LPM.markLoopAsDeleted(*L);
 
     return Result != LoopUnrollResult::Unmodified;
+}
+
+void HI_LoopUnroll::getAnalysisUsage(AnalysisUsage &AU) const
+{
+    AU.setPreservesAll();
+    AU.addRequired<DominatorTreeWrapperPass>();
+    AU.addRequired<LoopInfoWrapperPass>();
+    AU.addRequired<ScalarEvolutionWrapperPass>();
+    AU.addRequired<TargetTransformInfoWrapperPass>();
+    AU.addRequired<AssumptionCacheTracker>();
+    AU.addPreserved<LoopInfoWrapperPass>();
+    AU.addPreserved<DominatorTreeWrapperPass>();
+    AU.addPreserved<ScalarEvolutionWrapperPass>();
+    AU.addPreserved<AssumptionCacheTracker>();
+    AU.addPreserved<TargetTransformInfoWrapperPass>();
 }
 
 char HI_LoopUnroll::ID = 0; // the ID for pass should be initialized but the value does not matter, since LLVM uses the

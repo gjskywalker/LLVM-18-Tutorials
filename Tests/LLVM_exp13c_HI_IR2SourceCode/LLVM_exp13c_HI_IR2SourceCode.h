@@ -6,7 +6,7 @@
 #include "HI_FunctionInstantiation.h"
 #include "HI_HLSDuplicateInstRm.h"
 #include "HI_IR2SourceCode.h"
-#include "HI_IntstructionMoveBackward.h"
+#include "HI_InstructionMoveBackward.h"
 #include "HI_LoopDependenceAnalysis.h"
 #include "HI_LoopInFormationCollect.h"
 #include "HI_ReplaceSelectAccess.h"

@@ -77,9 +77,9 @@ int main(int argc, char **argv)
     auto loopsimplifypass = createLoopSimplifyPass();
     PM1.add(loopsimplifypass);
 
-    auto indvarsimplifypass = createIndVarSimplifyPass();
-    PM1.add(indvarsimplifypass);
-    print_info("Enable IndVarSimplifyPass Pass");
+    // auto indvarsimplifypass = createIndVarSimplifyPass();
+    // PM1.add(indvarsimplifypass);
+    // print_info("Enable IndVarSimplifyPass Pass");
 
     PM1.add(createTargetTransformInfoWrapperPass(TargetIRAnalysis()));
     print_info("Enable TargetIRAnalysis Pass");
@@ -115,8 +115,8 @@ int main(int argc, char **argv)
     //                 Optional<unsigned> Count = None,
 
     auto hi_loopunroll = new HI_LoopUnroll(IRLoop2LoopLabel, LoopLabel2UnrollFactor, 1, false,
-                                           None); //"HI_LoopUnroll"
-    PM1.add(hi_loopunroll);
+                                           std::nullopt); //"HI_LoopUnroll"
+    PM.add(hi_loopunroll);
     print_info("Enable HI_LoopUnroll Pass");
 
     // auto lazyvalueinfowrapperpass = new LazyValueInfoWrapperPass();
@@ -127,10 +127,10 @@ int main(int argc, char **argv)
     PM1.add(hi_varwidthreduce);
     print_info("Enable HI_VarWidthReduce Pass");
 
-    auto hi_intstructionmovebackward =
-        new HI_IntstructionMoveBackward("HI_IntstructionMoveBackward");
-    PM1.add(hi_intstructionmovebackward);
-    print_info("Enable HI_IntstructionMoveBackward Pass");
+    auto hi_instructionmovebackward =
+        new HI_InstructionMoveBackward("HI_instructionMoveBackward");
+    PM1.add(hi_instructionmovebackward);
+    print_info("Enable HI_instructionMoveBackward Pass");
 
     // don't remove chained operations
     auto hi_hlsduplicateinstrm = new HI_HLSDuplicateInstRm("HLSrmInsts");
@@ -192,9 +192,9 @@ int main(int argc, char **argv)
     PM.add(scalarevolutionwrapperpass);
     print_info("Enable ScalarEvolutionWrapperPass Pass");
 
-    auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
-    PM.add(loopaccesslegacyanalysis);
-    print_info("Enable LoopAccessLegacyAnalysis Pass");
+    // auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
+    // PM.add(loopaccesslegacyanalysis);
+    // print_info("Enable LoopAccessLegacyAnalysis Pass");
 
     auto dominatortreewrapperpass = new DominatorTreeWrapperPass();
     PM.add(dominatortreewrapperpass);
@@ -244,13 +244,18 @@ int main(int argc, char **argv)
     print_info("Enable HI_LoopDependenceAnalysis Pass");
     PM.add(hi_loopdependenceanalysis);
 
+    // auto hi_loopunroll = new HI_LoopUnroll(IRLoop2LoopLabel, LoopLabel2UnrollFactor, 1, false,
+    //                                        std::nullopt); //"HI_LoopUnroll"
+    // PM.add(hi_loopunroll);
+    // print_info("Enable HI_LoopUnroll Pass");
+
     // auto hi_simpletimingevaluation = new
     // HI_SimpleTimingEvaluation("HI_SimpleTimingEvaluation",top_str.c_str()); print_info("Enable
     // HI_SimpleTimingEvaluation Pass"); PM.add(hi_simpletimingevaluation);
 
     auto hi_nodirectivetimingresourceevaluation = new HI_NoDirectiveTimingResourceEvaluation(
         configFile_str.c_str(), "HI_NoDirectiveTimingResourceEvaluation", "BRAM_info",
-        top_str.c_str());
+        top_str.c_str(), true);
     print_info("Enable HI_NoDirectiveTimingResourceEvaluation Pass");
     PM.add(hi_nodirectivetimingresourceevaluation);
 

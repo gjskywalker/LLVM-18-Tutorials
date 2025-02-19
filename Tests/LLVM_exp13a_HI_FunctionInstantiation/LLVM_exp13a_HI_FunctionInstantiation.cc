@@ -96,10 +96,10 @@ int main(int argc, char **argv)
     PM1.add(hi_varwidthreduce);
     print_info("Enable HI_VarWidthReduce Pass");
 
-    auto hi_intstructionmovebackward =
-        new HI_InstructionMoveBackward("HI_IntstructionMoveBackward");
-    PM1.add(hi_intstructionmovebackward);
-    print_info("Enable HI_IntstructionMoveBackward Pass");
+    auto hi_instructionmovebackward =
+        new HI_InstructionMoveBackward("HI_instructionMoveBackward");
+    PM1.add(hi_instructionmovebackward);
+    print_info("Enable HI_instructionMoveBackward Pass");
 
     // don't remove chained operations
     auto hi_hlsduplicateinstrm = new HI_HLSDuplicateInstRm("HLSrmInsts");

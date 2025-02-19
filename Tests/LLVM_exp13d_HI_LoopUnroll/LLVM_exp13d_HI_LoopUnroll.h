@@ -1,7 +1,7 @@
 #include "HI_FunctionInstantiation.h"
 #include "HI_HLSDuplicateInstRm.h"
 #include "HI_IR2SourceCode.h"
-#include "HI_IntstructionMoveBackward.h"
+#include "HI_InstructionMoveBackward.h"
 #include "HI_LoopDependenceAnalysis.h"
 #include "HI_LoopInFormationCollect.h"
 #include "HI_LoopUnroll.h"
@@ -55,6 +55,7 @@
 #include "llvm/Analysis/ScalarEvolutionExpressions.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
@@ -97,6 +98,7 @@
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/SourceMgr.h>
+#include <optional>
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>

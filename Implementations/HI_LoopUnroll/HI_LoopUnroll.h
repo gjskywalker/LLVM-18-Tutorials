@@ -61,6 +61,7 @@
 #include "llvm/Transforms/Utils/UnrollLoop.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
 #include <bits/stl_map.h>
+#include <optional>
 #include <ios>
 #include <map>
 #include <set>
@@ -75,7 +76,7 @@ using namespace llvm;
 
 class HI_LoopUnroll : public LoopPass
 {
-  public:
+public:
     static char ID; // Pass ID, replacement for typeid
 
     int OptLevel;
@@ -85,21 +86,21 @@ class HI_LoopUnroll : public LoopPass
     /// metadata are considered. All other loops are skipped.
     bool OnlyWhenForced;
 
-    Optional<unsigned> ProvidedCount;
-    Optional<unsigned> ProvidedThreshold;
-    Optional<bool> ProvidedAllowPartial;
-    Optional<bool> ProvidedRuntime;
-    Optional<bool> ProvidedUpperBound;
-    Optional<bool> ProvidedAllowPeeling;
+    std::optional<unsigned> ProvidedCount;
+    std::optional<unsigned> ProvidedThreshold;
+    std::optional<bool> ProvidedAllowPartial;
+    std::optional<bool> ProvidedRuntime;
+    std::optional<bool> ProvidedUpperBound;
+    std::optional<bool> ProvidedAllowPeeling;
 
     std::map<std::string, std::string> &IRLoop2LoopLabel;
     std::map<std::string, int> &LoopLabel2UnrollFactor;
 
     HI_LoopUnroll(std::map<std::string, std::string> &_IRLoop2LoopLabel,
                   std::map<std::string, int> &_LoopLabel2UnrollFactor, int OptLevel = 2, bool OnlyWhenForced = false,
-                  Optional<unsigned> Threshold = None, Optional<unsigned> Count = None,
-                  Optional<bool> AllowPartial = None, Optional<bool> Runtime = None, Optional<bool> UpperBound = None,
-                  Optional<bool> AllowPeeling = None)
+                  std::optional<unsigned> Threshold = std::nullopt, std::optional<unsigned> Count = std::nullopt,
+                  std::optional<bool> AllowPartial = std::nullopt, std::optional<bool> Runtime = std::nullopt, std::optional<bool> UpperBound = std::nullopt,
+                  std::optional<bool> AllowPeeling = std::nullopt)
         : LoopPass(ID), OptLevel(OptLevel), OnlyWhenForced(OnlyWhenForced), ProvidedCount(std::move(Count)),
           ProvidedThreshold(Threshold), ProvidedAllowPartial(AllowPartial), ProvidedRuntime(Runtime),
           ProvidedUpperBound(UpperBound), ProvidedAllowPeeling(AllowPeeling), IRLoop2LoopLabel(_IRLoop2LoopLabel),
@@ -121,18 +122,11 @@ class HI_LoopUnroll : public LoopPass
                                      const TargetTransformInfo &TTI, AssumptionCache &AC,
                                      OptimizationRemarkEmitter &ORE, bool PreserveLCSSA, int OptLevel,
                                      bool OnlyWhenForced, unsigned int ProvidedCount,
-                                     Optional<unsigned> ProvidedThreshold, Optional<bool> ProvidedAllowPartial,
-                                     Optional<bool> ProvidedRuntime, Optional<bool> ProvidedUpperBound,
-                                     Optional<bool> ProvidedAllowPeeling);
+                                     std::optional<unsigned> ProvidedThreshold, std::optional<bool> ProvidedAllowPartial,
+                                     std::optional<bool> ProvidedRuntime, std::optional<bool> ProvidedUpperBound,
+                                     std::optional<bool> ProvidedAllowPeeling);
 
-    void getAnalysisUsage(AnalysisUsage &AU) const override
-    {
-        AU.addRequired<AssumptionCacheTracker>();
-        AU.addRequired<TargetTransformInfoWrapperPass>();
-        // FIXME: Loop passes are required to preserve domtree, and for now we just
-        // recreate dom info if anything gets unrolled.
-        getLoopAnalysisUsage(AU);
-    }
+    void getAnalysisUsage(AnalysisUsage &AU) const;
 
     unsigned int UnrollMaxUpperBound = 8;
 

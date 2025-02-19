@@ -208,6 +208,7 @@ void HI_IR2SourceCode::traceBasicBlockSourceCode(LoopInfo &LI, Function &F, DISu
                         if (DILoc->getLine() < begin_line && DILoc->getLine() > 0)
                             begin_line = DILoc->getLine();
 
+                        // TODO:: Is this a good way to find the begin_line_for_loop and end_line_for_loop?
                         if (I.getOpcode() == Instruction::ICmp)
                         {
                             if (DILoc->getLine() > end_line_for_loop)
@@ -472,6 +473,8 @@ void HI_IR2SourceCode::traceFunctionSourceCode(Function &F)
 
     for (auto &B : F)
     {
+        if (DEBUG)
+            *IR2Src_Log << B.getName() << " \n";
         for (auto &I : B)
         {
             SmallVector<std::pair<unsigned, MDNode *>, 4> I_MDs;
@@ -490,10 +493,14 @@ void HI_IR2SourceCode::traceFunctionSourceCode(Function &F)
                     }
                 }
             }
-            if (DEBUG)
-                *IR2Src_Log << "\n";
+            // if (DEBUG)
+            //     *IR2Src_Log << "\n";
         }
     }
+    if (DEBUG)
+        *IR2Src_Log << "The BeginLine of Function: " << F.getName() << " is " << begin_line << "\n";
+    if (DEBUG)
+        *IR2Src_Log << "The EndLine of Function: " << F.getName() << " is " << end_line << "\n";
 
     F.getAllMetadata(MDs);
     for (auto &MD : MDs)
@@ -504,6 +511,10 @@ void HI_IR2SourceCode::traceFunctionSourceCode(Function &F)
                 *IR2Src_Log << "Total instructions in function " << F.getName() << " - " << *N << "\n";
             if (auto DFLoc = dyn_cast<DISubprogram>(N))
             {
+                path = DFLoc->getDirectory().str() + "/" + DFLoc->getFilename().str();
+                if (DEBUG)
+                    *IR2Src_Log << "     DebugInfo: : " << DFLoc->getDirectory() << "/" << DFLoc->getFilename() << ":"
+                                << DFLoc->getLine() << "\n";
                 bool duplicated = 0;
                 for (auto tmp_line : IRFunc2BeginLine[demangleFunctionName(F.getName().str())])
                 {
@@ -525,7 +536,8 @@ void HI_IR2SourceCode::traceFunctionSourceCode(Function &F)
     if (DEBUG)
         *IR2Src_Log << "\n";
     if (DEBUG)
-        *IR2Src_Log << "    SourceRang: " << path << ":" << begin_line << "--" << end_line << "\n\n";
+        *IR2Src_Log << "    SourceRang: " << ":" << begin_line << "--" << end_line << "\n\n";
+    // *IR2Src_Log << "    SourceRang: " << path << ":" << begin_line << "--" << end_line << "\n\n";
 
     Function2Line[&F] = std::pair<int, int>(begin_line, end_line);
 
@@ -584,12 +596,14 @@ void HI_IR2SourceCode::mappingLoopIR2LoopLabel(DISubprogram *subprogram)
             tmp_loop_name += itLine.first->getName();
             if (DEBUG)
                 *IR2Src_Log << "               tmp_loop_name: " << tmp_loop_name
-                            << "in Function : " << itLine.first->getParent()->getName()
+                            << " in Function : " << itLine.first->getParent()->getName()
                             << " start at line: " << itLine.second.first << "\n";
         }
     }
     for (auto RMD : DFLoc->getRetainedNodes())
     {
+        if (DEBUG)
+            *IR2Src_Log << "     DebugInfo: " << *RMD << "\n";
         if (auto DLLoc = dyn_cast<DILabel>(RMD))
         {
             if (DEBUG)
@@ -608,11 +622,22 @@ void HI_IR2SourceCode::mappingLoopIR2LoopLabel(DISubprogram *subprogram)
                     tmp_loop_name += "-";
                     tmp_loop_name += itLine.first->getName();
                     *IR2Src_Log << "               tmp_loop_name: " << tmp_loop_name
-                                << "in Function : " << itLine.first->getParent()->getName()
+                                << " in Function : " << itLine.first->getParent()->getName()
                                 << " start at line: " << itLine.second.first << " looppath:" << Loop2Path[itLine.first]
                                 << " labelpath:" << tmp_path << "\n";
                 }
-                if (itLine.second.first == DLLoc->getLine() && Loop2Path[itLine.first] == tmp_path)
+                if (DEBUG)
+                {
+                    *IR2Src_Log << "For current basicblock: " << itLine.first->getName() << " : "
+                                << " start at line: " << itLine.second.first << " DLLoc->getLine(): " << DLLoc->getLine() << "\n";
+
+                    *IR2Src_Log << "Current Loop Path: " << Loop2Path[itLine.first] << " labelpath:" << tmp_path << "\n";
+                }
+                /*
+                    Since in the real case:
+                    1. the loop label is always the first line of the loop in the source code.
+                */
+                if (itLine.second.first == (DLLoc->getLine() + 1) && Loop2Path[itLine.first] == tmp_path)
                 {
 
                     if (!find)
@@ -629,6 +654,10 @@ void HI_IR2SourceCode::mappingLoopIR2LoopLabel(DISubprogram *subprogram)
                     }
                     else
                     {
+                        /*
+                            During the clang compilation, redundant loop labels can be checked and give a warning.
+                            However, in the real case, the loop label should be unique.
+                        */
                         std::string tmp_loop_name = itLine.first->getParent()->getName().str();
                         tmp_loop_name += "-";
                         tmp_loop_name += itLine.first->getName();
