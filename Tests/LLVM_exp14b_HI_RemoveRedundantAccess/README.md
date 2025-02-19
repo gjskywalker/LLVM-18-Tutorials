@@ -1,0 +1,2 @@
+This experiment is used to test pass RemoveRedundantAccess. The idea behind this pass is similiar to data-forwarding in CPU pipeline design. 
+By directly feeding results to the next needed calculation, this pass can save the redundant storing and loading time. 

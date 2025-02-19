@@ -153,11 +153,12 @@ bool HI_RemoveRedundantAccess::checkMustAlias(Instruction *I0, Instruction *I1)
         return false;
     }
 
-    Optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
+    std::optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
 
-    if (res != None)
+    if (res != std::nullopt)
     {
-        if (res.getValue().getSExtValue() == 0)
+        if (res->getSExtValue() == 0)
+        // if (res.getValue().getSExtValue() == 0)
         {
             checkMustAlias_cache[I_pair] = true;
             return true;
@@ -216,13 +217,16 @@ bool HI_RemoveRedundantAccess::noAliasHazard(Instruction *I0, Instruction *I1)
     const SCEV *tmp_S0 = SE->getSCEV(pointer_I0->getOperand(0));
     const SCEV *tmp_S1 = SE->getSCEV(pointer_I1->getOperand(0));
 
-    Optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
+    std::optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
+    // Optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
     // if (DEBUG) *RemoveRedundantAccess_Log << "    compute diff between " << *tmp_S0 << " and " <<
     // *tmp_S1 << "\n";
-    if (res != None)
+    if (res != std::nullopt)
+    // if (res != None)
     {
         // if (DEBUG) *RemoveRedundantAccess_Log << "    result= " << res << "\n";
-        if (res.getValue().getSExtValue() == 0)
+        if (res->getSExtValue() == 0)
+        // if (res.getValue().getSExtValue() == 0)
         {
             // if (DEBUG) *RemoveRedundantAccess_Log << "    which means must alias\n";
             noAliasHazard_cache[I_pair] = false;
@@ -602,26 +606,48 @@ void HI_RemoveRedundantAccess::findMemoryDeclarationin(Function *F, bool isTopFu
         if (DEBUG)
             *RemoveRedundantAccess_Log << " is Top function "
                                        << "\n";
+
+        /*
+            TODO: Check whether in the new LLVM version, all the pointer type will be converted to IntToPtrInst and the array type will be converted to alloca instruction.
+        */
         for (auto it = F->arg_begin(), ie = F->arg_end(); it != ie; ++it)
         {
-            if (it->getType()->isPointerTy())
+            if (auto tmp_type = dyn_cast<ArrayType>(it->getType()))
             {
-                PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                if (tmp_PtrType->getArrayElementType()->isArrayTy())
+                if (tmp_type->getArrayElementType()->isArrayTy())
                 {
                     if (DEBUG)
                         *RemoveRedundantAccess_Log << " beging to trace arg: " << it << "\n";
                     TraceAccessForTarget(it, it);
                 }
-                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
-                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getArrayElementType()->isDoubleTy())
+                else if (tmp_type->getArrayElementType()->isIntegerTy() ||
+                         tmp_type->getArrayElementType()->isFloatingPointTy() ||
+                         tmp_type->getArrayElementType()->isDoubleTy())
                 {
                     if (DEBUG)
                         *RemoveRedundantAccess_Log << " beging to trace arg: " << it << "\n";
                     TraceAccessForTarget(it, it);
                 }
             }
+
+            // if (it->getType()->isPointerTy())
+            // {
+            //     PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
+            //     if (tmp_PtrType->getArrayElementType()->isArrayTy())
+            //     {
+            //         if (DEBUG)
+            //             *RemoveRedundantAccess_Log << " beging to trace arg: " << it << "\n";
+            //         TraceAccessForTarget(it, it);
+            //     }
+            //     else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+            //              tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+            //              tmp_PtrType->getArrayElementType()->isDoubleTy())
+            //     {
+            //         if (DEBUG)
+            //             *RemoveRedundantAccess_Log << " beging to trace arg: " << it << "\n";
+            //         TraceAccessForTarget(it, it);
+            //     }
+            // }
         }
     }
     else
@@ -855,7 +881,8 @@ Value *HI_RemoveRedundantAccess::getTargetFromInst(Instruction *accessI)
     }
 }
 
-Optional<APInt> HI_RemoveRedundantAccess::computeConstantDifference(const SCEV *More, const SCEV *Less)
+std::optional<APInt> HI_RemoveRedundantAccess::computeConstantDifference(const SCEV *More, const SCEV *Less)
+// Optional<APInt> HI_RemoveRedundantAccess::computeConstantDifference(const SCEV *More, const SCEV *Less)
 {
     std::pair<const SCEV *, const SCEV *> ML_pair(More, Less);
     if (differentCache.find(ML_pair) != differentCache.end())
@@ -888,22 +915,25 @@ Optional<APInt> HI_RemoveRedundantAccess::computeConstantDifference(const SCEV *
 
         if (LAR->getLoop() != MAR->getLoop())
         {
-            differentCache[ML_pair] = None;
-            return None;
+            differentCache[ML_pair] = std::nullopt;
+            // differentCache[ML_pair] = None;
+            return std::nullopt;
         }
 
         // We look at affine expressions only; not for correctness but to keep
         // getStepRecurrence cheap.
         if (!LAR->isAffine() || !MAR->isAffine())
         {
-            differentCache[ML_pair] = None;
-            return None;
+            differentCache[ML_pair] = std::nullopt;
+            // differentCache[ML_pair] = None;
+            return std::nullopt;
         }
 
         if (LAR->getStepRecurrence(*SE) != MAR->getStepRecurrence(*SE))
         {
-            differentCache[ML_pair] = None;
-            return None;
+            differentCache[ML_pair] = std::nullopt;
+            // differentCache[ML_pair] = None;
+            return std::nullopt;
         }
 
         Less = LAR->getStart();
@@ -949,8 +979,9 @@ Optional<APInt> HI_RemoveRedundantAccess::computeConstantDifference(const SCEV *
         return C2->getAPInt() - C1->getAPInt();
     }
 
-    differentCache[ML_pair] = None;
-    return None;
+    differentCache[ML_pair] = std::nullopt;
+    // differentCache[ML_pair] = None;
+    return std::nullopt;
 }
 
 bool HI_RemoveRedundantAccess::splitBinaryAdd(const SCEV *Expr, const SCEV *&L, const SCEV *&R,

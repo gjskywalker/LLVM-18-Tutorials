@@ -74,13 +74,18 @@ int main(int argc, const char **argv)
 
     // parse the command-line args passed to your code
     int labelerArgc = 2;
-    CommonOptionsParser op(labelerArgc, argv, StatSampleCategory);
+    auto op = CommonOptionsParser::create(labelerArgc, argv, StatSampleCategory);
+    if (!op)
+    {
+        errs() << "Error parsing command line arguments\n";
+        return 1;
+    }
 
     std::string top_str = std::string(argv[2]);
     std::string configFile_str = std::string(argv[3]);
 
     // create a new Clang Tool instance (a LibTooling environment)
-    ClangTool Tool(op.getCompilations(), op.getSourcePathList());
+    ClangTool Tool(op->getCompilations(), op->getSourcePathList());
     Rewriter TheRewriter0, TheRewriter1;
 
     // run the Clang Tool, creating a new FrontendAction, which will run the AST consumer
@@ -178,9 +183,9 @@ int main(int argc, const char **argv)
     auto loopsimplifypass = createLoopSimplifyPass();
     PM1.add(loopsimplifypass);
 
-    auto indvarsimplifypass = createIndVarSimplifyPass();
-    PM1.add(indvarsimplifypass);
-    print_info("Enable IndVarSimplifyPass Pass");
+    // auto indvarsimplifypass = createIndVarSimplifyPass();
+    // PM1.add(indvarsimplifypass);
+    // print_info("Enable IndVarSimplifyPass Pass");
 
     PM1.add(createTargetTransformInfoWrapperPass(TargetIRAnalysis()));
     print_info("Enable TargetIRAnalysis Pass");
@@ -193,8 +198,8 @@ int main(int argc, const char **argv)
     PM1.add(CFGSimplification_pass2);
     print_info("Enable CFGSimplificationPass Pass");
 
-    auto hi_loopunroll = new HI_LoopUnroll(IRLoop2LoopLabel, LoopLabel2UnrollFactor, 1, false,
-                                           None); //"HI_LoopUnroll"
+    auto hi_loopunroll = new HI_LoopUnroll(IRLoop2LoopLabel, LoopLabel2UnrollFactor, 1, true,
+                                           std::nullopt); //"HI_LoopUnroll"
     PM1.add(hi_loopunroll);
     print_info("Enable HI_LoopUnroll Pass");
 
@@ -233,10 +238,10 @@ int main(int argc, const char **argv)
     // PM1.add(hi_varwidthreduce);
     // print_info("Enable HI_VarWidthReduce Pass");
 
-    auto hi_intstructionmovebackward =
-        new HI_IntstructionMoveBackward("HI_IntstructionMoveBackward");
-    PM1.add(hi_intstructionmovebackward);
-    print_info("Enable HI_IntstructionMoveBackward Pass");
+    auto hi_instructionmovebackward =
+        new HI_InstructionMoveBackward("HI_instructionMoveBackward");
+    PM1.add(hi_instructionmovebackward);
+    print_info("Enable HI_instructionMoveBackward Pass");
 
     if (argc == 4 || (argc == 5 && std::string(argv[4]) != "disable-lsr"))
     {
@@ -268,9 +273,13 @@ int main(int argc, const char **argv)
     PM11.add(lowerswitch_pass);
     print_info("Enable LowerSwitchPass Pass");
 
-    auto ADCE_pass = createAggressiveDCEPass();
-    PM11.add(ADCE_pass);
-    print_info("Enable HI_ReplaceSelectAccess Pass");
+    auto DCE_pass = createDeadCodeEliminationPass();
+    PM11.add(DCE_pass);
+    print_info("Enable DeadCodeElimination Pass");
+
+    // auto ADCE_pass = createAggressiveDCEPass();
+    // PM11.add(ADCE_pass);
+    // print_info("Enable HI_ReplaceSelectAccess Pass");
 
     auto CFGSimplification_pass1 = createCFGSimplificationPass();
     PM11.add(CFGSimplification_pass1);
@@ -300,10 +309,10 @@ int main(int argc, const char **argv)
     PM2.add(CFGSimplification_pass4);
     print_info("Enable CFGSimplificationPass Pass");
 
-    auto hi_intstructionmovebackward1 =
-        new HI_IntstructionMoveBackward("HI_IntstructionMoveBackward1");
-    PM2.add(hi_intstructionmovebackward1);
-    print_info("Enable HI_IntstructionMoveBackward Pass");
+    auto hi_instructionmovebackward1 =
+        new HI_InstructionMoveBackward("HI_instructionMoveBackward1");
+    PM2.add(hi_instructionmovebackward1);
+    print_info("Enable HI_instructionMoveBackward Pass");
 
     PM1.run(*Mod);
 
@@ -353,9 +362,9 @@ int main(int argc, const char **argv)
     PM.add(scalarevolutionwrapperpass);
     print_info("Enable ScalarEvolutionWrapperPass Pass");
 
-    auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
-    PM.add(loopaccesslegacyanalysis);
-    print_info("Enable LoopAccessLegacyAnalysis Pass");
+    // auto loopaccesslegacyanalysis = new LoopAccessLegacyAnalysis();
+    // PM.add(loopaccesslegacyanalysis);
+    // print_info("Enable LoopAccessLegacyAnalysis Pass");
 
     auto dominatortreewrapperpass = new DominatorTreeWrapperPass();
     PM.add(dominatortreewrapperpass);
@@ -418,7 +427,7 @@ int main(int argc, const char **argv)
 
     auto hi_nodirectivetimingresourceevaluation = new HI_NoDirectiveTimingResourceEvaluation(
         configFile_str.c_str(), "HI_NoDirectiveTimingResourceEvaluation", "BRAM_info",
-        top_str.c_str());
+        top_str.c_str(), true);
     print_info("Enable HI_NoDirectiveTimingResourceEvaluation Pass");
     PM.add(hi_nodirectivetimingresourceevaluation);
 

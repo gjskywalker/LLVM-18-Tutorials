@@ -1,0 +1,1 @@
+This experiment is used to test pass MulOrderOpt, which aims to reorder the sequence of multiplications to achieve better parallism for FPGA designs. 

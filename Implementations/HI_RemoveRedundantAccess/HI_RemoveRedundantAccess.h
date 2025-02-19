@@ -11,8 +11,8 @@
 #include "llvm/ADT/EquivalenceClasses.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/Hashing.h"
-#include "llvm/ADT/None.h"
-#include "llvm/ADT/Optional.h"
+// #include "llvm/ADT/None.h"
+// #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/ScopeExit.h"
@@ -107,6 +107,7 @@
 #include <sys/time.h>
 #include <tuple>
 #include <utility>
+#include <optional>
 #include <vector>
 
 using namespace llvm;
@@ -191,7 +192,8 @@ public:
     // get the target array for the access instruction
     Value *getTargetFromInst(Instruction *accessI);
 
-    Optional<APInt> computeConstantDifference(const SCEV *More, const SCEV *Less);
+    std::optional<APInt> computeConstantDifference(const SCEV *More, const SCEV *Less);
+    // Optional<APInt> computeConstantDifference(const SCEV *More, const SCEV *Less);
 
     bool splitBinaryAdd(const SCEV *Expr, const SCEV *&L, const SCEV *&R, SCEV::NoWrapFlags &Flags);
 
@@ -199,7 +201,7 @@ public:
     // true if it is possible, false if not possible
     bool noAliasHazard(Instruction *I0, Instruction *I1);
 
-    std::map<std::pair<const SCEV *, const SCEV *>, Optional<APInt>> differentCache;
+    std::map<std::pair<const SCEV *, const SCEV *>, std::optional<APInt>> differentCache;
 
     int callCounter;
     int Instruction_Counter;

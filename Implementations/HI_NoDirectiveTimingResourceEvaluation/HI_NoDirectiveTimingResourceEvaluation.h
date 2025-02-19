@@ -77,11 +77,11 @@ public:
         Loop_Counter = 0;
         valid = 1;
         config_file = new std::ifstream(config_file_name);
-        
+
         top_function_name = std::string(top_function);
         // Debug_log = new raw_fd_ostream("DEBUG_LOG", ErrInfo, sys::fs::OF_None);
-        if(verbose)
-        {   
+        if (verbose)
+        {
             Evaluating_log = new raw_fd_ostream(evaluating_log_name, ErrInfo, sys::fs::OF_None);
 
             BRAM_log = new raw_fd_ostream(BRAM_log_name, ErrInfo, sys::fs::OF_None);
@@ -96,7 +96,6 @@ public:
 
             // Cycle_Result
             Cycle_Result = new raw_fd_ostream("Cycle_Result", ErrInfo, sys::fs::OF_None);
-
         }
 
         // get the configureation from the file, e.g. clock period
@@ -118,7 +117,7 @@ public:
         {
             delete ele.second;
         }
-        if(verbose)
+        if (verbose)
         {
             Evaluating_log->flush();
             delete Evaluating_log;
@@ -301,7 +300,7 @@ public:
 
     // record the critical path to the end of sub-loops in the loop
     std::map<BasicBlock *, timingBase> tmp_BlockCriticalPath_inLoop;
-    
+
     int getLoopTripCount(ScalarEvolution *SE, Loop *L);
     // record the critical path from the outter loop header to the end of the specific sub-loop
     std::map<Loop *, timingBase> tmp_SubLoop_CriticalPath;
@@ -368,7 +367,7 @@ public:
     // mark the block in loop with latency by traversing from the header to the exiting blocks
     void MarkBlock_traversFromHeaderToExitingBlocks(timingBase total_latency, Loop *L, BasicBlock *curBlock);
 
-    bool isNotPoison(Instruction* instr);
+    bool isNotPoison(Instruction *instr);
 
     // evaluate the block latency and resource by traversing the instructions
     timingBase BlockLatencyResourceEvaluation(BasicBlock *B);

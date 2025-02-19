@@ -1,3 +1,2 @@
 clock = 10
 HLS_lib_path = ../../../HLS_Data_Lib/
-loop_unroll label=loop1 factor=5

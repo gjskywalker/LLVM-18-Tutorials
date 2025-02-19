@@ -46,7 +46,7 @@ bool HI_MulOrderOpt::runOnFunction(
             for (BasicBlock::reverse_iterator it = B.rbegin(), ie = B.rend(); it != ie; it++)
             {
                 Instruction *I = &*it;
-
+                // *MulOrderOptLog << "handling " << *I << "\n";
                 if (I->getOpcode() != Instruction::Mul)
                     continue;
                 if (generatedI.find(I) !=
@@ -77,7 +77,8 @@ bool HI_MulOrderOpt::runOnFunction(
                 changed = 1;
                 action = 1;
 
-                *MulOrderOptLog << "\n\nbefore replacement:\n\n" << B;
+                *MulOrderOptLog << "\n\nbefore replacement:\n\n"
+                                << B;
                 IRBuilder<> Builder(I);
 
                 int replcaceCnt = 0;
@@ -86,7 +87,8 @@ bool HI_MulOrderOpt::runOnFunction(
                 curMulI->replaceAllUsesWith(newMul);
                 RecursivelyDeleteTriviallyDeadInstructions(curMulI);
 
-                *MulOrderOptLog << "\n\nafter replacement#" << replcaceCnt << ":\n\n" << B;
+                *MulOrderOptLog << "\n\nafter replacement#" << replcaceCnt << ":\n\n"
+                                << B;
                 // while (1)
                 // {
                 //     replcaceCnt++;

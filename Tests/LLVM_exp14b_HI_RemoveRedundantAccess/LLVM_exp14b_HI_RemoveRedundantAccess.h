@@ -5,28 +5,19 @@
 #include "HI_FindFunction.h"
 #include "HI_FunctionInstantiation.h"
 #include "HI_HLSDuplicateInstRm.h"
-#include "HI_IR2SourceCode.h"
+#include "HI_RemoveRedundantAccess.h"
 #include "HI_InstructionMoveBackward.h"
-#include "HI_LoadALAP.h"
 #include "HI_LoopDependenceAnalysis.h"
 #include "HI_LoopInFormationCollect.h"
-#include "HI_LoopUnroll.h"
-#include "HI_Mul2Shl.h"
-#include "HI_MulOrderOpt.h"
-#include "HI_MuxInsertionArrayPartition.h"
-#include "HI_Polly_Info.h"
-#include "HI_NoDirectiveTimingResourceEvaluation.h"
-#include "HI_PragmaTargetExtraction.h"
-#include "HI_RemoveRedundantAccess.h"
 #include "HI_ReplaceSelectAccess.h"
 #include "HI_SeparateConstOffsetFromGEP.h"
+#include "HI_NoDirectiveTimingResourceEvaluation.h"
 #include "HI_SimpleTimingEvaluation.h"
 #include "HI_StringProcess.h"
 #include "HI_SysExec.h"
 #include "HI_VarWidthReduce.h"
-#include "HI_WithDirectiveTimingResourceEvaluation.h"
 #include "HI_print.h"
-#include "ConfigParse.h"
+#include "HI_Polly_Info.h"
 #include "polly/PolyhedralInfo.h"
 #include "clang/AST/AST.h"
 #include "clang/AST/ASTConsumer.h"
@@ -109,9 +100,3 @@
 #include <stdlib.h>
 #include <string>
 #include <utility>
-#include <optional>
-// #include "X86TargetMachine.h"
-
-// clang's frontend process !!! don;t miss them with llvm headers!!!
-#include "HI_LoopLabeler.h"
-#include "HI_FunctionInterfaceInfo.h"

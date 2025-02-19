@@ -12,8 +12,8 @@
       ],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp13d_HI_LoopUnroll/build",
-      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp13d_HI_LoopUnroll/build/LLVM_exp13d_HI_LoopUnroll",
+      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp14b_HI_RemoveRedundantAccess/build",
+      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp14b_HI_RemoveRedundantAccess/build/LLVM_exp14b_HI_RemoveRedundantAccess",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
