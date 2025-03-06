@@ -28,7 +28,8 @@ void HI_FunctionInterfaceInfo_Visitor::printTypeInfo(const clang::Type *T)
         TemplateName TN = TST->getTemplateName();
         TN.print(*parseLog, PP());
         *parseLog << " with args: ";
-        auto Args = llvm::makeArrayRef(TST->getArgs(), TST->getNumArgs());
+        auto Args = TST->template_arguments();
+        // auto Args = llvm::makeArrayRef(TST->getArgs(), TST->getNumArgs());
         for (auto arg : Args)
         {
             arg.print(PP(), *parseLog, 0);

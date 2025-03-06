@@ -2,6 +2,7 @@
 #define _HI_MuxInsertionArrayPartition
 
 #include "ClockInfo.h"
+#include "HI_DataInfo.h"
 #include "HI_StringProcess.h"
 #include "HI_print.h"
 #include "llvm/ADT/SmallVector.h"
@@ -43,6 +44,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <map>
 
 using namespace llvm;
 
@@ -372,8 +374,8 @@ public:
     // directives
     HI_MuxInsertionArrayPartition(const char *config_file_name, const char *top_function,
                                   std::map<std::string, int> &FuncParamLine2OutermostSize,
-                                  std::map<std::string, std::vector<int>> &IRFunc2BeginLine, bool DEBUG = 0)
-        : ModulePass(ID), FuncParamLine2OutermostSize(FuncParamLine2OutermostSize), IRFunc2BeginLine(IRFunc2BeginLine),
+                                  std::map<std::string, std::vector<int>> &IRFunc2BeginLine, std::map<llvm::Value *, ArrayInfo *> &Target2ArrayInfo, bool DEBUG = 0)
+        : ModulePass(ID), FuncParamLine2OutermostSize(FuncParamLine2OutermostSize), IRFunc2BeginLine(IRFunc2BeginLine), Target2BasicArrayInfo(Target2ArrayInfo),
           DEBUG(DEBUG)
     {
         config_file = new std::ifstream(config_file_name);
@@ -503,6 +505,9 @@ public:
     std::map<BasicBlock *, std::vector<Instruction *>> Block2AccessList;
 
     std::map<std::pair<Instruction *, Instruction *>, int> InstInst2DependenceDistance;
+
+    // Since it's hard to get the array information after the hi_separateconstoffsetfromgep pass, we pass this map to store the array information
+    std::map<llvm::Value *, ArrayInfo *> Target2BasicArrayInfo;
 
     // Trace Memory Declaration in Module
     // analyze BRAM accesses in the module before any other analysis

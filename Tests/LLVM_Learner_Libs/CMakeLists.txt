@@ -59,7 +59,7 @@ include_directories(./ ../../Implementations/
 ../../Implementations/HI_ArraySensitiveToLoopLevel
 ../../Implementations/HI_TopLoop2Func
 ../../Implementations/HI_FaddOrderOpt
+../../Implementations/HI_ArrayInfo
 )
 
-add_subdirectory(../../Implementations/HI_WithDirectiveTimingResourceEvaluation ./building)
-
+add_subdirectory(../../Implementations/HI_MuxInsertionArrayPartition ./building)

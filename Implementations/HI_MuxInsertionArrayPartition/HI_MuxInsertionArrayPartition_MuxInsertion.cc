@@ -31,7 +31,8 @@ bool HI_MuxInsertionArrayPartition::MuxInsert(BasicBlock *B)
     {
         action = 0;
         // (1) iterate the instructions in the block
-        if (B->getInstList().size() > 1) // ignore block with only branch instruction
+        if (B->sizeWithoutDebug() > 1)
+        // if (B->getInstList().size() > 1) // ignore block with only branch instruction
         {
             std::vector<Instruction *> LoadInsts;
             for (Instruction &rI : *B)

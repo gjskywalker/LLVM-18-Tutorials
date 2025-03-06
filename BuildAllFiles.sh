@@ -7,7 +7,11 @@ cd $curr_path
 cd Tests/LLVM_Learner_Libs/build
 cmake ..
 make -j8
-cp `find -name *.a` ../
+for file in `find -name *.a`
+do 
+    rm -f ../$(basename $file)
+    cp $file ../
+done 
 
 cd $curr_path/Tests
 

@@ -12,8 +12,8 @@
       ],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp14b_HI_RemoveRedundantAccess/build",
-      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp14b_HI_RemoveRedundantAccess/build/LLVM_exp14b_HI_RemoveRedundantAccess",
+      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp14_HI_WithDirectiveTimingResourceEvaluation/build",
+      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp14_HI_WithDirectiveTimingResourceEvaluation/build/LLVM_exp14_HI_WithDirectiveTimingResourceEvaluation",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

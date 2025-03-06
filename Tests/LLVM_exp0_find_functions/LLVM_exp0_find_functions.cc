@@ -49,6 +49,9 @@ int main(int argc, char **argv)
 
     // Create a pass manager and fill it with the passes we want to run.
     legacy::PassManager PM;
+
+    auto scalarevolutioinwrapperpass = new ScalarEvolutionWrapperPass();
+    PM.add(scalarevolutioinwrapperpass);
     HI_FindFunctions *hi_findfunctions = new HI_FindFunctions();
     PM.add(hi_findfunctions);
     PM.run(*Mod);

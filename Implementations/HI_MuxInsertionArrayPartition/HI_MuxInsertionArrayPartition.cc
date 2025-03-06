@@ -29,7 +29,6 @@ bool HI_MuxInsertionArrayPartition::runOnModule(
 
     // analyze BRAM accesses in the module before any other analysis
     bool changed = TraceMemoryDeclarationAndAnalyzeAccessinModule(M);
-
     if (muxWithMoreThan32)
         return true;
 
@@ -61,6 +60,27 @@ bool HI_MuxInsertionArrayPartition::TraceMemoryDeclarationAndAnalyzeAccessinModu
 {
     for (auto &it : M.global_values())
     {
+        // I prefer the following way to check if the GlobalVariable is an array, but it seems Tingyuan set the
+        // global variable which is not an array as an one-element array.
+
+        // if (auto GV = dyn_cast<GlobalVariable>(&it))
+        // {
+        //     if (GV->getValueType()->isArrayTy()) // Check if the GlobalVariable is an array
+        //     {
+        //         if (DEBUG)
+        //             *ArrayLog << it << " is a global array variable\n";
+        //         if (DEBUG)
+        //             *ArrayLog << "  get array information of [" << it.getName()
+        //                       << "] from argument and its address=" << &it << "\n";
+        //         Target2ArrayInfo[&it] = getArrayInfo(&it);
+        //         TraceAccessForTarget(&it, &it);
+        //         Instruction2Target[&it].push_back(&it);
+        //         if (DEBUG)
+        //             *ArrayLog << Target2ArrayInfo[&it] << "\n";
+        //         if (DEBUG)
+        //             ArrayLog->flush();
+        //     }
+        // }
         if (auto GV = dyn_cast<GlobalVariable>(&it))
         {
             if (DEBUG)

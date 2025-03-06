@@ -106,9 +106,12 @@ void HI_VarWidthReduce::Bitwidth_Analysis(Function *F)
                 if (I.getOperand(0)->getType()->isIntegerTy())
                 {
                     Instruction_id[&I] = ++Instruction_Counter;
+                    // The following step is redundant in new llvm version, since normally array variables
+                    // appear as the function arguments gonna be degenerated as pointer, and the bitwidth of
+                    // the stored data should be aligned with the bitwidth of the memory.
                     Instruction_BitNeeded[&I] = I.getOperand(0)->getType()->getIntegerBitWidth();
-                    // PointerType *PtrType = dyn_cast<PointerType>(I.getOperand(1)->getType());
-                    // assert(PtrType);
+                    PointerType *PtrType = dyn_cast<PointerType>(I.getOperand(1)->getType());
+                    assert(PtrType);
                     // Instruction_BitNeeded[&I] = PtrType->getArrayElementType()->getIntegerBitWidth();
                 }
             }
@@ -1009,7 +1012,9 @@ void HI_VarWidthReduce::Store_WidthCast(StoreInst *S_I)
     // assert(PtrType);
 
     // Instruction_BitNeeded[&I] = PtrType->getArrayElementType()->getIntegerBitWidth();
-    Instruction_BitNeeded[&I] = (cast<IntegerType>(I.getType()))->getBitWidth();
+    if (auto tmp_type = dyn_cast<IntegerType>(I.getType()))
+        Instruction_BitNeeded[&I] = tmp_type->getBitWidth();
+    // Instruction_BitNeeded[&I] = (dyn_cast<IntegerType>(I.getType()))->getBitWidth();
 
     for (int i = 0; i <= 0;
          ++i) // check the operands to see whether a TRUNC/EXT is necessary

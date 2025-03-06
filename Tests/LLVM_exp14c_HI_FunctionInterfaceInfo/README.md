@@ -1,0 +1,1 @@
+HI_FunctionInterfaceInfo pass is used to offer AST infomation for testing functions and insert loop labels and function inline notations. 

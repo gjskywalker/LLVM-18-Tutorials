@@ -99,6 +99,7 @@ public:
     raw_ostream *Function_Demangle;
     std::map<std::string, std::string> Function_Demangle_Map;
 
+    ScalarEvolution *SE;
     /// Timer
 
     struct timeval tv_begin;

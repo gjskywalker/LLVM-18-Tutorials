@@ -48,7 +48,9 @@ HI_WithDirectiveTimingResourceEvaluation::BlockLatencyResourceEvaluation(BasicBl
     resourceBase resourceAccmulator(0, 0, 0, clock_period);
 
     // (1) iterate the instructions in the block
-    if (B->getInstList().size() > 1) // ignore block with only branch instruction
+    // Compared to ->size(), ->sizeWithoutDebug() will not count debug instructions
+    if (B->sizeWithoutDebug() > 1)
+    // if (B->getInstList().size() > 1) // ignore block with only branch instruction
     {
         for (Instruction &rI : *B)
         {

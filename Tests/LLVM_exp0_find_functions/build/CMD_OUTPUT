@@ -6,4 +6,6 @@
 -- Generating done
 -- Build files have been written to: /home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_Learner_Libs/build
 Consolidate compiler generated dependencies of target HI_FindFunctions
+[ 50%] Building CXX object building/CMakeFiles/HI_FindFunctions.dir/HI_FindFunction.cc.o
+[100%] Linking CXX static library libHI_FindFunctions.a
 [100%] Built target HI_FindFunctions

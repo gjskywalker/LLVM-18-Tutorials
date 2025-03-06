@@ -1,4 +1,6 @@
 #include "HI_AggressiveLSR_MUL.h"
+#include "HI_DataInfo.h"
+#include "HI_ArrayInfo.h"
 #include "HI_ArrayAccessPattern.h"
 #include "HI_DependenceList.h"
 #include "HI_DuplicateInstRm.h"
@@ -61,6 +63,7 @@
 #include "llvm/Analysis/ScalarEvolutionAliasAnalysis.h"
 #include "llvm/Analysis/ScalarEvolutionExpressions.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
+#include "llvm/Analysis/OptimizationRemarkEmitter.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/IR/CFG.h"
@@ -110,6 +113,14 @@
 #include <string>
 #include <utility>
 #include <optional>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <nlohmann/json.hpp> // Include the JSON for Modern C++ library
+#include <filesystem>
+#include <map>
 // #include "X86TargetMachine.h"
 
 // clang's frontend process !!! don;t miss them with llvm headers!!!

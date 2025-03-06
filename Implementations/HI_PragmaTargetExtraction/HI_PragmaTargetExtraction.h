@@ -117,6 +117,7 @@ public:
             partition_size[i] = input.partition_size[i];
         for (int i = 0; i < num_dims; i++)
             cyclic[i] = input.cyclic[i];
+        return *this;
     }
 };
 
@@ -437,6 +438,7 @@ public:
                 partition_size[i] = input.partition_size[i];
             for (int i = 0; i < num_dims; i++)
                 cyclic[i] = input.cyclic[i];
+            return *this;
         }
     };
 
@@ -582,6 +584,7 @@ public:
             scopeStr = input.scopeStr;
             ScopeFunc = input.ScopeFunc;
             labelStr = input.labelStr;
+            return *this;
         }
     };
 

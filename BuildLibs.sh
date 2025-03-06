@@ -5,7 +5,6 @@ cd $curr_path
 
 cd Tests
 
-
 for folder in `ls`
 do
     if [ -d ./$folder ]
@@ -21,5 +20,9 @@ done
 
 cd LLVM_Learner_Libs/build
 cmake ..
-make -j4
-cp `find -name *.a` ../
+make -j8
+for file in `find -name *.a`
+do 
+    rm -f ../$(basename $file)
+    cp $file ../ 
+done 

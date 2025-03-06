@@ -59,6 +59,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <optional>
 
 using namespace llvm;
 
@@ -938,7 +939,7 @@ public:
     // some LLVM analysises could be involved
     ScalarEvolution *SE;
     LoopInfo *LI;
-    LoopAccessLegacyAnalysis *LAA;
+    // LoopAccessLegacyAnalysis *LAA;
     AliasAnalysis *AA;
 
     bool topFunctionFound = 0;
@@ -1497,7 +1498,8 @@ public:
                                     std::vector<partition_info> &res);
 
     // check whether the two SCEV have const distance
-    Optional<APInt> computeConstantDifference(const SCEV *More, const SCEV *Less);
+    std::optional<APInt> computeConstantDifference(const SCEV *More, const SCEV *Less);
+    // Optional<APInt> computeConstantDifference(const SCEV *More, const SCEV *Less);
 
     // check whether the two instructions have loop carried dependence
     // if there is such dependence, record the distance in InstInst2DependenceDistance

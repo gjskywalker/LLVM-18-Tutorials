@@ -1,0 +1,19 @@
+
+cmake_minimum_required(VERSION 3.10) 
+
+
+find_package(LLVM REQUIRED CONFIG) 
+# Needed to use support library 
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -std=c++17") 
+
+include_directories(${LLVM_INCLUDE_DIRS}) 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../Include)
+add_definitions(${LLVM_DEFINITIONS}) 
+
+aux_source_directory(. DIR_HI_ARRAYINFO_SRCS)
+add_library(HI_ArrayInfo ${DIR_HI_ARRAYINFO_SRCS})
+
+
+# set(llvm_libs "")
+

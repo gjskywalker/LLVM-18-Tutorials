@@ -34,32 +34,46 @@ void HI_MuxInsertionArrayPartition::findMemoryDeclarationAndAnalyzeAccessin(Func
                       << "\n";
         for (auto it = F->arg_begin(), ie = F->arg_end(); it != ie; ++it)
         {
+            /*
+                In the new LLVM version, the argument is a pointer then it must be an array in the HLS design.
+            */
             if (it->getType()->isPointerTy())
             {
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                if (tmp_PtrType->getArrayElementType()->isArrayTy())
-                {
-                    if (DEBUG)
-                        *ArrayLog << "  get array information of [" << it->getName()
-                                  << "] from argument and its address=" << it << "\n";
-                    Target2ArrayInfo[it] = getArrayInfo(it);
-                    TraceAccessForTarget(it, it);
-                    if (DEBUG)
-                        *ArrayLog << Target2ArrayInfo[it] << "\n";
-                }
-                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
-                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getArrayElementType()->isDoubleTy())
-                {
-                    if (DEBUG)
-                        *ArrayLog << "  get array information of [" << it->getName()
-                                  << "] from argument and its address=" << it << "\n";
-                    Target2ArrayInfo[it] = getArrayInfo(it);
-                    TraceAccessForTarget(it, it);
-                    if (DEBUG)
-                        *ArrayLog << Target2ArrayInfo[it] << "\n";
-                }
+                if (DEBUG)
+                    *ArrayLog << "  get array information of [" << it->getName()
+                              << "] from argument and its address=" << it << "\n";
+                Target2ArrayInfo[it] = getArrayInfo(it);
+                TraceAccessForTarget(it, it);
+                if (DEBUG)
+                    *ArrayLog << Target2ArrayInfo[it] << "\n";
             }
+            // if (it->getType()->isPointerTy())
+            // {
+            //     PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
+            //     if (tmp_PtrType->getArrayElementType()->isArrayTy())
+            //     {
+            //         if (DEBUG)
+            //             *ArrayLog << "  get array information of [" << it->getName()
+            //                       << "] from argument and its address=" << it << "\n";
+            //         Target2ArrayInfo[it] = getArrayInfo(it);
+            //         TraceAccessForTarget(it, it);
+            //         if (DEBUG)
+            //             *ArrayLog << Target2ArrayInfo[it] << "\n";
+            //     }
+            //     else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+            //              tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+            //              tmp_PtrType->getArrayElementType()->isDoubleTy())
+            //     {
+            //         if (DEBUG)
+            //             *ArrayLog << "  get array information of [" << it->getName()
+            //                       << "] from argument and its address=" << it << "\n";
+            //         Target2ArrayInfo[it] = getArrayInfo(it);
+            //         TraceAccessForTarget(it, it);
+            //         if (DEBUG)
+            //             *ArrayLog << Target2ArrayInfo[it] << "\n";
+            //     }
+            // }
         }
     }
     else
@@ -198,7 +212,8 @@ void HI_MuxInsertionArrayPartition::TraceAccessForTarget(Value *cur_node, Value 
         {
             if (DEBUG)
                 *BRAM_log << "    is an CALL instruction: " << *CallI << "\n";
-            for (int i = 0; i < CallI->getNumOperands(); ++i)
+            for (int i = 0; i < CallI->arg_size(); ++i)
+            // for (int i = 0; i < CallI->getNumOperands(); ++i)
             {
                 if (CallI->getArgOperand(i) == cur_node) // find which argument is exactly the pointer we are tracing
                 {
@@ -620,52 +635,88 @@ void HI_MuxInsertionArrayPartition::TraceAccessRelatedInstructionForTarget(Value
     ArrayValueVisited.erase(cur_node);
 }
 
+/*
+    Since in the new llvm version, array type is no long a pointer type, we need to get the array information
+    based on other methods as listed in Note.md
+*/
 HI_MuxInsertionArrayPartition::HI_ArrayInfo HI_MuxInsertionArrayPartition::getArrayInfo(Value *target)
 {
     if (Target2ArrayInfo.find(target) != Target2ArrayInfo.end())
         return Target2ArrayInfo[target];
-    PointerType *ptr_type = dyn_cast<PointerType>(target->getType());
-    if (!ptr_type)
+    // PointerType *ptr_type = dyn_cast<PointerType>(target->getType());
+    // if (!ptr_type)
+    // {
+    //     llvm::errs() << "  "
+    //                  << "target:" << *target << " is not pointer type.\n";
+    //     assert(false && "wrong type for array target.");
+    // }
+    // bool find = false;
+    // GetElementPtrInst *GEP = nullptr;
+    // for (User *U : target->users())
+    // {
+    //     if (auto GEP_tmp = dyn_cast<GetElementPtrInst>(U))
+    //     {
+    //         find = true;
+    //         GEP = GEP_tmp;
+    //         break;
+    //     }
+    // }
+    // assert(find && "The target should be used by GEP instruction and this pass should be run before the HI_SeparateConstOffsetFromGEP pass.");
+    // // if (DEBUG)
+    // //     *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: [" << *ptr_type->getArrayElementType()
+    // //               << "]\n";
+    // // Type *tmp_type = ptr_type->getArrayElementType();
+    // int total_ele = 1;
+    // int tmp_dim_size[10];
+    // int num_dims = 0;
+    // auto tmp_type = GEP->getSourceElementType();
+    // // llvm::errs() << "tmp_type: " << *tmp_type << "\n";
+    // while (auto array_T = dyn_cast<ArrayType>(tmp_type))
+    // {
+    //     if (DEBUG)
+    //         *ArrayLog << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
+    //                   << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
+    //     total_ele *= (array_T->getNumElements());
+    //     tmp_dim_size[num_dims] = (array_T->getNumElements());
+    //     num_dims++;
+    //     llvm::errs() << "num_dims: " << num_dims << "\n";
+    //     tmp_type = array_T->getArrayElementType();
+    // }
+    // while (auto array_T = dyn_cast<ArrayType>(tmp_type))
+    // {
+    //     if (DEBUG)
+    //         *ArrayLog << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
+    //                   << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
+    //     total_ele *= (array_T->getNumElements());
+    //     tmp_dim_size[num_dims] = (array_T->getNumElements());
+    //     num_dims++;
+    //     tmp_type = array_T->getArrayElementType();
+    // }
+    if (this->Target2BasicArrayInfo.find(target) == this->Target2BasicArrayInfo.end())
     {
-        llvm::errs() << "  "
-                     << "target:" << *target << " is not pointer type.\n";
-        assert(false && "wrong type for array target.");
+        llvm::errs() << "The target is not found in the Target2BasicArrayInfo.\n";
+        assert(false && "The target is not found in the Target2BasicArrayInfo.");
     }
-    if (DEBUG)
-        *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: [" << *ptr_type->getArrayElementType()
-                  << "]\n";
-    Type *tmp_type = ptr_type->getArrayElementType();
-    int total_ele = 1;
-    int tmp_dim_size[10];
-    int num_dims = 0;
-    while (auto array_T = dyn_cast<ArrayType>(tmp_type))
-    {
-        if (DEBUG)
-            *ArrayLog << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
-                      << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
-        total_ele *= (array_T->getNumElements());
-        tmp_dim_size[num_dims] = (array_T->getNumElements());
-        num_dims++;
-        tmp_type = array_T->getArrayElementType();
-    }
-
     HI_ArrayInfo res_array_info;
-    res_array_info.num_dims = num_dims;
-    for (int i = 0; i < num_dims; i++)
+    res_array_info.num_dims = this->Target2BasicArrayInfo[target]->num_dims;
+    int num_dims = res_array_info.num_dims;
+    for (int i = 0; i < res_array_info.num_dims; i++)
     {
-        res_array_info.dim_size[i] = tmp_dim_size[num_dims - i - 1];
+        res_array_info.dim_size[i] = this->Target2BasicArrayInfo[target]->dim_size[i];
     }
-
+    // for (int i = 0; i < num_dims; i++)
+    // {
+    //     res_array_info.dim_size[i] = tmp_dim_size[num_dims - i - 1];
+    // }
     res_array_info.sub_element_num[0] = 1;
-    for (int i = 1; i < num_dims; i++)
+    for (int i = 1; i < res_array_info.num_dims; i++)
     {
         res_array_info.sub_element_num[i] = res_array_info.sub_element_num[i - 1] * res_array_info.dim_size[i - 1];
     }
 
     if (auto arg_v = dyn_cast<Argument>(target))
     {
-
-        if (num_dims == 0)
+        if (res_array_info.num_dims == 0)
             res_array_info.sub_element_num[num_dims] = 1;
         else
             res_array_info.sub_element_num[num_dims] =
@@ -710,7 +761,7 @@ HI_MuxInsertionArrayPartition::HI_ArrayInfo HI_MuxInsertionArrayPartition::getAr
         }
     }
 
-    res_array_info.elementType = tmp_type;
+    res_array_info.elementType = this->Target2BasicArrayInfo[target]->elementType;
     res_array_info.target = target;
 
     matchArrayAndConfiguration(target, res_array_info);
@@ -725,6 +776,112 @@ HI_MuxInsertionArrayPartition::HI_ArrayInfo HI_MuxInsertionArrayPartition::getAr
 
     return res_array_info;
 }
+
+// HI_MuxInsertionArrayPartition::HI_ArrayInfo HI_MuxInsertionArrayPartition::getArrayInfo(Value *target)
+// {
+//     if (Target2ArrayInfo.find(target) != Target2ArrayInfo.end())
+//         return Target2ArrayInfo[target];
+//     PointerType *ptr_type = dyn_cast<PointerType>(target->getType());
+//     if (!ptr_type)
+//     {
+//         llvm::errs() << "  "
+//                      << "target:" << *target << " is not pointer type.\n";
+//         assert(false && "wrong type for array target.");
+//     }
+//     if (DEBUG)
+//         *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: [" << *ptr_type->getArrayElementType()
+//                   << "]\n";
+//     Type *tmp_type = ptr_type->getArrayElementType();
+//     int total_ele = 1;
+//     int tmp_dim_size[10];
+//     int num_dims = 0;
+//     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
+//     {
+//         if (DEBUG)
+//             *ArrayLog << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
+//                       << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
+//         total_ele *= (array_T->getNumElements());
+//         tmp_dim_size[num_dims] = (array_T->getNumElements());
+//         num_dims++;
+//         tmp_type = array_T->getArrayElementType();
+//     }
+
+//     HI_ArrayInfo res_array_info;
+//     res_array_info.num_dims = num_dims;
+//     for (int i = 0; i < num_dims; i++)
+//     {
+//         res_array_info.dim_size[i] = tmp_dim_size[num_dims - i - 1];
+//     }
+
+//     res_array_info.sub_element_num[0] = 1;
+//     for (int i = 1; i < num_dims; i++)
+//     {
+//         res_array_info.sub_element_num[i] = res_array_info.sub_element_num[i - 1] * res_array_info.dim_size[i - 1];
+//     }
+
+//     if (auto arg_v = dyn_cast<Argument>(target))
+//     {
+
+//         if (num_dims == 0)
+//             res_array_info.sub_element_num[num_dims] = 1;
+//         else
+//             res_array_info.sub_element_num[num_dims] =
+//                 res_array_info.sub_element_num[num_dims - 1] * res_array_info.dim_size[num_dims - 1];
+
+//         std::string FuncName = demangleFunctionName(arg_v->getParent()->getName().str());
+//         std::string funcLine;
+//         std::string argName(arg_v->getName().str());
+
+//         for (int possibleLine : IRFunc2BeginLine[FuncName])
+//         {
+//             funcLine = std::to_string(possibleLine);
+//             if (FuncParamLine2OutermostSize.find(FuncName + "-" + argName + "-" + funcLine) !=
+//                 FuncParamLine2OutermostSize.end())
+//                 break;
+//         }
+
+//         res_array_info.dim_size[num_dims] =
+//             FuncParamLine2OutermostSize[FuncName + "-" + argName + "-" + funcLine]; // set to nearly infinite
+//         res_array_info.num_dims++;
+//         res_array_info.isArgument = 1;
+//     }
+//     else
+//     {
+//         if (auto global_v = dyn_cast<GlobalVariable>(target))
+//         {
+//             if (num_dims == 0)
+//             {
+//                 res_array_info.sub_element_num[num_dims] = 1;
+//                 res_array_info.dim_size[num_dims] = 1; // set to nearly infinite
+//                 res_array_info.num_dims = 1;
+//             }
+//         }
+//         else if (auto alloc_I = dyn_cast<AllocaInst>(target))
+//         {
+//             if (num_dims == 0)
+//             {
+//                 res_array_info.sub_element_num[num_dims] = 1;
+//                 res_array_info.dim_size[num_dims] = 1; // set to nearly infinite
+//                 res_array_info.num_dims = 1;
+//             }
+//         }
+//     }
+
+//     res_array_info.elementType = tmp_type;
+//     res_array_info.target = target;
+
+//     matchArrayAndConfiguration(target, res_array_info);
+
+//     int totalPartitionNum = getTotalPartitionNum(res_array_info);
+
+//     if (!res_array_info.completePartition)
+//     {
+//         if (res_array_info.sub_element_num[num_dims - 1] * res_array_info.dim_size[num_dims - 1] == totalPartitionNum)
+//             res_array_info.completePartition = 1;
+//     }
+
+//     return res_array_info;
+// }
 
 // get the total number of partitions of the target array
 int HI_MuxInsertionArrayPartition::getTotalPartitionNum(HI_ArrayInfo &refInfo)
@@ -991,7 +1148,6 @@ HI_MuxInsertionArrayPartition::partition_info HI_MuxInsertionArrayPartition::get
 
 bool HI_MuxInsertionArrayPartition::processNaiveAccess(Instruction *Load_or_Store)
 {
-
     if (Load_or_Store->getOpcode() != Instruction::Load && Load_or_Store->getOpcode() != Instruction::Store)
         return false;
 
@@ -1192,9 +1348,13 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
                     {
                         llvm::errs() << " -----> intial offset const: " << initial_const << "\n";
                         llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
-                                     << ((initial_const) & ((1 << start_V->getAPInt().getMinSignedBits()) - 1)) << " ["
-                                     << start_V->getAPInt().getMinSignedBits() << "]"
+                                     << ((initial_const) & ((1 << start_V->getAPInt().getBitWidth()) - 1)) << " ["
+                                     << start_V->getAPInt().getBitWidth() << "]"
                                      << "\n";
+                        // llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
+                        //              << ((initial_const) & ((1 << start_V->getAPInt().getMinSignedBits()) - 1)) << " ["
+                        //              << start_V->getAPInt().getMinSignedBits() << "]"
+                        //              << "\n";
                         llvm::errs() << "    -----> (1<<getActiveBits)-1 "
                                      << ((initial_const) & ((1 << start_V->getAPInt().getActiveBits()) - 1)) << " ["
                                      << start_V->getAPInt().getActiveBits() << "]"
@@ -1255,7 +1415,6 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
         // the actual start value is (pointer), when the offset is zero
         else if (auto initial_expr_unknown = dyn_cast<SCEVUnknown>(initial_expr_tmp))
         {
-
             initial_const = 0;
             if (DEBUG)
                 *ArrayLog << " -----> intial offset const: " << initial_const << "\n";
@@ -1265,8 +1424,13 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
             {
                 target = tmp_PTI_I->getOperand(0);
             }
+            else if (auto tmp_allo_I = dyn_cast<AllocaInst>(initial_expr_unknown->getValue()))
+            {
+                target = tmp_allo_I;
+            }
             else
             {
+
                 assert(target && "There should be an PtrToInt Instruction for the addition operation.\n");
             }
 
@@ -1432,9 +1596,17 @@ void HI_MuxInsertionArrayPartition::handleUnstandardSCEVAccessWithHeadOffset(Ins
             {
                 llvm::errs() << " -----> intial offset const: " << initial_const << "\n";
                 llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
-                             << ((initial_const) & ((1 << initial_const_scev->getAPInt().getMinSignedBits()) - 1))
-                             << " [" << initial_const_scev->getAPInt().getMinSignedBits() << "]"
+                             << ((initial_const) & ((1 << initial_const_scev->getAPInt().getBitWidth()) - 1))
+                             << " [" << initial_const_scev->getAPInt().getBitWidth() << "]"
                              << "\n";
+                // llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
+                //              << ((initial_const) & ((1 << initial_const_scev->getAPInt().getMinSignedBits()) - 1))
+                //              << " [" << initial_const_scev->getAPInt().getMinSignedBits() << "]"
+                //              << "\n";
+                // llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
+                //              << ((initial_const) & ((1 << initial_const_scev->getAPInt().getMinSignedBits()) - 1))
+                //              << " [" << initial_const_scev->getAPInt().getMinSignedBits() << "]"
+                //              << "\n";
                 llvm::errs() << "    -----> (1<<getActiveBits)-1 "
                              << ((initial_const) & ((1 << initial_const_scev->getAPInt().getActiveBits()) - 1)) << " ["
                              << initial_const_scev->getAPInt().getActiveBits() << "]"
@@ -1561,9 +1733,13 @@ void HI_MuxInsertionArrayPartition::handleUnstandardSCEVAccess(Instruction *I, c
                     ArrayLog->flush();
                 llvm::errs() << " -----> intial offset const: " << initial_const << "\n";
                 llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
-                             << ((initial_const) & ((1 << initial_const_scev->getAPInt().getMinSignedBits()) - 1))
-                             << " [" << initial_const_scev->getAPInt().getMinSignedBits() << "]"
+                             << ((initial_const) & ((1 << initial_const_scev->getAPInt().getBitWidth()) - 1))
+                             << " [" << initial_const_scev->getAPInt().getBitWidth() << "]"
                              << "\n";
+                // llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
+                //              << ((initial_const) & ((1 << initial_const_scev->getAPInt().getMinSignedBits()) - 1))
+                //              << " [" << initial_const_scev->getAPInt().getMinSignedBits() << "]"
+                //              << "\n";
                 llvm::errs() << "    -----> (1<<getActiveBits)-1 "
                              << ((initial_const) & ((1 << initial_const_scev->getAPInt().getActiveBits()) - 1)) << " ["
                              << initial_const_scev->getAPInt().getActiveBits() << "]"

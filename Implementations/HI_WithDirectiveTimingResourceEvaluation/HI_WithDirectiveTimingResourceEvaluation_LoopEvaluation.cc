@@ -1160,11 +1160,14 @@ void HI_WithDirectiveTimingResourceEvaluation::checkLoopCarriedDependent(Instruc
     const SCEV *tmp_S0 = SE->getSCEV(pointer_I0->getOperand(0));
     const SCEV *tmp_S1 = SE->getSCEV(pointer_I1->getOperand(0));
 
-    Optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
+    std::optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
+    // Optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
 
-    if (res != None)
+    if (res != std::nullopt)
+    // if (res != None)
     {
-        int offset_dis = res.getValue().getSExtValue();
+        int offset_dis = res->getSExtValue();
+        // int offset_dis = res.getValue().getSExtValue();
         if (DEBUG)
             *ArrayLog << " offset_dis=" << offset_dis << "\n";
 

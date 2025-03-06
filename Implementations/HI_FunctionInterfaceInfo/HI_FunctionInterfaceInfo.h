@@ -55,7 +55,7 @@ using namespace clang;
 
 class HI_FunctionInterfaceInfo_Visitor : public RecursiveASTVisitor<HI_FunctionInterfaceInfo_Visitor>
 {
-  public:
+public:
     HI_FunctionInterfaceInfo_Visitor(CompilerInstance &_CI, Rewriter &R, std::string _parselog_name,
                                      std::map<std::string, int> &FuncParamLine2OutermostSize,
                                      std::string topFunctioName, bool functionAllInline)
@@ -91,7 +91,8 @@ class HI_FunctionInterfaceInfo_Visitor : public RecursiveASTVisitor<HI_FunctionI
             FullSourceLoc FSL(ST, CI.getSourceManager());
 
             if (FuncName != topFunctioName && functionAllInline)
-                TheRewriter.InsertText(f->getBeginLoc(), "inline __attribute__((always_inline)) ", false, true);
+                TheRewriter.InsertTextBefore(f->getBeginLoc(), "inline __attribute__((always_inline)) ");
+            // TheRewriter.InsertText(f->getBeginLoc(), "inline __attribute__((always_inline)) " + "\n", false, true);
 
             if (f->getNumParams() > 0)
             {
@@ -171,7 +172,7 @@ class HI_FunctionInterfaceInfo_Visitor : public RecursiveASTVisitor<HI_FunctionI
         return PrintingPolicy(CI.getLangOpts());
     }
 
-  private:
+private:
     Rewriter &TheRewriter;
     std::map<std::string, int> &FuncParamLine2OutermostSize;
     std::string topFunctioName;
@@ -188,7 +189,7 @@ class HI_FunctionInterfaceInfo_Visitor : public RecursiveASTVisitor<HI_FunctionI
 // by the Clang parser.
 class HI_FunctionInterfaceInfo_ASTConsumer : public ASTConsumer
 {
-  public:
+public:
     HI_FunctionInterfaceInfo_ASTConsumer(CompilerInstance &_CI, Rewriter &R, std::string _parselog_name,
                                          std::map<std::string, int> &FuncParamLine2OutermostSize,
                                          std::string topFunctioName, bool functionAllInline)
@@ -207,7 +208,7 @@ class HI_FunctionInterfaceInfo_ASTConsumer : public ASTConsumer
         return true;
     }
 
-  private:
+private:
     HI_FunctionInterfaceInfo_Visitor Visitor;
     CompilerInstance &CI;
     std::string parselog_name;
@@ -223,7 +224,7 @@ class HI_FunctionInterfaceInfo_ASTConsumer : public ASTConsumer
 // For each source file provided to the tool, a new FrontendAction is created.
 class HI_FunctionInterfaceInfo_FrontendAction : public ASTFrontendAction
 {
-  public:
+public:
     HI_FunctionInterfaceInfo_FrontendAction(const char *_parselog_name, Rewriter &R, const char *_outputCode_name,
                                             std::map<std::string, int> &FuncParamLine2OutermostSize,
                                             std::string topFunctioName, bool functionAllInline)
@@ -250,7 +251,7 @@ class HI_FunctionInterfaceInfo_FrontendAction : public ASTFrontendAction
             CI, TheRewriter, parselog_name, FuncParamLine2OutermostSize, topFunctioName, functionAllInline);
     }
 
-  private:
+private:
     Rewriter &TheRewriter;
     std::map<std::string, int> &FuncParamLine2OutermostSize;
     std::string topFunctioName;
@@ -269,7 +270,7 @@ std::unique_ptr<tooling::FrontendActionFactory> HI_FunctionInterfaceInfo_rewrite
 {
     class SimpleFrontendActionFactory : public tooling::FrontendActionFactory
     {
-      public:
+    public:
         SimpleFrontendActionFactory(const char *_parseLog_name, Rewriter &R, const char *_outputCode_name,
                                     std::map<std::string, int> &FuncParamLine2OutermostSize, std::string topFunctioName,
                                     bool functionAllInline = 0)

@@ -24,6 +24,8 @@ include_directories(${Clang_INCLUDE_DIRS})
 
 include_directories(./ 
 ../../Implementations/ 
+../../Implementations/Include
+../../Implementations/HI_ArrayInfo
 ../../Implementations/HI_FindFunctions 
 ../../Implementations/HI_print 
 ../../Implementations/HI_LoopInFormationCollect 
@@ -36,7 +38,7 @@ include_directories(./
 ../../Implementations/HI_VarWidthReduce
 ../../Implementations/HI_SeparateConstOffsetFromGEP
 ../../Implementations/HI_NoDirectiveTimingResourceEvaluation
-../../Implementations/HI_IntstructionMoveBackward
+../../Implementations/HI_InstructionMoveBackward
 ../../Implementations/HI_HLSDuplicateInstRm
 ../../Implementations/HI_AggressiveLSR_MUL
 ../../Implementations/HI_ArrayAccessPattern
@@ -72,6 +74,7 @@ llvm_map_components_to_libnames(llvm_libs support core irreader engine nativecod
 target_link_libraries(${Outputname} pthread dl 
 HI_FindFunctions 
 HI_print 
+HI_ArrayInfo
 HI_DependenceList 
 HI_SysExec 
 HI_LoopInFormationCollect
@@ -81,7 +84,7 @@ HI_DuplicateInstRm
 HI_VarWidthReduce 
 HI_SeparateConstOffsetFromGEP
 HI_NoDirectiveTimingResourceEvaluation
-HI_IntstructionMoveBackward
+HI_InstructionMoveBackward
 HI_HLSDuplicateInstRm
 HI_AggressiveLSR_MUL
 HI_ArrayAccessPattern

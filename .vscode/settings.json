@@ -64,7 +64,11 @@
     "semaphore": "cpp",
     "shared_mutex": "cpp",
     "stop_token": "cpp",
-    "thread": "cpp"
+    "thread": "cpp",
+    "forward_list": "cpp",
+    "bitset": "cpp",
+    "span": "cpp",
+    "valarray": "cpp"
   },
   "editor.formatOnSave": true,
   "C_Cpp_Runner.cCompilerPath": "gcc",
@@ -98,5 +102,6 @@
     "**/.vscode",
     "**/.vscode/**"
   ],
-  "cmake.sourceDirectory": "/home/eeuser/Desktop/LLVM-18-Tutorials/Implementations"
+  "cmake.sourceDirectory": "/home/eeuser/Desktop/LLVM-18-Tutorials/Implementations",
+  "C_Cpp.errorSquiggles": "disabled"
 }

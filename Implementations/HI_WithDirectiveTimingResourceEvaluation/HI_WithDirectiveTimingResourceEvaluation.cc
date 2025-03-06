@@ -20,7 +20,7 @@ bool HI_WithDirectiveTimingResourceEvaluation::runOnModule(
                // will be executed for each Function.
 {
     print_status("Running HI_WithDirectiveTimingResourceEvaluation pass.");
-    gettimeofday(&tv_begin, NULL);
+    // gettimeofday(&tv_begin, NULL);
     if (DEBUG)
         *Evaluating_log << " ======================= the module begin =======================\n";
     if (DEBUG)

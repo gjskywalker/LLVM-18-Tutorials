@@ -117,8 +117,10 @@ public:
             std::string FuncName = DeclName.getAsString();
             // llvm::errs() << "find loop in function " << FuncName << "\n";
             // curStmt->dump();
-            TheRewriter.InsertText(ForStatement->getBeginLoc(),
-                                   "Loop_" + FuncName + "_" + std::to_string(label_counter) + ": ", false, true);
+            TheRewriter.InsertTextBefore(ForStatement->getBeginLoc(),
+                                         "Loop_" + FuncName + "_" + std::to_string(label_counter) + ": " + "\n");
+            // TheRewriter.InsertText(ForStatement->getBeginLoc(),
+            //                        "Loop_" + FuncName + "_" + std::to_string(label_counter) + ": ", false, true);
         }
         for (auto it = curStmt->child_begin(), ie = curStmt->child_end(); it != ie; it++)
         {

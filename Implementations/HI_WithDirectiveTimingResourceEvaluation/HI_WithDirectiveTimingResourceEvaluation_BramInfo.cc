@@ -1753,13 +1753,17 @@ bool HI_WithDirectiveTimingResourceEvaluation::checkAccessAlias(Instruction *I0,
     if (!tmp_S0 || !tmp_S1)
         return false;
 
-    Optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
+    std::optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
+    // Optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
 
-    if (res != None)
+    if (res != std::nullopt)
+    // if (res != None)
     {
         if (DEBUG)
-            *ArrayLog << "distance between them =" << res.getValue().getSExtValue() << "\n";
-        if (res.getValue().getSExtValue() == 0)
+            *ArrayLog << "distance between them =" << res->getSExtValue() << "\n";
+        // *ArrayLog << "distance between them =" << res.getValue().getSExtValue() << "\n";
+        if (res->getSExtValue() == 0)
+            // if (res.getValue().getSExtValue() == 0)
             return true;
         else
             return false;
@@ -2131,9 +2135,13 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
                     {
                         llvm::errs() << " -----> intial offset const: " << initial_const << "\n";
                         llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
-                                     << ((initial_const) & ((1 << start_V->getAPInt().getMinSignedBits()) - 1)) << " ["
-                                     << start_V->getAPInt().getMinSignedBits() << "]"
+                                     << ((initial_const) & ((1 << start_V->getAPInt().getBitWidth()) - 1)) << " ["
+                                     << start_V->getAPInt().getBitWidth() << "]"
                                      << "\n";
+                        // llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
+                        //              << ((initial_const) & ((1 << start_V->getAPInt().getMinSignedBits()) - 1)) << " ["
+                        //              << start_V->getAPInt().getMinSignedBits() << "]"
+                        //              << "\n";
                         llvm::errs() << "    -----> (1<<getActiveBits)-1 "
                                      << ((initial_const) & ((1 << start_V->getAPInt().getActiveBits()) - 1)) << " ["
                                      << start_V->getAPInt().getActiveBits() << "]"
@@ -2372,8 +2380,8 @@ void HI_WithDirectiveTimingResourceEvaluation::handleUnstandardSCEVAccessWithHea
             {
                 llvm::errs() << " -----> intial offset const: " << initial_const << "\n";
                 llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
-                             << ((initial_const) & ((1 << initial_const_scev->getAPInt().getMinSignedBits()) - 1))
-                             << " [" << initial_const_scev->getAPInt().getMinSignedBits() << "]"
+                             << ((initial_const) & ((1 << initial_const_scev->getAPInt().getBitWidth()) - 1))
+                             << " [" << initial_const_scev->getAPInt().getBitWidth() << "]"
                              << "\n";
                 llvm::errs() << "    -----> (1<<getActiveBits)-1 "
                              << ((initial_const) & ((1 << initial_const_scev->getAPInt().getActiveBits()) - 1)) << " ["
@@ -2381,7 +2389,7 @@ void HI_WithDirectiveTimingResourceEvaluation::handleUnstandardSCEVAccessWithHea
                              << "\n";
                 llvm::errs() << "    -----> (getZExtValue) "
                              << (((1 << initial_const_scev->getAPInt().getZExtValue()) - 1)) << " bw=["
-                             << initial_const_scev->getAPInt().getBitWidth() << "]"
+                             << initial_const_scev->getAPInt().getZExtValue() << "]"
                              << "\n";
                 initial_const = (initial_const) & ((1 << initial_const_scev->getAPInt().getZExtValue()) - 1);
             }
@@ -2496,9 +2504,13 @@ void HI_WithDirectiveTimingResourceEvaluation::handleUnstandardSCEVAccess(Instru
             {
                 llvm::errs() << " -----> intial offset const: " << initial_const << "\n";
                 llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
-                             << ((initial_const) & ((1 << initial_const_scev->getAPInt().getMinSignedBits()) - 1))
-                             << " [" << initial_const_scev->getAPInt().getMinSignedBits() << "]"
+                             << ((initial_const) & ((1 << initial_const_scev->getAPInt().getBitWidth()) - 1))
+                             << " [" << initial_const_scev->getAPInt().getBitWidth() << "]"
                              << "\n";
+                // llvm::errs() << "    -----> (1<<getMinSignedBits)-1 "
+                //              << ((initial_const) & ((1 << initial_const_scev->getAPInt().getMinSignedBits()) - 1))
+                //              << " [" << initial_const_scev->getAPInt().getMinSignedBits() << "]"
+                //              << "\n";
                 llvm::errs() << "    -----> (1<<getActiveBits)-1 "
                              << ((initial_const) & ((1 << initial_const_scev->getAPInt().getActiveBits()) - 1)) << " ["
                              << initial_const_scev->getAPInt().getActiveBits() << "]"
@@ -2709,8 +2721,8 @@ void HI_WithDirectiveTimingResourceEvaluation::getAllPartitionBasedOnInfo(HI_Acc
     }
 }
 
-Optional<APInt> HI_WithDirectiveTimingResourceEvaluation::computeConstantDifference(const SCEV *ori_More,
-                                                                                    const SCEV *ori_Less)
+std::optional<APInt> HI_WithDirectiveTimingResourceEvaluation::computeConstantDifference(const SCEV *ori_More, const SCEV *ori_Less)
+// Optional<APInt> HI_WithDirectiveTimingResourceEvaluation::computeConstantDifference(const SCEV *ori_More, const SCEV *ori_Less)
 {
     // We avoid subtracting expressions here because this function is usually
     // fairly deep in the call stack (i.e. is called many times).
@@ -2740,15 +2752,18 @@ Optional<APInt> HI_WithDirectiveTimingResourceEvaluation::computeConstantDiffere
         const auto *MAR = cast<SCEVAddRecExpr>(More);
 
         if (LAR->getLoop() != MAR->getLoop())
-            return None;
+            return std::nullopt;
+        // return None;
 
         // We look at affine expressions only; not for correctness but to keep
         // getStepRecurrence cheap.
         if (!LAR->isAffine() || !MAR->isAffine())
-            return None;
+            return std::nullopt;
+        // return None;
 
         if (LAR->getStepRecurrence(*SE) != MAR->getStepRecurrence(*SE))
-            return None;
+            return std::nullopt;
+        // return None;
 
         Less = LAR->getStart();
         More = MAR->getStart();
@@ -2784,7 +2799,8 @@ Optional<APInt> HI_WithDirectiveTimingResourceEvaluation::computeConstantDiffere
     if (C1 && C2 && RLess == RMore)
         return C2->getAPInt() - C1->getAPInt();
 
-    return None;
+    return std::nullopt;
+    // return None;
 }
 
 // some accesses with offset which is not related to the loop of current level
@@ -2932,12 +2948,14 @@ bool HI_WithDirectiveTimingResourceEvaluation::noAliasHazard(Instruction *I0, In
     const SCEV *tmp_S0 = SE->getSCEV(pointer_I0->getOperand(0));
     const SCEV *tmp_S1 = SE->getSCEV(pointer_I1->getOperand(0));
 
-    Optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
+    std::optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
+    // Optional<APInt> res = computeConstantDifference(tmp_S0, tmp_S1);
 
-    if (res != None)
+    if (res != std::nullopt)
+    // if (res != None)
     {
-
-        if (res.getValue().getSExtValue() == 0)
+        if (res->getSExtValue() == 0)
+        // if (res.getValue().getSExtValue() == 0)
         {
 
             return false;

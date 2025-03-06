@@ -1,3 +1,5 @@
+# HI_WithDirectiveTimingResourceEvaluation
+
 HI_WithDirectiveTimingResourceEvaluation pass is used to evaluate the timing and resource of the application, considering the effect of HLS directives.
 
 Here, I mainly consider array partitioning, loop pipelining and loop unrolling.
@@ -13,7 +15,6 @@ Basic implementation idea:
 3. Loop pipelining: since we cannot implement pipeline in the IR level, we use loop label to mark which loop should be pipelined. During the evaluation, the loop requested to be pipelined will be checked and the proper initial interval will be found.
 
 4. Muxes will be inserted for array partitions.
-
 
 Moreover, many other optimizations are involved for this test:
 a) Mul2Shl

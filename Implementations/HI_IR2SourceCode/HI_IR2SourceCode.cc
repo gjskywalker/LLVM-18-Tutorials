@@ -602,8 +602,6 @@ void HI_IR2SourceCode::mappingLoopIR2LoopLabel(DISubprogram *subprogram)
     }
     for (auto RMD : DFLoc->getRetainedNodes())
     {
-        if (DEBUG)
-            *IR2Src_Log << "     DebugInfo: " << *RMD << "\n";
         if (auto DLLoc = dyn_cast<DILabel>(RMD))
         {
             if (DEBUG)
@@ -622,22 +620,11 @@ void HI_IR2SourceCode::mappingLoopIR2LoopLabel(DISubprogram *subprogram)
                     tmp_loop_name += "-";
                     tmp_loop_name += itLine.first->getName();
                     *IR2Src_Log << "               tmp_loop_name: " << tmp_loop_name
-                                << " in Function : " << itLine.first->getParent()->getName()
+                                << "in Function : " << itLine.first->getParent()->getName()
                                 << " start at line: " << itLine.second.first << " looppath:" << Loop2Path[itLine.first]
                                 << " labelpath:" << tmp_path << "\n";
                 }
-                if (DEBUG)
-                {
-                    *IR2Src_Log << "For current basicblock: " << itLine.first->getName() << " : "
-                                << " start at line: " << itLine.second.first << " DLLoc->getLine(): " << DLLoc->getLine() << "\n";
-
-                    *IR2Src_Log << "Current Loop Path: " << Loop2Path[itLine.first] << " labelpath:" << tmp_path << "\n";
-                }
-                /*
-                    Since in the real case:
-                    1. the loop label is always the first line of the loop in the source code.
-                */
-                if (itLine.second.first == (DLLoc->getLine() + 1) && Loop2Path[itLine.first] == tmp_path)
+                if (itLine.second.first == DLLoc->getLine() && Loop2Path[itLine.first] == tmp_path)
                 {
 
                     if (!find)
@@ -654,10 +641,6 @@ void HI_IR2SourceCode::mappingLoopIR2LoopLabel(DISubprogram *subprogram)
                     }
                     else
                     {
-                        /*
-                            During the clang compilation, redundant loop labels can be checked and give a warning.
-                            However, in the real case, the loop label should be unique.
-                        */
                         std::string tmp_loop_name = itLine.first->getParent()->getName().str();
                         tmp_loop_name += "-";
                         tmp_loop_name += itLine.first->getName();
