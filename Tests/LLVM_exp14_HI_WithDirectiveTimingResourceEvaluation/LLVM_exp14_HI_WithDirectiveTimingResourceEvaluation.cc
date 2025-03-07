@@ -239,7 +239,7 @@ int main(int argc, const char **argv)
     // To differ with the HI_ArrayInfo which contains the pragma information, we define a new class ArrayInfo to store the
     // basic information of the array.
     std::map<llvm::Value *, ArrayInfo *> Target2ArrayInfo;
-    HI_ArrayInfo *hi_arrayinfo = new HI_ArrayInfo("HI_ArrayInfo", Target2ArrayInfo, true);
+    HI_ArrayInfo *hi_arrayinfo = new HI_ArrayInfo("HI_ArrayInfo", Target2ArrayInfo, (argc == 5 && std::string(argv[4]) == "DEBUG"));
     PM_pre.add(hi_arrayinfo);
 
     print_status("Start LLVM pre-processing");
@@ -559,7 +559,7 @@ int main(int argc, const char **argv)
     auto hi_withdirectivetimingresourceevaluation = new HI_WithDirectiveTimingResourceEvaluation(
         configFile_str.c_str(), "HI_WithDirectiveTimingResourceEvaluation", "BRAM_info_0",
         "ArrayLog", top_str.c_str(), IRLoop2LoopLabel_eval, IRLoop2OriginTripCount, LoopLabel2II,
-        LoopLabel2UnrollFactor, FuncParamLine2OutermostSize, IRFunc2BeginLine,
+        LoopLabel2UnrollFactor, FuncParamLine2OutermostSize, IRFunc2BeginLine, Target2ArrayInfo,
         (argc == 5 && std::string(argv[4]) == "DEBUG"));
     print_info("Enable HI_WithDirectiveTimingResourceEvaluation Pass");
     PM4.add(hi_withdirectivetimingresourceevaluation);

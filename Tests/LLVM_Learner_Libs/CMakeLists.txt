@@ -62,4 +62,4 @@ include_directories(./ ../../Implementations/
 ../../Implementations/HI_ArrayInfo
 )
 
-add_subdirectory(../../Implementations/HI_MuxInsertionArrayPartition ./building)
+add_subdirectory(../../Implementations/ ./building)

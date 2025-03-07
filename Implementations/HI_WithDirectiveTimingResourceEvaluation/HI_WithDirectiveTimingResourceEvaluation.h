@@ -20,6 +20,7 @@
 #include "HI_InstructionFiles.h"
 #include "HI_StringProcess.h"
 #include "HI_print.h"
+#include "HI_DataInfo.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/LoopAccessAnalysis.h"
@@ -60,6 +61,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <optional>
+#include <vector>
+#include <queue>
 
 using namespace llvm;
 
@@ -519,10 +522,10 @@ public:
         const char *ArrayLog_name, const char *top_function, std::map<std::string, std::string> &IRLoop2LoopLabel,
         std::map<std::string, int> &IRLoop2OriginTripCount, std::map<std::string, int> &LoopLabel2II,
         std::map<std::string, int> &LoopLabel2UnrollFactor, std::map<std::string, int> &FuncParamLine2OutermostSize,
-        std::map<std::string, std::vector<int>> &IRFunc2BeginLine, bool DEBUG = 0)
+        std::map<std::string, std::vector<int>> &IRFunc2BeginLine, std::map<llvm::Value *, ArrayInfo *> &Target2BasicArrayInfo, bool DEBUG = 0)
         : ModulePass(ID), IRLoop2LoopLabel(IRLoop2LoopLabel), LoopLabel2II(LoopLabel2II),
           LoopLabel2UnrollFactor(LoopLabel2UnrollFactor), FuncParamLine2OutermostSize(FuncParamLine2OutermostSize),
-          IRFunc2BeginLine(IRFunc2BeginLine), BiOp_Info_name2list_map(this->BiOp_Info_name2list_map_contain),
+          IRFunc2BeginLine(IRFunc2BeginLine), BiOp_Info_name2list_map(this->BiOp_Info_name2list_map_contain), Target2BasicArrayInfo(Target2BasicArrayInfo),
           DEBUG(DEBUG)
     {
         BlockEvaluated.clear();
@@ -616,6 +619,7 @@ public:
     std::map<std::string, resourceBase> LoopLabel2Resource;
     std::map<std::string, int> LoopLabel2SmallestII;
     std::map<std::string, int> LoopLabel2IterationLatency;
+    std::map<llvm::Value *, ArrayInfo *> Target2BasicArrayInfo;
     HI_DesignConfigInfo configInfo;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

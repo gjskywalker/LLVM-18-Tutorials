@@ -1376,9 +1376,13 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
                         {
                             target = tmp_PTI_I->getOperand(0);
                         }
+                        else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
+                        {
+                            target = tmp_allo_I;
+                        }
                         else
                         {
-                            assert(target && "There should be an PtrToInt Instruction for the "
+                            assert(target && "There should be an PtrToInt/Alloc Instruction for the "
                                              "addition operation.\n");
                         }
 
@@ -1431,7 +1435,7 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
             else
             {
 
-                assert(target && "There should be an PtrToInt Instruction for the addition operation.\n");
+                assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
             }
 
             if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
@@ -1626,9 +1630,13 @@ void HI_MuxInsertionArrayPartition::handleUnstandardSCEVAccessWithHeadOffset(Ins
                 {
                     target = tmp_PTI_I->getOperand(0);
                 }
+                else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
+                {
+                    target = tmp_allo_I;
+                }
                 else
                 {
-                    assert(target && "There should be an PtrToInt Instruction for the addition operation.\n");
+                    assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
                 }
 
                 if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
@@ -1759,9 +1767,13 @@ void HI_MuxInsertionArrayPartition::handleUnstandardSCEVAccess(Instruction *I, c
                 {
                     target = tmp_PTI_I->getOperand(0);
                 }
+                else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
+                {
+                    target = tmp_allo_I;
+                }
                 else
                 {
-                    assert(target && "There should be an PtrToInt Instruction for the addition operation.\n");
+                    assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
                 }
 
                 if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())

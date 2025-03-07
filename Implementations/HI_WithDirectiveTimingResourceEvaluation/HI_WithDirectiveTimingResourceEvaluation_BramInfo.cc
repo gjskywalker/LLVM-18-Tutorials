@@ -213,7 +213,8 @@ void HI_WithDirectiveTimingResourceEvaluation::TraceAccessForTarget(Value *cur_n
             {
                 Access2TargetMap[CallI].push_back(ori_node);
             }
-            for (int i = 0; i < CallI->getNumOperands(); ++i)
+            for (int i = 0; i < CallI->arg_size(); ++i)
+            // for (int i = 0; i < CallI->getNumOperands(); ++i)
             {
                 if (CallI->getArgOperand(i) == cur_node) // find which argument is exactly the pointer we are tracing
                 {
@@ -727,10 +728,13 @@ HI_WithDirectiveTimingResourceEvaluation::get_BRAM_Num_For(AllocaInst *alloca_I)
     resourceBase res(0, 0, 0, 0, clock_period);
     if (DEBUG)
         *BRAM_log << "\n\nchecking allocation instruction [" << *alloca_I
-                  << "] and its type is: " << *alloca_I->getType() << " and its ElementType is: ["
-                  << *alloca_I->getType()->getArrayElementType() << "]\n";
-    Type *tmp_type = alloca_I->getType()->getArrayElementType();
-
+                  << "] and its target is: " << *alloca_I << " and its ElementType is: ["
+                  << *alloca_I->getAllocatedType() << "]\n";
+    // *BRAM_log << "\n\nchecking allocation instruction [" << *alloca_I
+    //           << "] and its type is: " << *alloca_I->getType() << " and its ElementType is: ["
+    //           << *alloca_I->getType()->getArrayElementType() << "]\n";
+    // Type *tmp_type = alloca_I->getType()->getArrayElementType(); In LLVM 18.0.0, alloc->getType() is pointerType;
+    Type *tmp_type = alloca_I->getAllocatedType();
     while (auto array_T = dyn_cast<ArrayType>(tmp_type))
     {
         if (DEBUG)
@@ -914,33 +918,50 @@ HI_WithDirectiveTimingResourceEvaluation::get_BRAM_Num_For(int width, int depth)
 // different patterns so we need to process them in different ways.
 void HI_WithDirectiveTimingResourceEvaluation::TryArrayAccessProcess(Instruction *I, ScalarEvolution *SE)
 {
-
-    // handle the situation for access instruction, which address come from Value or allocaInst
+    // handle the situation for access instruction, which address come from Value or allocaInst and the offset is zero
     if (processNaiveAccess(I))
         return;
 
     // handle the situation for access instruction, which address come from ITP, where the I in ITP
-    // come from addition
+    // come from addition or phi instruction
     /*
     1.  get the initial value of access address by using SCEV
     2.  calculate the index of the access for different dimension
     */
-    if (I->getOpcode() != Instruction::Add)
+    if (I->getOpcode() != Instruction::Add && I->getOpcode() != Instruction::PHI)
         return;
     if (Inst_AccessRelated.find(I) == Inst_AccessRelated.end())
         return;
-
+    if (DEBUG)
+    {
+        *ArrayLog << *I << " is under processing of ArrayAccessProcess\n";
+        ArrayLog->flush();
+    }
+    // Normally, I is the add instruction or phi instruction
     auto ITP_I = dyn_cast<IntToPtrInst>(I->use_begin()->getUser());
-
     if (!ITP_I)
+    {
+        *ArrayLog << "Instruction " << *I << " is not used by IntToPtrInst\n";
+        ArrayLog->flush();
         return;
+    }
+    if (DEBUG)
+    {
+        *ArrayLog << "For instruction " << *I << "the corresponding IntToPtrInst is " << *ITP_I << "\n";
+        ArrayLog->flush();
+    }
 
     bool isMemoryAccess =
         dyn_cast<LoadInst>(ITP_I->use_begin()->getUser()) || dyn_cast<StoreInst>(ITP_I->use_begin()->getUser());
 
     if (DEBUG)
-        *ArrayLog << *I << " --> is under processing of ArrayAccessProcess\n";
-    // ArrayLog->flush();
+    {
+        if (isMemoryAccess)
+        {
+            *ArrayLog << "This is a memory access instruction and the related memory access instruction is " << *ITP_I->use_begin()->getUser() << "\n";
+            ArrayLog->flush();
+        }
+    }
     // if (!(ITP_I->hasOneUse() && isMemoryAccess))truction:   store i32 %add20.1, i32* %10, align
     // 4, !db
     // {
@@ -950,26 +971,35 @@ void HI_WithDirectiveTimingResourceEvaluation::TryArrayAccessProcess(Instruction
     // assert(ITP_I->hasOneUse() && isMemoryAccess && "This instruction shoudl be directly used for
     // one memory access.");
 
+    // Normally smaple_accessI is the store or load instruction
     Instruction *sample_accessI = dyn_cast<Instruction>(ITP_I->use_begin()->getUser());
 
     // 1.  get the initial value of access address by using SCEV
+    // PHI Instruction:   %indvars.iv69 = phi i64 [ 0, %for.cond16.preheader ], [ %indvars.iv.next70, %for.cond.cleanup22 ] SCEV: {0,+,1}<nuw><nsw><%for.cond20.preheader>
+    // Add Instruction:   %add20.1 = add i32 %add20, 1 SCEV: %add20.1
+    // TODO: the problem here is we may omit some phi nodes which are not directly used by the access instruction
     const SCEV *tmp_S = SE->getSCEV(I);
 
     if (DEBUG)
+    {
         *ArrayLog << *I << " --> SCEV: " << *tmp_S << "\n";
+        ArrayLog->flush();
+    }
 
     // const SCEV *tryCleanS = tryGetPureAddOrAddRecSCEV(tmp_S, 0);
     // if (tryCleanS)
     //     *ArrayLog << *I << " --> tryGetPureAddOrAddRecSCEV SCEV: " << *tryCleanS << "\n";
-    ArrayLog->flush();
 
     if (getUnknownNum(tmp_S) > 1)
     {
         // it is a complex SCEV and hard to predict the access pattern, we assume that it could
         // access all possible elements. in the array
         if (DEBUG)
+        {
             *ArrayLog << *I << " --> SCEV: " << *tmp_S
                       << " has multiple unknown values in expression. It will be a complex access.\n";
+            ArrayLog->flush();
+        }
         handleComplexSCEVAccess(I, tmp_S);
         return;
     }
@@ -1267,7 +1297,8 @@ void HI_WithDirectiveTimingResourceEvaluation::findMemoryAccessin(Function *F)
 }
 
 // find out which instrctuins are related to the array, going through PtrToInt, Add, IntToPtr,
-// Store, Load instructions
+// Since normally, the inttoptr instruction is ahead of store/load instruction, so in the Inst_AccessRelated, it won't store the store/load instruction
+// Besides, allocation instruction (for instance, ptr %A = alloc[10 x [10 x i32]]) doesn't have operands, so it won't be stored in the Inst_AccessRelated
 void HI_WithDirectiveTimingResourceEvaluation::TraceAccessRelatedInstructionForTarget(Value *cur_node)
 {
     if (DEBUG)
@@ -1304,48 +1335,57 @@ HI_WithDirectiveTimingResourceEvaluation::getArrayInfo(Value *target)
 {
     if (Target2ArrayInfo.find(target) != Target2ArrayInfo.end())
         return Target2ArrayInfo[target];
-    PointerType *ptr_type = dyn_cast<PointerType>(target->getType());
-    if (!ptr_type)
+    // PointerType *ptr_type = dyn_cast<PointerType>(target->getType());
+    // if (!ptr_type)
+    // {
+    //     llvm::errs() << "  "
+    //                  << "target:" << *target << " is not pointer type.\n";
+    //     assert(false && "wrong type for array target.");
+    // }
+    // if (DEBUG)
+    //     *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: [" << *ptr_type->getArrayElementType()
+    //               << "]\n";
+    // Type *tmp_type = ptr_type->getArrayElementType();
+    // int total_ele = 1;
+    // int tmp_dim_size[10];
+    // int num_dims = 0;
+    // while (auto array_T = dyn_cast<ArrayType>(tmp_type))
+    // {
+    //     if (DEBUG)
+    //         *ArrayLog << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
+    //                   << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
+    //     total_ele *= (array_T->getNumElements());
+    //     tmp_dim_size[num_dims] = (array_T->getNumElements());
+    //     num_dims++;
+    //     tmp_type = array_T->getArrayElementType();
+    // }
+    if (this->Target2BasicArrayInfo.find(target) == this->Target2BasicArrayInfo.end())
     {
         llvm::errs() << "  "
-                     << "target:" << *target << " is not pointer type.\n";
+                     << "target:" << *target
+                     << " is not found in the Target2BasicArrayInfo.\n";
         assert(false && "wrong type for array target.");
     }
-    if (DEBUG)
-        *ArrayLog << "\n\nchecking type : " << *ptr_type << " and its ElementType is: [" << *ptr_type->getArrayElementType()
-                  << "]\n";
-    Type *tmp_type = ptr_type->getArrayElementType();
-    int total_ele = 1;
-    int tmp_dim_size[10];
-    int num_dims = 0;
-    while (auto array_T = dyn_cast<ArrayType>(tmp_type))
-    {
-        if (DEBUG)
-            *ArrayLog << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
-                      << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
-        total_ele *= (array_T->getNumElements());
-        tmp_dim_size[num_dims] = (array_T->getNumElements());
-        num_dims++;
-        tmp_type = array_T->getArrayElementType();
-    }
-
     HI_ArrayInfo res_array_info;
-    res_array_info.num_dims = num_dims;
-    for (int i = 0; i < num_dims; i++)
+    res_array_info.num_dims = this->Target2BasicArrayInfo[target]->num_dims;
+    int num_dims = res_array_info.num_dims;
+    for (int i = 0; i < res_array_info.num_dims; i++)
     {
-        res_array_info.dim_size[i] = tmp_dim_size[num_dims - i - 1];
+        res_array_info.dim_size[i] = this->Target2BasicArrayInfo[target]->dim_size[i];
     }
-
+    // for (int i = 0; i < num_dims; i++)
+    // {
+    //     res_array_info.dim_size[i] = tmp_dim_size[num_dims - i - 1];
+    // }
     res_array_info.sub_element_num[0] = 1;
-    for (int i = 1; i < num_dims; i++)
+    for (int i = 1; i < res_array_info.num_dims; i++)
     {
         res_array_info.sub_element_num[i] = res_array_info.sub_element_num[i - 1] * res_array_info.dim_size[i - 1];
     }
 
     if (auto arg_v = dyn_cast<Argument>(target))
     {
-
-        if (num_dims == 0)
+        if (res_array_info.num_dims == 0)
             res_array_info.sub_element_num[num_dims] = 1;
         else
             res_array_info.sub_element_num[num_dims] =
@@ -1390,15 +1430,18 @@ HI_WithDirectiveTimingResourceEvaluation::getArrayInfo(Value *target)
         }
     }
 
-    res_array_info.elementType = tmp_type;
+    res_array_info.elementType = this->Target2BasicArrayInfo[target]->elementType;
     res_array_info.target = target;
 
     matchArrayAndConfiguration(target, res_array_info);
 
     int totalPartitionNum = getTotalPartitionNum(res_array_info);
 
-    if (res_array_info.sub_element_num[num_dims - 1] * res_array_info.dim_size[num_dims - 1] == totalPartitionNum)
-        res_array_info.completePartition = 1;
+    if (!res_array_info.completePartition)
+    {
+        if (res_array_info.sub_element_num[num_dims - 1] * res_array_info.dim_size[num_dims - 1] == totalPartitionNum)
+            res_array_info.completePartition = 1;
+    }
 
     return res_array_info;
 }
@@ -1444,7 +1487,7 @@ HI_WithDirectiveTimingResourceEvaluation::getPartitionFor(Instruction *access)
     HI_AccessInfo tmp_res = getAccessInfoForAccessInst(access);
     std::vector<partition_info> partitions;
 
-    assert(!tmp_res.unpredictable && "unpredictable access shoudl not be considered to use getPartitionFor.");
+    assert(!tmp_res.unpredictable && "unpredictable access should not be considered to use getPartitionFor.");
 
     int tripCountMax = 1;
     if (LI->getLoopFor(access->getParent()))
@@ -1684,7 +1727,18 @@ HI_WithDirectiveTimingResourceEvaluation::getAccessInfoForAccessInst(Instruction
 
     assert(address_addI && "The pointer for this access should be found.\n");
     if (AddressInst2AccessInfo.find(address_addI) == AddressInst2AccessInfo.end())
+    {
+        // for (auto it : AddressInst2AccessInfo)
+        // {
+        //     llvm::errs() << "AddressInst2AccessInfo: " << *(it.first) << "\n";
+        // }
+        // for (auto ie : Inst_AccessRelated)
+        // {
+        //     llvm::errs() << "Inst_AccessRelated: " << *ie << "\n";
+        // }
         llvm::errs() << "Instruction: " << *Load_or_Store << " addressI: " << *address_addI << "<=======\n";
+    }
+
     assert(AddressInst2AccessInfo.find(address_addI) != AddressInst2AccessInfo.end() &&
            "The pointer should be checked by TryArrayAccessProcess() previously.");
     return AddressInst2AccessInfo[address_addI];
@@ -1965,12 +2019,13 @@ HI_WithDirectiveTimingResourceEvaluation::getAccessPartitionBasedOnAccessInfoAnd
     return res_partiton_info;
 }
 
+// In this function, we only trace the base address with offset 0;
 bool HI_WithDirectiveTimingResourceEvaluation::processNaiveAccess(Instruction *Load_or_Store)
 {
-
     if (Load_or_Store->getOpcode() != Instruction::Load && Load_or_Store->getOpcode() != Instruction::Store)
         return false;
-
+    *ArrayLog << "Processing naive access: " << *Load_or_Store << "\n";
+    ArrayLog->flush();
     Instruction *pointer_I = nullptr;
     Value *pointer_V = nullptr;
     if (Load_or_Store->getOpcode() == Instruction::Load)
@@ -1987,12 +2042,22 @@ bool HI_WithDirectiveTimingResourceEvaluation::processNaiveAccess(Instruction *L
     if (!pointer_I && pointer_V)
     {
         Value *target = pointer_V;
+        if (DEBUG)
+        {
+            *ArrayLog << "Processing naive access with target: " << *target << "\n";
+            ArrayLog->flush();
+        }
         if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
         {
             if (Alias2Target.find(target) != Alias2Target.end()) // it could be argument. We need to trace back to get
                                                                  // its original array declaration
             {
                 target = Alias2Target[target];
+                if (DEBUG)
+                {
+                    *ArrayLog << "Current target is alias, trace back to: " << *target << "\n";
+                    ArrayLog->flush();
+                }
             }
             else
             {
@@ -2024,6 +2089,8 @@ bool HI_WithDirectiveTimingResourceEvaluation::processNaiveAccess(Instruction *L
             AddressInst2AccessInfo[target] = getAccessInfoFor(target, Load_or_Store, 0, nullptr, nullptr);
             if (DEBUG)
                 *ArrayLog << " -----> access info with array index: " << AddressInst2AccessInfo[target] << "\n\n\n";
+            if (DEBUG)
+                ArrayLog->flush();
         }
     }
 
@@ -2069,6 +2136,87 @@ bool HI_WithDirectiveTimingResourceEvaluation::processNaiveAccess(Instruction *L
                     // ArrayLog->flush();
                 }
             }
+            // else
+            // {
+            // In this case, we need to do BFS to find the Ptr2IntInst
+            // Since phi node also relates to induciton variable, we need to record the previous PHI node to avoid
+            // the infinite searching loop.
+            // std::vector<llvm::PHINode *> visited_phi;
+            // std::queue<llvm::Value *> search_queue;
+            // search_queue.push(IPT->getOperand(0));
+            // while (search_queue.empty())
+            // {
+            //     llvm::Value *cur_val = search_queue.front();
+            //     search_queue.pop();
+            //     if (auto phi_node = dyn_cast<PHINode>(cur_val))
+            //     {
+            //         visited_phi.push_back(phi_node);
+            //         for (int i = 0; i < phi_node->getNumIncomingValues(); i++)
+            //         {
+            //             search_queue.push(phi_node->getIncomingValue(i));
+            //         }
+            //     }
+            //     else if (auto BinO = dyn_cast<BinaryOperator>(cur_val))
+            //     {
+            //         for (int i = 0; i < BinO->getNumOperands(); i++)
+            //         {
+            //             if (auto phi_node = dyn_cast<PHINode>(BinO->getOperand(i)))
+            //             {
+            //                 if (std::find(visited_phi.begin(), visited_phi.end(), phi_node) != visited_phi.end())
+            //                 {
+            //                     continue;
+            //                 }
+            //                 search_queue.push(phi_node);
+            //             }
+            //             else
+            //             {
+            //                 search_queue.push(BinO->getOperand(i));
+            //             }
+            //         }
+            //     }
+            //     else if (auto PTI = dyn_cast<PtrToIntInst>(cur_val))
+            //     {
+            //         Value *target = PTI->getOperand(0);
+            //         if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
+            //         {
+            //             if (Alias2Target.find(target) != Alias2Target.end()) // it could be argument. We need to trace
+            //                                                                  // back to get its original array declaration
+            //             {
+            //                 target = Alias2Target[target];
+            //             }
+            //             else
+            //             {
+            //                 llvm::errs() << "ERRORS: cannot find target [" << *target
+            //                              << "] in Target2ArrayInfo and its address=" << target << "\n";
+            //                 assert(Target2ArrayInfo.find(target) != Target2ArrayInfo.end() &&
+            //                        Alias2Target.find(target) != Alias2Target.end() &&
+            //                        "Fail to find the array inforamtion for the target.");
+            //             }
+            //         }
+            //         if (auto arg_pointer = dyn_cast<Argument>(target))
+            //         {
+            //             AddressInst2AccessInfo[pointer_I->getOperand(0)] =
+            //                 getAccessInfoFor(target, Load_or_Store, 0, nullptr, nullptr);
+            //             if (DEBUG)
+            //                 *ArrayLog << " -----> access info with array index: "
+            //                           << AddressInst2AccessInfo[pointer_I->getOperand(0)] << "\n\n\n";
+            //             // ArrayLog->flush();
+            //         }
+            //         else if (auto alloc_pointer = dyn_cast<AllocaInst>(target))
+            //         {
+            //             AddressInst2AccessInfo[pointer_I->getOperand(0)] =
+            //                 getAccessInfoFor(target, Load_or_Store, 0, nullptr, nullptr);
+            //             if (DEBUG)
+            //                 *ArrayLog << " -----> access info with array index: "
+            //                           << AddressInst2AccessInfo[pointer_I->getOperand(0)] << "\n\n\n";
+            //             // ArrayLog->flush();
+            //         }
+            //     }
+            //     else
+            //     {
+            //         assert(false && "PtrToIntInst should be found.\n");
+            //     }
+            // }
         }
         else if (auto alloc_pointer = dyn_cast<AllocaInst>(pointer_I))
         {
@@ -2079,8 +2227,8 @@ bool HI_WithDirectiveTimingResourceEvaluation::processNaiveAccess(Instruction *L
                 ArrayLog->flush();
         }
     }
-
-    return false;
+    return true;
+    // return false;
 }
 
 void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, const SCEVAddRecExpr *SARE)
@@ -2099,7 +2247,7 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
         std::vector<int> inc_indices, trip_counts;
         findTheIncrementalIndexAndTripCount(SARE, inc_indices, trip_counts, I);
         if (DEBUG)
-            *ArrayLog << " -----> inccremental value: ";
+            *ArrayLog << " -----> incremental value: ";
         if (DEBUG)
             for (auto inc_const_tmp : inc_indices)
                 *ArrayLog << inc_const_tmp << " ";
@@ -2163,9 +2311,13 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
                         {
                             target = tmp_PTI_I->getOperand(0);
                         }
+                        else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
+                        {
+                            target = tmp_allo_I;
+                        }
                         else
                         {
-                            assert(target && "There should be an PtrToInt Instruction for the "
+                            assert(target && "There should be an PtrToInt/Alloc Instruction for the "
                                              "addition operation.\n");
                         }
 
@@ -2212,9 +2364,13 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
             {
                 target = tmp_PTI_I->getOperand(0);
             }
+            else if (auto tmp_allo_I = dyn_cast<AllocaInst>(initial_expr_unknown->getValue()))
+            {
+                target = tmp_allo_I;
+            }
             else
             {
-                assert(target && "There should be an PtrToInt Instruction for the addition operation.\n");
+                assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
             }
 
             if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
@@ -2346,7 +2502,7 @@ void HI_WithDirectiveTimingResourceEvaluation::handleUnstandardSCEVAccessWithHea
         std::vector<int> inc_indices, trip_counts;
         findTheIncrementalIndexAndTripCount(SARE, inc_indices, trip_counts, I);
         if (DEBUG)
-            *ArrayLog << " -----> inccremental value: ";
+            *ArrayLog << " -----> incremental value: ";
         if (DEBUG)
             for (auto inc_const_tmp : inc_indices)
                 *ArrayLog << inc_const_tmp << " ";
@@ -2402,9 +2558,13 @@ void HI_WithDirectiveTimingResourceEvaluation::handleUnstandardSCEVAccessWithHea
                 {
                     target = tmp_PTI_I->getOperand(0);
                 }
+                else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
+                {
+                    target = tmp_allo_I;
+                }
                 else
                 {
-                    assert(target && "There should be an PtrToInt Instruction for the addition operation.\n");
+                    assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
                 }
 
                 if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
@@ -2470,7 +2630,7 @@ void HI_WithDirectiveTimingResourceEvaluation::handleUnstandardSCEVAccess(Instru
         std::vector<int> inc_indices, trip_counts;
         findTheIncrementalIndexAndTripCount(SARE, inc_indices, trip_counts, I);
         if (DEBUG)
-            *ArrayLog << " -----> inccremental value: ";
+            *ArrayLog << " -----> incremental value: ";
         if (DEBUG)
             for (auto inc_const_tmp : inc_indices)
                 *ArrayLog << inc_const_tmp << " ";
@@ -2530,9 +2690,13 @@ void HI_WithDirectiveTimingResourceEvaluation::handleUnstandardSCEVAccess(Instru
                 {
                     target = tmp_PTI_I->getOperand(0);
                 }
+                else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
+                {
+                    target = tmp_allo_I;
+                }
                 else
                 {
-                    assert(target && "There should be an PtrToInt Instruction for the addition operation.\n");
+                    assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
                 }
 
                 if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
@@ -2584,18 +2748,24 @@ void HI_WithDirectiveTimingResourceEvaluation::handleComplexSCEVAccess(Instructi
     if (!ITP_I)
         return;
 
-    if (DEBUG)
-        *ArrayLog << *I << " --> is under processing of ArrayAccessProcess\n";
+    // if (DEBUG)
+    //     *ArrayLog << *I << " --> is under processing of ArrayAccessProcess\n";
     // ArrayLog->flush();
 
     Instruction *sample_accessI = dyn_cast<Instruction>(ITP_I->use_begin()->getUser());
 
     if (DEBUG)
+    {
         *ArrayLog << *I << " --> is a complex SCEV. We need special processing for it.\n";
+        ArrayLog->flush();
+    }
 
     Value *target = getTargetFromInst(sample_accessI);
     if (DEBUG)
+    {
         *ArrayLog << *I << " --> target array: " << *target << "\n";
+        ArrayLog->flush();
+    }
     if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
     {
         if (Alias2Target.find(target) != Alias2Target.end()) // it could be argument. We need to trace back to get its
@@ -2616,8 +2786,10 @@ void HI_WithDirectiveTimingResourceEvaluation::handleComplexSCEVAccess(Instructi
     assert(target && "the target array should be found.\n");
     AddressInst2AccessInfo[I] = getAccessInfoFor(target, I, -1, nullptr, nullptr, /*unpredictable*/ true);
     if (DEBUG)
+    {
         *ArrayLog << " -----> access info with array index: " << AddressInst2AccessInfo[I] << "\n\n\n";
-    // ArrayLog->flush();
+        ArrayLog->flush();
+    }
 }
 
 bool std::operator<(const HI_WithDirectiveTimingResourceEvaluation::partition_info &A,
