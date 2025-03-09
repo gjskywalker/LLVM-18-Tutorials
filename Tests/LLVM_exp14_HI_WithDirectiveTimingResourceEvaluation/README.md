@@ -3,6 +3,18 @@
 HI_WithDirectiveTimingResourceEvaluation pass is used to evaluate the timing and resource of the application, considering the effect of HLS directives.
 
 Here, I mainly consider array partitioning, loop pipelining and loop unrolling.
+When adding pragmas, please add the requirement pragma in `config.txt` file, the loop label will be automatically added
+during the compilation. The nameing rule for loop label is `Loop_funcname_id`. Users can find them in `tmp.cc` file.
+
+Examples for pragma writing:
+
+`
+
+1. array_partition variable=A scope=Loop__2mm_1 dim=1 factor=2 cyclic=1
+2. loop_unroll label=Loop__2mm_1 factor=2
+3. loop_pipelin label=Loop__2mm_1 factor=2
+
+`
 
 Basic implementation idea:
 

@@ -126,6 +126,7 @@ int main(int argc, const char **argv)
     //              "PLog", TheRewriter0, "tmp.cc")
     //              .get());
 
+    // Here is where we use the rewriter to rewrite the source file with the added loop labels and function inline comments
     std::map<std::string, int> FuncParamLine2OutermostSize;
     Tool.run(HI_FunctionInterfaceInfo_rewrite_newFrontendActionFactory<
                  HI_FunctionInterfaceInfo_FrontendAction>("PLog1", TheRewriter, "tmp.cc",
@@ -230,7 +231,7 @@ int main(int argc, const char **argv)
 
     std::map<std::string, std::vector<int>> IRFunc2BeginLine;
     auto hi_ir2sourcecode = new HI_IR2SourceCode("HI_IR2SourceCode", IRLoop2LoopLabel,
-                                                 IRFunc2BeginLine, IRLoop2OriginTripCount);
+                                                 IRFunc2BeginLine, IRLoop2OriginTripCount, (argc == 5 && std::string(argv[4]) == "DEBUG"));
     PM_pre.add(hi_ir2sourcecode);
     print_info("Enable HI_IR2SourceCode Pass");
 
@@ -289,10 +290,10 @@ int main(int argc, const char **argv)
         call void @_Z4_2mmPA3_iS0_S0_.for.cond20.preheader(ptr %C, i64 2, ptr %A, ptr %B), !dbg !59
         ret void, !dbg !61
     */
-    // auto hi_loopunroll = new HI_LoopUnroll(IRLoop2LoopLabel, LoopLabel2UnrollFactor, 1, true,
-    //                                        std::nullopt); //"HI_LoopUnroll"
-    // PM1.add(hi_loopunroll);
-    // print_info("Enable HI_LoopUnroll Pass");
+    auto hi_loopunroll = new HI_LoopUnroll(IRLoop2LoopLabel, LoopLabel2UnrollFactor, 1, true,
+                                           std::nullopt); //"HI_LoopUnroll"
+    PM1.add(hi_loopunroll);
+    print_info("Enable HI_LoopUnroll Pass");
 
     auto hi_separateconstoffsetfromgep =
         new HI_SeparateConstOffsetFromGEP("HI_SeparateConstOffsetFromGEP", true);

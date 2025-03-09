@@ -921,10 +921,75 @@ HI_WithDirectiveTimingResourceEvaluation::FF_Evaluate(
                     }
                 }
             }
+            else if (auto l1_pre = dyn_cast<PHINode>(l0_pred->getOperand(0)))
+            {
+                // TODO: I just copied the code from the AddOperator above, but I am not sure whether it is correct or not
+                if (DEBUG)
+                    *FF_log << "---- found the PHI instruction for its offset: " << *l1_pre << "\n";
+                for (int i = 0; i < l1_pre->getNumIncomingValues(); i++)
+                {
+                    if (isa<PtrToIntInst>(l1_pre->getIncomingValue(i)))
+                        continue;
+
+                    if (auto l2_pred =
+                            dyn_cast<Instruction>(byPassBitcastOp(l1_pre->getIncomingValue(i))))
+                    {
+                        if (DEBUG)
+                            *FF_log
+                                << "---- found the exact offset instruction for it: " << *l2_pred
+                                << "\n";
+
+                        // check whether we should consider the FF cost by this instruction l2_pred
+                        if (Value_FFAssigned.find(l2_pred) != Value_FFAssigned.end())
+                        {
+                            if (DEBUG)
+                                *FF_log << "---- which is registered.\n";
+                            return res;
+                        }
+
+                        if (BlockContain(I->getParent(), l2_pred))
+                        {
+                            if (cur_InstructionCriticalPath.find(l2_pred) !=
+                                cur_InstructionCriticalPath.end())
+                                if (cur_InstructionCriticalPath[l2_pred].latency ==
+                                    (cur_InstructionCriticalPath[I] - getInstructionLatency(I))
+                                        .latency) // WARNING: there are instructions with negative
+                                                  // latency in the libraries
+                                {
+                                    if (DEBUG)
+                                        *FF_log << "---- which needs no register.\n";
+                                    return res;
+                                }
+                        }
+
+                        // For ZExt/SExt Instruction, we do not need to consider those constant bits
+                        int minBW = l2_pred->getType()->getIntegerBitWidth();
+                        if (auto zext_I = dyn_cast<ZExtInst>(l2_pred))
+                        {
+                            minBW = zext_I->getSrcTy()->getIntegerBitWidth();
+                            if (DEBUG)
+                                *FF_log
+                                    << "---- which involves extension operation and the src BW is "
+                                    << minBW << "\n";
+                        }
+                        if (auto sext_I = dyn_cast<SExtInst>(l2_pred))
+                        {
+                            minBW = sext_I->getSrcTy()->getIntegerBitWidth();
+                            if (DEBUG)
+                                *FF_log
+                                    << "---- which involves extension operation and the src BW is "
+                                    << minBW
+                                    << "\n";
+                        }
+                        res.FF = minBW;
+                        Value_FFAssigned.insert(l2_pred);
+                    }
+                }
+            }
             else
             {
                 print_warning(
-                    "WARNING: The PRE-predecessor of store instruction should be AddOperator.");
+                    "WARNING: The PRE-predecessor of store instruction should be AddOperator/Phi.");
             }
         }
         else
@@ -1134,10 +1199,75 @@ HI_WithDirectiveTimingResourceEvaluation::FF_Evaluate(
                     }
                 }
             }
+            else if (auto l1_pred = dyn_cast<PHINode>(l0_pred->getOperand(0)))
+            {
+                if (DEBUG)
+                    *FF_log << "---- found the Phi instruction for its offset: " << *l1_pred
+                            << "\n";
+                for (int i = 0; i < l1_pred->getNumIncomingValues(); i++)
+                {
+                    if (isa<PtrToIntInst>(l1_pred->getIncomingValue(i)))
+                        continue;
+                    if (auto l2_pred =
+                            dyn_cast<Instruction>(byPassBitcastOp(l1_pred->getIncomingValue(i))))
+                    {
+                        if (DEBUG)
+                            *FF_log
+                                << "---- found the exact offset instruction for it: " << *l2_pred
+                                << "\n";
+
+                        // check whether we should consider the FF cost by this instruction l2_pred
+                        if (Value_FFAssigned.find(l2_pred) != Value_FFAssigned.end())
+                        {
+                            if (DEBUG)
+                                *FF_log << "---- which is registered.\n";
+                            return res;
+                        }
+
+                        if (BlockContain(I->getParent(), l2_pred))
+                        {
+                            if (cur_InstructionCriticalPath.find(l2_pred) !=
+                                cur_InstructionCriticalPath.end())
+                            {
+                                if (cur_InstructionCriticalPath[l2_pred].latency ==
+                                    (cur_InstructionCriticalPath[I] - getInstructionLatency(I))
+                                        .latency) // WARNING: there are instructions with negative
+                                                  // latency in the libraries
+                                {
+                                    if (DEBUG)
+                                        *FF_log << "---- which needs no register.\n";
+                                    return res;
+                                }
+                            }
+                        }
+
+                        // For ZExt/SExt Instruction, we do not need to consider those constant bits
+                        int minBW = l2_pred->getType()->getIntegerBitWidth();
+                        if (auto zext_I = dyn_cast<ZExtInst>(l2_pred))
+                        {
+                            minBW = zext_I->getSrcTy()->getIntegerBitWidth();
+                            if (DEBUG)
+                                *FF_log
+                                    << "---- which involves extension operation and the src BW is "
+                                    << minBW << "\n";
+                        }
+                        if (auto sext_I = dyn_cast<SExtInst>(l2_pred))
+                        {
+                            minBW = sext_I->getSrcTy()->getIntegerBitWidth();
+                            if (DEBUG)
+                                *FF_log
+                                    << "---- which involves extension operation and the src BW is "
+                                    << minBW << "\n";
+                        }
+                        res.FF = minBW;
+                        Value_FFAssigned.insert(l2_pred);
+                    }
+                }
+            }
             else
             {
                 print_warning("WARNING: Most of the PRE-predecessor of load instruction should be "
-                              "AddOperator.");
+                              "AddOperator/PhiNode.");
             }
         }
         else

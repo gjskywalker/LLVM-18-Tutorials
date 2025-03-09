@@ -2343,6 +2343,102 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
                             *ArrayLog << " -----> access target info: " << Target2ArrayInfo[target] << "\n";
                         // ArrayLog->flush();
                     }
+                    else if (const SCEVPtrToIntExpr *ptr2int_scev = dyn_cast<SCEVPtrToIntExpr>(initial_expr_add->getOperand(i)))
+                    {
+                        const SCEV *ptr_operand_SCEV = ptr2int_scev->getOperand(0);
+                        if (const SCEVUnknown *ptr_operand_SCEV_unknown = dyn_cast<SCEVUnknown>(ptr_operand_SCEV))
+                        {
+                            if (DEBUG)
+                            {
+                                *ArrayLog << " -----> access target: " << *ptr_operand_SCEV_unknown->getValue() << "\n";
+                                ArrayLog->flush();
+                            }
+                            if (auto tmp_PTI_I = dyn_cast<PtrToIntInst>(ptr_operand_SCEV_unknown->getValue()))
+                            {
+                                target = tmp_PTI_I->getOperand(0);
+                            }
+                            else if (auto tmp_allo_I = dyn_cast<AllocaInst>(ptr_operand_SCEV_unknown->getValue()))
+                            {
+                                target = tmp_allo_I;
+                            }
+                            else
+                            {
+                                assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
+                            }
+
+                            if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
+                            {
+                                if (Alias2Target.find(target) !=
+                                    Alias2Target.end()) // it could be argument. We need to trace back
+                                                        // to get its original array declaration
+                                {
+                                    target = Alias2Target[target];
+                                }
+                                else
+                                {
+                                    llvm::errs() << "ERRORS: cannot find target [" << *target
+                                                 << "] in Target2ArrayInfo and its address=" << target << "\n";
+                                    assert(Target2ArrayInfo.find(target) != Target2ArrayInfo.end() &&
+                                           Alias2Target.find(target) != Alias2Target.end() &&
+                                           "Fail to find the array inforamtion for the target.");
+                                }
+                            }
+
+                            if (DEBUG)
+                            {
+                                *ArrayLog << " -----> access target info: " << Target2ArrayInfo[target] << "\n";
+                                ArrayLog->flush();
+                            }
+                        }
+                    }
+                    else if (const SCEVPtrToIntExpr *ptr2int_scev = dyn_cast<SCEVPtrToIntExpr>(initial_expr_add->getOperand(i)))
+                    {
+                        const SCEV *ptr_operand_SCEV = ptr2int_scev->getOperand(0);
+                        if (const SCEVUnknown *ptr_operand_SCEV_unknown = dyn_cast<SCEVUnknown>(ptr_operand_SCEV))
+                        {
+                            if (DEBUG)
+                            {
+                                *ArrayLog << " -----> access target: " << *ptr_operand_SCEV_unknown->getValue() << "\n";
+                                ArrayLog->flush();
+                            }
+                            if (auto tmp_PTI_I = dyn_cast<PtrToIntInst>(ptr_operand_SCEV_unknown->getValue()))
+                            {
+                                target = tmp_PTI_I->getOperand(0);
+                            }
+                            else if (auto tmp_allo_I = dyn_cast<AllocaInst>(ptr_operand_SCEV_unknown->getValue()))
+                            {
+                                target = tmp_allo_I;
+                            }
+                            else
+                            {
+                                assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
+                            }
+
+                            if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
+                            {
+                                if (Alias2Target.find(target) !=
+                                    Alias2Target.end()) // it could be argument. We need to trace back
+                                                        // to get its original array declaration
+                                {
+                                    target = Alias2Target[target];
+                                }
+                                else
+                                {
+                                    llvm::errs() << "ERRORS: cannot find target [" << *target
+                                                 << "] in Target2ArrayInfo and its address=" << target << "\n";
+                                    assert(Target2ArrayInfo.find(target) != Target2ArrayInfo.end() &&
+                                           Alias2Target.find(target) != Alias2Target.end() &&
+                                           "Fail to find the array inforamtion for the target.");
+                                }
+                            }
+
+                            if (DEBUG)
+                            {
+                                *ArrayLog << " -----> access target info: " << Target2ArrayInfo[target] << "\n";
+                                ArrayLog->flush();
+                            }
+                        }
+                    }
                     else
                     {
                         assert(false && "The access target should be found.\n");

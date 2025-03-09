@@ -1325,7 +1325,7 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
                 *ArrayLog << trip_count_tmp << " ";
         if (DEBUG)
             *ArrayLog << "\n";
-        // ArrayLog->flush();
+        ArrayLog->flush();
 
         const SCEV *initial_expr_tmp = findTheActualStartValue(SARE);
 
@@ -1341,7 +1341,10 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
                 {
                     initial_const = start_V->getAPInt().getSExtValue();
                     if (DEBUG)
+                    {
                         *ArrayLog << " -----> intial offset const: " << initial_const << "\n";
+                        ArrayLog->flush();
+                    }
                     // assert(initial_const >= 0 && "the initial offset should be found.\n");
                     // some time, using 2-complement will end with fake negative initial offset
                     if (initial_const < 0)
@@ -1366,24 +1369,73 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
                         initial_const = (initial_const) & ((1 << start_V->getAPInt().getZExtValue()) - 1);
                     }
                 }
-                else
+                else if (const SCEVUnknown *array_value_scev = dyn_cast<SCEVUnknown>(initial_expr_add->getOperand(i)))
                 {
-                    if (const SCEVUnknown *array_value_scev = dyn_cast<SCEVUnknown>(initial_expr_add->getOperand(i)))
+                    if (DEBUG)
+                    {
+                        *ArrayLog << " -----> access target: " << *array_value_scev->getValue() << "\n";
+                        ArrayLog->flush();
+                    }
+                    if (auto tmp_PTI_I = dyn_cast<PtrToIntInst>(array_value_scev->getValue()))
+                    {
+                        target = tmp_PTI_I->getOperand(0);
+                    }
+                    else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
+                    {
+                        target = tmp_allo_I;
+                    }
+                    else
+                    {
+                        assert(target && "There should be an PtrToInt/Alloc Instruction for the "
+                                         "addition operation.\n");
+                    }
+
+                    if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
+                    {
+                        if (Alias2Target.find(target) !=
+                            Alias2Target.end()) // it could be argument. We need to trace back
+                                                // to get its original array declaration
+                        {
+                            target = Alias2Target[target];
+                        }
+                        else
+                        {
+                            llvm::errs() << "ERRORS: cannot find target [" << *target
+                                         << "] in Target2ArrayInfo and its address=" << target << "\n";
+                            assert(Target2ArrayInfo.find(target) != Target2ArrayInfo.end() &&
+                                   Alias2Target.find(target) != Alias2Target.end() &&
+                                   "Fail to find the array inforamtion for the target.");
+                        }
+                    }
+
+                    if (DEBUG)
+                    {
+                        *ArrayLog << " -----> access target info: " << Target2ArrayInfo[target] << "\n";
+                        ArrayLog->flush();
+                    }
+                }
+                // TODO: In SCEV we have the specific ptrtoint expr to handle the ptrtoint instructions, we to ensure we don't miss another cases, I chose to keep the above code
+                else if (const SCEVPtrToIntExpr *ptr2int_scev = dyn_cast<SCEVPtrToIntExpr>(initial_expr_add->getOperand(i)))
+                {
+                    const SCEV *ptr_operand_SCEV = ptr2int_scev->getOperand(0);
+                    if (const SCEVUnknown *ptr_operand_SCEV_unknown = dyn_cast<SCEVUnknown>(ptr_operand_SCEV))
                     {
                         if (DEBUG)
-                            *ArrayLog << " -----> access target: " << *array_value_scev->getValue() << "\n";
-                        if (auto tmp_PTI_I = dyn_cast<PtrToIntInst>(array_value_scev->getValue()))
+                        {
+                            *ArrayLog << " -----> access target: " << *ptr_operand_SCEV_unknown->getValue() << "\n";
+                            ArrayLog->flush();
+                        }
+                        if (auto tmp_PTI_I = dyn_cast<PtrToIntInst>(ptr_operand_SCEV_unknown->getValue()))
                         {
                             target = tmp_PTI_I->getOperand(0);
                         }
-                        else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
+                        else if (auto tmp_allo_I = dyn_cast<AllocaInst>(ptr_operand_SCEV_unknown->getValue()))
                         {
                             target = tmp_allo_I;
                         }
                         else
                         {
-                            assert(target && "There should be an PtrToInt/Alloc Instruction for the "
-                                             "addition operation.\n");
+                            assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
                         }
 
                         if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
@@ -1405,13 +1457,20 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
                         }
 
                         if (DEBUG)
+                        {
                             *ArrayLog << " -----> access target info: " << Target2ArrayInfo[target] << "\n";
-                        // ArrayLog->flush();
+                            ArrayLog->flush();
+                        }
                     }
-                    else
-                    {
-                        assert(false && "The access target should be found.\n");
-                    }
+                }
+                else
+                {
+                    llvm::errs() << *I << "Operand " << i << "\n";
+                    llvm::errs() << "ERRORS: cannot find the target [" << *(initial_expr_add->getOperand(i)) << "] in the SCEV.\n";
+                    llvm::errs() << "ERRORS: cannot find the target in the SCEV.\n"
+                                 << initial_expr_add->getOperand(i)->getSCEVType()
+                                 << "\n";
+                    assert(false && "The access target should be found.\n");
                 }
             }
         }
@@ -1434,7 +1493,6 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
             }
             else
             {
-
                 assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
             }
 
@@ -1457,13 +1515,11 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
 
             if (DEBUG)
                 *ArrayLog << " -----> access target info: " << Target2ArrayInfo[target] << "\n";
-            // ArrayLog->flush();
         }
         else
         {
             assert(false && "Shound not reach here.");
         }
-
         // assert(initial_const >= 0 && "the initial offset should be found.\n");
         // some time, using 2-complement will end with fake negative initial offset
 
@@ -1471,7 +1527,7 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
         AddressInst2AccessInfo[I] = getAccessInfoFor(target, I, initial_const, &inc_indices, &trip_counts);
         if (DEBUG)
             *ArrayLog << " -----> access info with array index: " << AddressInst2AccessInfo[I] << "\n\n\n";
-        // ArrayLog->flush();
+        ArrayLog->flush();
     }
 }
 
