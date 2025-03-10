@@ -271,6 +271,7 @@ int main(int argc, const char **argv)
     auto loopsimplifypass = createLoopSimplifyPass();
     PM1.add(loopsimplifypass);
 
+    // This one has been remove/replaced in LLVM-18.0.0
     // auto indvarsimplifypass = createIndVarSimplifyPass();
     // PM1.add(indvarsimplifypass);
     // print_info("Enable IndVarSimplifyPass Pass");
@@ -283,7 +284,7 @@ int main(int argc, const char **argv)
     print_info("Enable CFGSimplificationPass Pass");
 
     /*
-    Example after loop unrolling:
+    Example after loop unrolling & loop extraction:
         for.cond16.preheader:                             ; preds = %entry
         call void @_Z4_2mmPA3_iS0_S0_.for.cond20.preheader(ptr %C, i64 0, ptr %A, ptr %B), !dbg !59
         call void @_Z4_2mmPA3_iS0_S0_.for.cond20.preheader(ptr %C, i64 1, ptr %A, ptr %B), !dbg !59
@@ -316,6 +317,7 @@ int main(int argc, const char **argv)
     PM1.add(hi_mul2shl);
     print_info("Enable HI_Mul2Shl Pass");
 
+    // we used our custom pass to replace the original separateconstoffsetfromgep pass
     // auto separateconstoffsetfromgep = createSeparateConstOffsetFromGEPPass(true);
     // PM.add(separateconstoffsetfromgep);
     // print_info("Enable SeparateConstOffsetFromGEP Pass");
@@ -404,11 +406,12 @@ int main(int argc, const char **argv)
     print_cmd(cmd_str);
     result = sysexec(cmd_str.c_str());
     assert(result);
+    // Included in the HI_WithTimingResourceEvaluation pass
     // auto hi_arrayaccesspattern = new HI_ArrayAccessPattern("HI_ArrayAccessPattern",top_str);
     // PM.add(hi_arrayaccesspattern);
     // print_info("Enable HI_ArrayAccessPattern Pass");
 
-    // PM.add(createCorrelatedValuePropagationPass());
+    // PM3.add(createCorrelatedValuePropagationPass());
     // print_info("Enable CorrelatedValuePropagation Pass");
 
     // PM.add(createCorrelatedValuePropagationPass());
@@ -455,16 +458,16 @@ int main(int argc, const char **argv)
     result = sysexec(cmd_str.c_str());
     assert(result);
 
-    // auto hi_duplicateinstrm1 = new HI_DuplicateInstRm("rmInsts");
-    // PM.add(hi_duplicateinstrm1);
-    // print_info("Enable HI_DuplicateInstRm Pass");
+    auto hi_duplicateinstrm1 = new HI_DuplicateInstRm("rmInsts");
+    PM4.add(hi_duplicateinstrm1);
+    print_info("Enable HI_DuplicateInstRm Pass");
 
-    // PM.add(createStraightLineStrengthReducePass());
-    // print_info("Enable StraightLineStrengthReduce Pass");
+    PM4.add(createStraightLineStrengthReducePass());
+    print_info("Enable StraightLineStrengthReduce Pass");
 
-    // auto instructioncombiningpass = createInstructionCombiningPass(true);
-    // PM.add(instructioncombiningpass);
-    // print_info("Enable InstructionCombiningPass Pass");
+    auto instructioncombiningpass = createInstructionCombiningPass();
+    PM4.add(instructioncombiningpass);
+    print_info("Enable InstructionCombiningPass Pass");
 
     // auto loopstrengthreducepass = createLoopStrengthReducePass();
     // PM.add(loopstrengthreducepass);
