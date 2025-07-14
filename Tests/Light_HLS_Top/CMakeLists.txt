@@ -24,6 +24,7 @@ include_directories(${Clang_INCLUDE_DIRS})
 
 include_directories(./ 
 ../../Implementations/ 
+../../Implementations/Include
 ../../Implementations/HI_FindFunctions 
 ../../Implementations/HI_print 
 ../../Implementations/HI_LoopInFormationCollect 
@@ -35,7 +36,7 @@ include_directories(./
 ../../Implementations/HI_DuplicateInstRm
 ../../Implementations/HI_VarWidthReduce
 ../../Implementations/HI_SeparateConstOffsetFromGEP
-../../Implementations/HI_IntstructionMoveBackward
+../../Implementations/HI_InstructionMoveBackward
 ../../Implementations/HI_HLSDuplicateInstRm
 ../../Implementations/HI_AggressiveLSR_MUL
 ../../Implementations/HI_ArrayAccessPattern
@@ -80,7 +81,7 @@ HI_SimpleTimingEvaluation
 HI_DuplicateInstRm 
 HI_VarWidthReduce 
 HI_SeparateConstOffsetFromGEP
-HI_IntstructionMoveBackward
+HI_InstructionMoveBackward
 HI_HLSDuplicateInstRm
 HI_AggressiveLSR_MUL
 HI_ArrayAccessPattern

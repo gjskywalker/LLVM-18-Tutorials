@@ -13,12 +13,14 @@ extern std::string clock_period_str;
 extern std::string HLS_lib_path;
 
 void Parse_Config(const char *config_file_name, std::map<std::string, int> &LoopLabel2UnrollFactor,
-                  std::map<std::string, int> &LoopLabel2II);
+                  std::map<std::string, int> &LoopLabel2II, std::string &OptimalSequence);
 
 void parseArrayPartition(std::stringstream &iss);
 
 void parseLoopUnroll(std::stringstream &iss, std::map<std::string, int> &LoopLabel2UnrollFactor);
 
 void parseLoopPipeline(std::stringstream &iss, std::map<std::string, int> &LoopLabel2II);
+
+void parseOptimalSequence(std::stringstream &iss, std::string &OptimalSequence);
 
 #endif

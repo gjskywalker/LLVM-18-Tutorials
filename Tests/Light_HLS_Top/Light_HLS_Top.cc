@@ -128,9 +128,9 @@ int main(int argc, const char **argv)
         auto loopsimplifypass_pre = createLoopSimplifyPass();
         PM_pre.add(loopsimplifypass_pre);
 
-        auto indvarsimplifypass_pre = createIndVarSimplifyPass();
-        PM_pre.add(indvarsimplifypass_pre);
-        print_info("Enable IndVarSimplifyPass Pass");
+        // auto indvarsimplifypass_pre = createIndVarSimplifyPass();
+        // PM_pre.add(indvarsimplifypass_pre);
+        // print_info("Enable IndVarSimplifyPass Pass");
 
         auto CFGSimplification_pass22_pre = createCFGSimplificationPass();
         PM_pre.add(CFGSimplification_pass22_pre);
@@ -142,9 +142,9 @@ int main(int argc, const char **argv)
             PM_pre.add(loopextract);
             print_info("Enable LoopExtractor Pass");
 
-            auto indvarsimplifypass_pre_loopextract = createIndVarSimplifyPass();
-            PM_pre.add(indvarsimplifypass_pre_loopextract);
-            print_info("Enable IndVarSimplifyPass Pass");
+            // auto indvarsimplifypass_pre_loopextract = createIndVarSimplifyPass();
+            // PM_pre.add(indvarsimplifypass_pre_loopextract);
+            // print_info("Enable IndVarSimplifyPass Pass");
 
             auto CFGSimplification_pass22_pre_loopextract = createCFGSimplificationPass();
             PM_pre.add(CFGSimplification_pass22_pre_loopextract);
@@ -181,9 +181,9 @@ int main(int argc, const char **argv)
         auto loopsimplifypass = createLoopSimplifyPass();
         PM0.add(loopsimplifypass);
 
-        auto indvarsimplifypass = createIndVarSimplifyPass();
-        PM0.add(indvarsimplifypass);
-        print_info("Enable IndVarSimplifyPass Pass");
+        // auto indvarsimplifypass = createIndVarSimplifyPass();
+        // PM0.add(indvarsimplifypass);
+        // print_info("Enable IndVarSimplifyPass Pass");
 
         PM0.add(createTargetTransformInfoWrapperPass(TargetIRAnalysis()));
         print_info("Enable TargetIRAnalysis Pass");
@@ -201,10 +201,10 @@ int main(int argc, const char **argv)
         PM0.add(hi_separateconstoffsetfromgep);
         print_info("Enable HI_SeparateConstOffsetFromGEP Pass");
 
-        auto hi_intstructionmovebackward0 =
-            new HI_IntstructionMoveBackward("HI_IntstructionMoveBackward0", (debugFlag));
-        PM0.add(hi_intstructionmovebackward0);
-        print_info("Enable HI_IntstructionMoveBackward Pass");
+        auto hi_instructionmovebackward0 =
+            new HI_InstructionMoveBackward("HI_InstructionMoveBackward0", (debugFlag));
+        PM0.add(hi_instructionmovebackward0);
+        print_info("Enable HI_InstructionMoveBackward Pass");
 
         PM0.run(*Mod_tmp);
 
@@ -215,8 +215,7 @@ int main(int argc, const char **argv)
             OSPM0.flush();
         }
 
-        auto hi_loopunroll = new HI_LoopUnroll(IRLoop2LoopLabel, LoopLabel2UnrollFactor, 1, false,
-                                               None); //"HI_LoopUnroll"
+        auto hi_loopunroll = new HI_LoopUnroll(IRLoop2LoopLabel, LoopLabel2UnrollFactor, 1, false); //"HI_LoopUnroll"
         PM1.add(hi_loopunroll);
         print_info("Enable HI_LoopUnroll Pass");
 
@@ -257,9 +256,9 @@ int main(int argc, const char **argv)
         PM1.add(lowerswitch_pass);
         print_info("Enable LowerSwitchPass Pass");
 
-        auto ADCE_pass = createAggressiveDCEPass();
-        PM1.add(ADCE_pass);
-        print_info("Enable AggressiveDCEPass Pass");
+        // auto ADCE_pass = createAggressiveDCEPass();
+        // PM1.add(ADCE_pass);
+        // print_info("Enable AggressiveDCEPass Pass");
 
         auto CFGSimplification_pass1 = createCFGSimplificationPass();
         PM1.add(CFGSimplification_pass1);
@@ -288,10 +287,10 @@ int main(int argc, const char **argv)
         PM2.add(hi_removeredundantaccessPM2);
         print_info("Enable HI_RemoveRedundantAccess Pass");
 
-        auto hi_intstructionmovebackward1 =
-            new HI_IntstructionMoveBackward("HI_IntstructionMoveBackward1", (debugFlag));
-        PM2.add(hi_intstructionmovebackward1);
-        print_info("Enable HI_IntstructionMoveBackward Pass");
+        auto hi_instructionmovebackward1 =
+            new HI_InstructionMoveBackward("HI_InstructionMoveBackward1", (debugFlag));
+        PM2.add(hi_instructionmovebackward1);
+        print_info("Enable HI_InstructionMoveBackward Pass");
 
         // don't remove chained operations
         auto hi_hlsduplicateinstrm2 = new HI_HLSDuplicateInstRm("HLSrmInsts2", (debugFlag));
@@ -349,17 +348,17 @@ int main(int argc, const char **argv)
         PM4.add(scalarevolutionwrapperpass);
         print_info("Enable ScalarEvolutionWrapperPass Pass");
 
-        auto hi_MuxInsertionArrayPartition = new HI_MuxInsertionArrayPartition(
-            configFile_str.c_str(), top_str.c_str(), FuncParamLine2OutermostSize, IRFunc2BeginLine, debugFlag);
-        print_info("Enable HI_MuxInsertionArrayPartition Pass");
-        PM4.add(hi_MuxInsertionArrayPartition);
+        // auto hi_MuxInsertionArrayPartition = new HI_MuxInsertionArrayPartition(
+        //     configFile_str.c_str(), top_str.c_str(), FuncParamLine2OutermostSize, IRFunc2BeginLine, debugFlag);
+        // print_info("Enable HI_MuxInsertionArrayPartition Pass");
+        // PM4.add(hi_MuxInsertionArrayPartition);
 
         auto lowerswitch_pass_eval = createLowerSwitchPass();
         PM4.add(lowerswitch_pass_eval);
         // print_info("Enable LowerSwitchPass Pass");
 
-        auto ADCE_pass_eval = createAggressiveDCEPass();
-        PM4.add(ADCE_pass_eval);
+        // auto ADCE_pass_eval = createAggressiveDCEPass();
+        // PM4.add(ADCE_pass_eval);
         // print_info("Enable AggressiveDCEPass Pass");
 
         auto CFGSimplification_pass1_eval = createCFGSimplificationPass();

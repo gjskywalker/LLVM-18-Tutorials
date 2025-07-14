@@ -5,7 +5,7 @@
 #include "HI_FunctionInstantiation.h"
 #include "HI_HLSDuplicateInstRm.h"
 #include "HI_IR2SourceCode.h"
-#include "HI_IntstructionMoveBackward.h"
+#include "HI_InstructionMoveBackward.h"
 #include "HI_LoadALAP.h"
 #include "HI_LoopUnroll.h"
 #include "HI_Mul2Shl.h"

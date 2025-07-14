@@ -48,7 +48,8 @@ public:
 
     ~HI_ArrayInfo()
     {
-        Array_out->flush();
+        // Array_out->flush();
+        delete Array_out;
     }
 
     virtual bool doInitialization(Module &M) override
@@ -59,8 +60,7 @@ public:
 
     virtual bool doFinalization(Module &M) override
     {
-        *Array_out << "\n\n\n\n\n=================== Instruction Set and Example "
-                      "======================\n\n";
+        // print_status("Finalizing HI_ArrayInfo pass.");
         return false;
     }
 

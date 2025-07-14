@@ -405,7 +405,10 @@ HI_MuxInsertionArrayPartition::getAccessInfoFor(Value *target, Instruction *acce
 
     for (int i = 0; i < res.num_dims; i++) // initial access indice
     {
-        res.index[i] = (initial_offset / res.sub_element_num[i]) % res.dim_size[i];
+        if (res.dim_size[i] == 0 || res.sub_element_num[i] == 0)
+            print_error("The dimension size of the array is 0. Please rewrite the C++ Code so that LLVM IR can include the correct information.");
+        else
+            res.index[i] = (initial_offset / res.sub_element_num[i]) % res.dim_size[i];
     }
 
     if (inc_indices)
@@ -1384,6 +1387,10 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
                     {
                         target = tmp_allo_I;
                     }
+                    else if (auto tmp_arg = dyn_cast<Argument>(array_value_scev->getValue()))
+                    {
+                        target = tmp_arg;
+                    }
                     else
                     {
                         assert(target && "There should be an PtrToInt/Alloc Instruction for the "
@@ -1414,7 +1421,7 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
                         ArrayLog->flush();
                     }
                 }
-                // TODO: In SCEV we have the specific ptrtoint expr to handle the ptrtoint instructions, we to ensure we don't miss another cases, I chose to keep the above code
+                // TODO: In SCEV we have the specific ptrtoint expr to handle the ptrtoint instructions, to ensure we don't miss another cases, I chose to keep the above code
                 else if (const SCEVPtrToIntExpr *ptr2int_scev = dyn_cast<SCEVPtrToIntExpr>(initial_expr_add->getOperand(i)))
                 {
                     const SCEV *ptr_operand_SCEV = ptr2int_scev->getOperand(0);
@@ -1433,9 +1440,13 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
                         {
                             target = tmp_allo_I;
                         }
+                        else if (auto tmp_arg = dyn_cast<Argument>(ptr_operand_SCEV_unknown->getValue()))
+                        {
+                            target = tmp_arg;
+                        }
                         else
                         {
-                            assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
+                            assert(target && "There should be an PtrToInt/Alloc/Arg Instruction for the addition operation.\n");
                         }
 
                         if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
@@ -1491,9 +1502,13 @@ void HI_MuxInsertionArrayPartition::handleSAREAccess(Instruction *I, const SCEVA
             {
                 target = tmp_allo_I;
             }
+            else if (auto tmp_arg = dyn_cast<Argument>(initial_expr_unknown->getValue()))
+            {
+                target = tmp_arg;
+            }
             else
             {
-                assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
+                assert(target && "There should be an PtrToInt/Alloc/Arg Instruction for the addition operation.\n");
             }
 
             if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
@@ -1690,6 +1705,10 @@ void HI_MuxInsertionArrayPartition::handleUnstandardSCEVAccessWithHeadOffset(Ins
                 {
                     target = tmp_allo_I;
                 }
+                else if (auto tmp_arg = dyn_cast<Argument>(array_value_scev->getValue()))
+                {
+                    target = tmp_arg;
+                }
                 else
                 {
                     assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
@@ -1826,6 +1845,10 @@ void HI_MuxInsertionArrayPartition::handleUnstandardSCEVAccess(Instruction *I, c
                 else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
                 {
                     target = tmp_allo_I;
+                }
+                else if (auto tmp_arg = dyn_cast<Argument>(array_value_scev->getValue()))
+                {
+                    target = tmp_arg;
                 }
                 else
                 {

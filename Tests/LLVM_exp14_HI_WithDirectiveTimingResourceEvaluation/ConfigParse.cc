@@ -1,7 +1,7 @@
 #include "ConfigParse.h"
 
 void Parse_Config(const char *config_file_name, std::map<std::string, int> &LoopLabel2UnrollFactor,
-                  std::map<std::string, int> &LoopLabel2II)
+                  std::map<std::string, int> &LoopLabel2II, std::string &OptimalSequence)
 {
     std::string tmp_s;
     std::string tmpStr_forParsing;
@@ -27,7 +27,7 @@ void Parse_Config(const char *config_file_name, std::map<std::string, int> &Loop
             break;
 
         case hash_compile_time("array_partition"):
-            // parseArrayPartition(iss);
+            parseArrayPartition(iss);
             break;
 
         case hash_compile_time("loop_unroll"):
@@ -38,12 +38,34 @@ void Parse_Config(const char *config_file_name, std::map<std::string, int> &Loop
             parseLoopPipeline(iss, LoopLabel2II);
             break;
 
+        case hash_compile_time("optimal_sequence"):
+            parseOptimalSequence(iss, OptimalSequence);
+            break;
         default:
             break;
         }
     }
     assert(HLS_lib_path != "" && "The HLS Lib is necessary in the configuration file!\n");
     delete config_file;
+}
+
+void parseOptimalSequence(std::stringstream &iss, std::string &OptimalSequence)
+{
+    std::string passes_18 = "simplifycfg sroa early-cse ipsccp globalopt typepromotion instcombine speculative-execution jump-threading correlated-propagation reassociate loop-instsimplify loop-simplifycfg licm loop-rotate loop-idiom indvars loop-deletion mldst-motion gvn sccp bdce adce memcpyopt dse loop-vectorize loop-load-elim slp-vectorizer loop-unroll instsimplify";
+    std::stringstream passes(passes_18);
+    std::vector<std::string> passes_vec;
+    std::string pass;
+    while (passes >> pass)
+    {
+        passes_vec.push_back(pass);
+    }
+    consumeEqual(iss); // Consume the '=' character
+    int value;
+    while (iss >> value) // Read integers separated by spaces
+    {
+        OptimalSequence += passes_vec[value] + ",";
+    }
+    OptimalSequence = OptimalSequence.substr(0, OptimalSequence.length() - 1); // remove the last ','
 }
 
 // parse the argument for array partitioning

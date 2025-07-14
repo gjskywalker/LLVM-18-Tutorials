@@ -10,9 +10,9 @@ Examples for pragma writing:
 
 `
 
-1. array_partition variable=A scope=Loop__2mm_1 dim=1 factor=2 cyclic=1
-2. loop_unroll label=Loop__2mm_1 factor=2
-3. loop_pipelin label=Loop__2mm_1 factor=2
+1. array_partition variable=A scope=Loop\_\_2mm_1 dim=1 factor=2 cyclic=1
+2. loop_unroll label=Loop\_\_2mm_1 factor=2
+3. loop_pipeling label=Loop\_\_2mm_1 factor=2
 
 `
 

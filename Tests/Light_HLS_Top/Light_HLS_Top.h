@@ -7,7 +7,7 @@
 #include "HI_FunctionInstantiation.h"
 #include "HI_HLSDuplicateInstRm.h"
 #include "HI_IR2SourceCode.h"
-#include "HI_IntstructionMoveBackward.h"
+#include "HI_InstructionMoveBackward.h"
 #include "HI_LoadALAP.h"
 #include "HI_LoopDependenceAnalysis.h"
 #include "HI_LoopInFormationCollect.h"
@@ -109,6 +109,7 @@
 #include <stdlib.h>
 #include <string>
 #include <utility>
+#include <optional>
 // #include "X86TargetMachine.h"
 
 // clang's frontend process !!! don;t miss them with llvm headers!!!

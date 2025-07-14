@@ -25,4 +25,4 @@ for file in `find -name *.a`
 do 
     rm -f ../$(basename $file)
     cp $file ../ 
-done 
+done

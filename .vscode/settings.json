@@ -68,7 +68,11 @@
     "forward_list": "cpp",
     "bitset": "cpp",
     "span": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "any": "cpp",
+    "codecvt": "cpp",
+    "iomanip": "cpp",
+    "variant": "cpp"
   },
   "editor.formatOnSave": true,
   "C_Cpp_Runner.cCompilerPath": "gcc",
@@ -78,22 +82,13 @@
   "C_Cpp_Runner.cppStandard": "",
   "C_Cpp_Runner.msvcBatchPath": "",
   "C_Cpp_Runner.useMsvc": false,
-  "C_Cpp_Runner.warnings": [
-    "-Wall",
-    "-Wextra",
-    "-Wpedantic"
-  ],
+  "C_Cpp_Runner.warnings": ["-Wall", "-Wextra", "-Wpedantic"],
   "C_Cpp_Runner.enableWarnings": true,
   "C_Cpp_Runner.warningsAsError": false,
   "C_Cpp_Runner.compilerArgs": [],
   "C_Cpp_Runner.linkerArgs": [],
-  "C_Cpp_Runner.includePaths": [
-    "/usr/local/include/polly"
-  ],
-  "C_Cpp_Runner.includeSearch": [
-    "*",
-    "**/*"
-  ],
+  "C_Cpp_Runner.includePaths": ["/usr/local/include/polly"],
+  "C_Cpp_Runner.includeSearch": ["*", "**/*"],
   "C_Cpp_Runner.excludeSearch": [
     "**/build",
     "**/build/**",

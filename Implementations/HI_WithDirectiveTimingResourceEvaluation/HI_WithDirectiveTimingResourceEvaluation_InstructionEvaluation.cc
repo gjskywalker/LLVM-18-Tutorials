@@ -171,16 +171,30 @@ HI_WithDirectiveTimingResourceEvaluation::getInstructionLatency(Instruction *I)
         int oprandBitWidth;
         int resBitWidth;
         Value *op1 = ICI->getOperand(1);
-        oprandBitWidth = op1->getType()->getIntegerBitWidth();
+        if (op1->getType()->isIntegerTy())
+        {
+            oprandBitWidth = op1->getType()->getIntegerBitWidth();
+            resBitWidth = ICI->getType()->getIntegerBitWidth();
+        }
+        else
+        {
+            if (op1->getType()->isPointerTy())
+            {
+                if (IntToPtrInst *ITP = dyn_cast<IntToPtrInst>(op1))
+                {
+                    oprandBitWidth = ITP->getOperand(0)->getType()->getIntegerBitWidth();
+                    resBitWidth = ICI->getType()->getIntegerBitWidth();
+                }
+            }
+        }
+        // oprandBitWidth = op1->getType()->getIntegerBitWidth();
         resBitWidth = oprandBitWidth;
         result = get_inst_TimingInfo_result("icmp", oprandBitWidth, resBitWidth, clock_period_str);
-        ;
         return result;
     }
     else if (FCmpInst *FI = dyn_cast<FCmpInst>(I))
     {
         result = get_inst_TimingInfo_result("fcmp", -1, -1, clock_period_str);
-        ;
         return result;
     }
     ////////////////////////////// Memory Operations /////////////////////////
@@ -708,11 +722,25 @@ HI_WithDirectiveTimingResourceEvaluation::getInstructionResource(Instruction *I)
         int oprandBitWidth;
         int resBitWidth;
         Value *op1 = ICI->getOperand(1);
-        oprandBitWidth = op1->getType()->getIntegerBitWidth();
+        if (op1->getType()->isIntegerTy())
+        {
+            oprandBitWidth = op1->getType()->getIntegerBitWidth();
+            resBitWidth = ICI->getType()->getIntegerBitWidth();
+        }
+        else
+        {
+            if (op1->getType()->isPointerTy())
+            {
+                if (IntToPtrInst *ITP = dyn_cast<IntToPtrInst>(op1))
+                {
+                    oprandBitWidth = ITP->getOperand(0)->getType()->getIntegerBitWidth();
+                    resBitWidth = ICI->getType()->getIntegerBitWidth();
+                }
+            }
+        }
+        // oprandBitWidth = op1->getType()->getIntegerBitWidth();
         resBitWidth = oprandBitWidth;
-        result =
-            get_inst_ResourceInfo_result("icmp", oprandBitWidth, resBitWidth, clock_period_str);
-        ;
+        result = get_inst_ResourceInfo_result("icmp", oprandBitWidth, resBitWidth, clock_period_str);
         return result;
     }
     else if (FCmpInst *FI = dyn_cast<FCmpInst>(I))
@@ -986,10 +1014,92 @@ HI_WithDirectiveTimingResourceEvaluation::FF_Evaluate(
                     }
                 }
             }
+            else if (auto l1_pred = dyn_cast<BinaryOperator>(l0_pred->getOperand(0)))
+            {
+                // TODO: I also just copied from AddOperator case.
+                /*
+                    My current case is:
+                    %0 = ptrtoint ptr %A to i64
+                    %7 = or i64 %0, 1, !dbg !104
+                */
+                if (l1_pred && l1_pre->getOpcode() == Instruction::Or)
+                {
+                    if (DEBUG)
+                        *FF_log << "---- found the Or instruction for its offset: " << *l1_pred
+                                << "\n";
+                    for (int i = 0; i < l1_pred->getNumOperands(); i++)
+                    {
+                        if (isa<PtrToIntInst>(l1_pred->getOperand(i)))
+                            continue;
+
+                        if (auto l2_pred =
+                                dyn_cast<Instruction>(byPassBitcastOp(l1_pred->getOperand(i))))
+                        {
+                            if (DEBUG)
+                                *FF_log
+                                    << "---- found the exact offset instruction for it: " << *l2_pred
+                                    << "\n";
+
+                            // check whether we should consider the FF cost by this instruction l2_pred
+                            if (Value_FFAssigned.find(l2_pred) != Value_FFAssigned.end())
+                            {
+                                if (DEBUG)
+                                    *FF_log << "---- which is registered.\n";
+                                return res;
+                            }
+
+                            if (BlockContain(I->getParent(), l2_pred))
+                            {
+                                if (cur_InstructionCriticalPath.find(l2_pred) !=
+                                    cur_InstructionCriticalPath.end())
+                                    if (cur_InstructionCriticalPath[l2_pred].latency ==
+                                        (cur_InstructionCriticalPath[I] - getInstructionLatency(I))
+                                            .latency) // WARNING: there are instructions with negative
+                                                      // latency in the libraries
+                                    {
+                                        if (DEBUG)
+                                            *FF_log << "---- which needs no register.\n";
+                                        return res;
+                                    }
+                            }
+
+                            // For ZExt/SExt Instruction, we do not need to consider those constant bits
+                            int minBW = l2_pred->getType()->getIntegerBitWidth();
+                            if (auto zext_I = dyn_cast<ZExtInst>(l2_pred))
+                            {
+                                minBW = zext_I->getSrcTy()->getIntegerBitWidth();
+                                if (DEBUG)
+                                    *FF_log
+                                        << "---- which involves extension operation and the src BW is "
+                                        << minBW << "\n";
+                            }
+                            if (auto sext_I = dyn_cast<SExtInst>(l2_pred))
+                            {
+                                minBW = sext_I->getSrcTy()->getIntegerBitWidth();
+                                if (DEBUG)
+                                    *FF_log
+                                        << "---- which involves extension operation and the src BW is "
+                                        << minBW << "\n";
+                            }
+                            res.FF = minBW;
+                            Value_FFAssigned.insert(l2_pred);
+                        }
+                        else if (auto l2_pred =
+                                     dyn_cast<Constant>(byPassBitcastOp(l1_pred->getOperand(i))))
+                        {
+                            if (DEBUG)
+                                *FF_log
+                                    << "---- found the exact offset instruction for it: " << *l2_pred
+                                    << "\n";
+                            return res;
+                        }
+                    }
+                }
+            }
             else
             {
                 print_warning(
-                    "WARNING: The PRE-predecessor of store instruction should be AddOperator/Phi.");
+                    "WARNING: The PRE-predecessor of store instruction should be AddOperator/Phi/Or.");
             }
         }
         else

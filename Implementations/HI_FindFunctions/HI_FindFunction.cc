@@ -35,30 +35,30 @@ bool HI_FindFunctions::runOnModule(
         }
     }
 
-    for (Function &F : M)
-    {
-        if (F.getName().find("llvm.") != std::string::npos) // bypass the "llvm.xxx" functions..
-            continue;
-        if (F.getName().find("HIPartitionMux") != std::string::npos) // bypass the "llvm.xxx" functions..
-            continue;
-        SE = &getAnalysis<ScalarEvolutionWrapperPass>(F).getSE();
-        for (BasicBlock &B : F)
-        {
-            for (Instruction &I : B)
-            {
-                if (SE->isSCEVable(I.getType()))
-                {
-                    // llvm::errs() << "Instruction: " << I << " is SCEVable\n";
-                    auto tmp_S = SE->getSCEV(&I);
-                    *Function_Demangle << "Instruction: " << I << " SCEV: " << *tmp_S << "\n";
-                }
-                else
-                {
-                    *Function_Demangle << "Instruction: " << I << " is not SCEVable\n";
-                }
-            }
-        }
-    }
+    // for (Function &F : M)
+    // {
+    //     if (F.getName().find("llvm.") != std::string::npos) // bypass the "llvm.xxx" functions..
+    //         continue;
+    //     if (F.getName().find("HIPartitionMux") != std::string::npos) // bypass the "llvm.xxx" functions..
+    //         continue;
+    //     // SE = &getAnalysis<ScalarEvolutionWrapperPass>(F).getSE();
+    //     for (BasicBlock &B : F)
+    //     {
+    //         for (Instruction &I : B)
+    //         {
+    //             if (SE->isSCEVable(I.getType()))
+    //             {
+    //                 // llvm::errs() << "Instruction: " << I << " is SCEVable\n";
+    //                 auto tmp_S = SE->getSCEV(&I);
+    //                 *Function_Demangle << "Instruction: " << I << " SCEV: " << *tmp_S << "\n";
+    //             }
+    //             else
+    //             {
+    //                 *Function_Demangle << "Instruction: " << I << " is not SCEVable\n";
+    //             }
+    //         }
+    //     }
+    // }
 
     *Function_Demangle
         << "===============printing the module ====================================\n";

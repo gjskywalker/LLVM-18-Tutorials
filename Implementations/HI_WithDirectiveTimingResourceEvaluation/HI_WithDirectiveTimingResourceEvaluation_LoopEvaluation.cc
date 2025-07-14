@@ -755,6 +755,7 @@ int HI_WithDirectiveTimingResourceEvaluation::checkAccessIIForLoop(Loop *curLoop
                 existingAccessCntForLoop[it_value_partition_2_cnt.first] += it_value_partition_2_cnt.second;
             }
             int accessTotalCntInLoop = existingAccessCntForLoop[it_value_partition_2_cnt.first];
+            // TODO: Check whether partID.port_num -1 is necessary or not, currently we assign partID.port_num to 1
             if ((accessTotalCntInLoop + partID.port_num - 1) / partID.port_num > min_II)
             {
                 if (DEBUG)

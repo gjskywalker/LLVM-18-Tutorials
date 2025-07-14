@@ -71,19 +71,19 @@ char HI_LoopDependenceAnalysis::ID =
 void HI_LoopDependenceAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.setPreservesAll();
-    AU.addRequired<LoopInfoWrapperPass>();
-    AU.addRequired<ScalarEvolutionWrapperPass>();
+    AU.addRequiredTransitive<LoopInfoWrapperPass>();
+    AU.addRequiredTransitive<ScalarEvolutionWrapperPass>();
     // AU.addRequired<ScalarEvolutionWrapperPass>();
     // AU.addRequired<LoopInfoWrapperPass>();
     // AU.addPreserved<LoopInfoWrapperPass>();
     // AU.addRequired<LoopAccessLegacyAnalysis>();
-    AU.addRequired<DominatorTreeWrapperPass>();
+    AU.addRequiredTransitive<DominatorTreeWrapperPass>();
     // AU.addPreserved<DominatorTreeWrapperPass>();
-    AU.addRequired<OptimizationRemarkEmitterWrapperPass>();
+    AU.addRequiredTransitive<OptimizationRemarkEmitterWrapperPass>();
     // AU.addPreserved<GlobalsAAWrapperPass>();
-    AU.addRequiredID(LoopSimplifyID);
+    // AU.addRequiredID(LoopSimplifyID);
     AU.addRequiredTransitive<AAResultsWrapperPass>();
-    AU.addPreserved<AAResultsWrapperPass>();
+    // AU.addPreserved<AAResultsWrapperPass>();
 }
 
 bool HI_LoopDependenceAnalysis::hasNoMemoryOps(BasicBlock *b)

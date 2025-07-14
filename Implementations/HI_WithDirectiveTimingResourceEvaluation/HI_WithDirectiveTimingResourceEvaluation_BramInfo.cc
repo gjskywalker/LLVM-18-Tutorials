@@ -38,7 +38,9 @@ void HI_WithDirectiveTimingResourceEvaluation::findMemoryDeclarationAndAnalyzeAc
             if (it->getType()->isPointerTy())
             {
                 PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-                if (tmp_PtrType->getArrayElementType()->isArrayTy())
+                if (tmp_PtrType)
+                // In LLVM-18.0.0, the getArrayElementType() is removed from pointer type
+                // if (tmp_PtrType->getArrayElementType()->isArrayTy())
                 {
                     if (DEBUG)
                         *ArrayLog << "  get array information of [" << it->getName()
@@ -49,19 +51,19 @@ void HI_WithDirectiveTimingResourceEvaluation::findMemoryDeclarationAndAnalyzeAc
                     if (DEBUG)
                         *ArrayLog << Target2ArrayInfo[it] << "\n";
                 }
-                else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
-                         tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
-                         tmp_PtrType->getArrayElementType()->isDoubleTy())
-                {
-                    if (DEBUG)
-                        *ArrayLog << "  get array information of [" << it->getName()
-                                  << "] from argument and its address=" << it << "\n";
-                    Target2ArrayInfo[it] = getArrayInfo(it);
-                    TraceAccessForTarget(it, it);
-                    Value2Target[it].insert(it);
-                    if (DEBUG)
-                        *ArrayLog << Target2ArrayInfo[it] << "\n";
-                }
+                // else if (tmp_PtrType->getArrayElementType()->isIntegerTy() ||
+                //          tmp_PtrType->getArrayElementType()->isFloatingPointTy() ||
+                //          tmp_PtrType->getArrayElementType()->isDoubleTy())
+                // {
+                //     if (DEBUG)
+                //         *ArrayLog << "  get array information of [" << it->getName()
+                //                   << "] from argument and its address=" << it << "\n";
+                //     Target2ArrayInfo[it] = getArrayInfo(it);
+                //     TraceAccessForTarget(it, it);
+                //     Value2Target[it].insert(it);
+                //     if (DEBUG)
+                //         *ArrayLog << Target2ArrayInfo[it] << "\n";
+                // }
             }
         }
     }
@@ -462,7 +464,8 @@ bool HI_WithDirectiveTimingResourceEvaluation::checkBRAMAvailabilty(
     // }
 
     int cnt = 0;
-    HI_AccessInfo curAccessInfo = getAccessInfoForAccessInst(access);
+    if ()
+        HI_AccessInfo curAccessInfo = getAccessInfoForAccessInst(access);
 
     // check whether there is congestion when trying to access the BRAM
     // by checking the list of scheduled accesses in the basic block
@@ -780,37 +783,45 @@ HI_WithDirectiveTimingResourceEvaluation::get_BRAM_Num_For(Argument *ArgTarget)
 
     resourceBase res(0, 0, 0, 0, clock_period);
 
-    auto ptrType = dyn_cast<PointerType>(ArgTarget->getType());
+    // auto ptrType = dyn_cast<PointerType>(ArgTarget->getType());
 
-    if (DEBUG)
-        *BRAM_log << "\n\nchecking argument [" << *ArgTarget << "] and its type is: " << *ptrType
-                  << " and its ElementType is: [" << *ptrType->getArrayElementType() << "]\n";
-    if (DEBUG)
-        BRAM_log->flush();
-    Type *tmp_type = ptrType->getArrayElementType();
-    while (auto array_T = dyn_cast<ArrayType>(tmp_type))
-    {
-        if (DEBUG)
-            *BRAM_log << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
-                      << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
-        tmp_type = array_T->getArrayElementType();
-    }
+    // if (DEBUG)
+    //     *BRAM_log << "\n\nchecking argument [" << *ArgTarget << "] and its type is: " << *ptrType
+    //               << " and its ElementType is: [" << *ptrType->getArrayElementType() << "]\n";
+    // if (DEBUG)
+    //     BRAM_log->flush();
+    // Type *tmp_type = ptrType->getArrayElementType();
+    // while (auto array_T = dyn_cast<ArrayType>(tmp_type))
+    // {
+    //     if (DEBUG)
+    //         *BRAM_log << "----- element type of : " << *tmp_type << " is " << *(array_T->getArrayElementType())
+    //                   << " and the number of its elements is " << (array_T->getNumElements()) << "\n";
+    //     tmp_type = array_T->getArrayElementType();
+    // }
 
+    HI_ArrayInfo tmpInfo;
+    tmpInfo = Target2ArrayInfo[ArgTarget];
     int eachPartitionDepth = getEachPartitionDepth(Target2ArrayInfo[ArgTarget]);
     int totalPartitionNum = getTotalPartitionNum(Target2ArrayInfo[ArgTarget]);
 
     int BW = 0;
-    if (tmp_type->isIntegerTy())
-        BW = tmp_type->getIntegerBitWidth();
-    else if (tmp_type->isFloatTy())
+    // if (tmp_type->isIntegerTy())
+    //     BW = tmp_type->getIntegerBitWidth();
+    // else if (tmp_type->isFloatTy())
+    //     BW = 32;
+    // else if (tmp_type->isDoubleTy())
+    //     BW = 64;
+    if (tmpInfo.elementType->isIntegerTy())
+        BW = tmpInfo.elementType->getIntegerBitWidth();
+    else if (tmpInfo.elementType->isFloatTy())
         BW = 32;
-    else if (tmp_type->isDoubleTy())
+    else if (tmpInfo.elementType->isDoubleTy())
         BW = 64;
     assert(BW != 0 && "we should get BW for the basic element type.\n");
     res = get_BRAM_Num_For(BW, eachPartitionDepth) * totalPartitionNum;
 
     if (DEBUG)
-        *BRAM_log << "checked argument [" << *ArgTarget << "] and its basic elemenet type is: [" << *tmp_type
+        *BRAM_log << "checked argument [" << *ArgTarget << "] and its basic elemenet type is: [" << *(tmpInfo.elementType)
                   << "] with BW=[" << BW << "] and the total number of basic elements of each partition is: ["
                   << eachPartitionDepth << "] and the total number of partitions is " << totalPartitionNum
                   << "and it need BRAMs [" << res.BRAM << "].\n\n";
@@ -928,7 +939,7 @@ void HI_WithDirectiveTimingResourceEvaluation::TryArrayAccessProcess(Instruction
     1.  get the initial value of access address by using SCEV
     2.  calculate the index of the access for different dimension
     */
-    if (I->getOpcode() != Instruction::Add && I->getOpcode() != Instruction::PHI)
+    if (I->getOpcode() != Instruction::Add && I->getOpcode() != Instruction::PHI && I->getOpcode() != Instruction::Or && I->getOpcode() != Instruction::Select)
         return;
     if (Inst_AccessRelated.find(I) == Inst_AccessRelated.end())
         return;
@@ -938,10 +949,27 @@ void HI_WithDirectiveTimingResourceEvaluation::TryArrayAccessProcess(Instruction
         ArrayLog->flush();
     }
     // Normally, I is the add instruction or phi instruction
-    auto ITP_I = dyn_cast<IntToPtrInst>(I->use_begin()->getUser());
+    IntToPtrInst *ITP_I = nullptr;
+    for (User *U : I->users())
+    {
+        if (auto tmp_I = dyn_cast<IntToPtrInst>(U))
+        {
+            if (DEBUG)
+            {
+                *ArrayLog << "The user of " << *I << " is " << *tmp_I << "\n";
+                ArrayLog->flush();
+            }
+            ITP_I = tmp_I;
+            break;
+        }
+    }
     if (!ITP_I)
     {
         *ArrayLog << "Instruction " << *I << " is not used by IntToPtrInst\n";
+        for (User *U : I->users())
+        {
+            *ArrayLog << "The user is " << *U << "\n";
+        }
         ArrayLog->flush();
         return;
     }
@@ -1077,6 +1105,8 @@ void HI_WithDirectiveTimingResourceEvaluation::TryArrayAccessProcess(Instruction
 }
 
 // generate AccessInformation according to the target and the initial access
+// TODO: for some cases the array dimension information is not available in the IR level, we need to find an alternative way to get the information later.
+// Currently we only print the warning message for these cases.
 HI_WithDirectiveTimingResourceEvaluation::HI_AccessInfo
 HI_WithDirectiveTimingResourceEvaluation::getAccessInfoFor(Value *target, Instruction *access, int initial_offset,
                                                            std::vector<int> *inc_indices, std::vector<int> *trip_counts,
@@ -1363,8 +1393,8 @@ HI_WithDirectiveTimingResourceEvaluation::getArrayInfo(Value *target)
     {
         llvm::errs() << "  "
                      << "target:" << *target
-                     << " is not found in the Target2BasicArrayInfo.\n";
-        assert(false && "wrong type for array target.");
+                     << " is not found in the Target2BasicArrayInfo. Most likely it isn't used in this program.\n";
+        // assert(false && "wrong type for array target.");
     }
     HI_ArrayInfo res_array_info;
     res_array_info.num_dims = this->Target2BasicArrayInfo[target]->num_dims;
@@ -1702,6 +1732,7 @@ HI_WithDirectiveTimingResourceEvaluation::getAccessInfoForAccessInst(Instruction
     Value *address_addI = nullptr;
     if (pointer_I)
     {
+        // Two situations: inttoptr or allocation instruction
         if (pointer_I->getOpcode() == Instruction::IntToPtr)
             address_addI = (pointer_I->getOperand(0));
         else
@@ -1737,10 +1768,10 @@ HI_WithDirectiveTimingResourceEvaluation::getAccessInfoForAccessInst(Instruction
         //     llvm::errs() << "Inst_AccessRelated: " << *ie << "\n";
         // }
         llvm::errs() << "Instruction: " << *Load_or_Store << " addressI: " << *address_addI << "<=======\n";
+        assert(AddressInst2AccessInfo.find(address_addI) != AddressInst2AccessInfo.end() &&
+               "The pointer should be checked by TryArrayAccessProcess() previously.");
     }
 
-    assert(AddressInst2AccessInfo.find(address_addI) != AddressInst2AccessInfo.end() &&
-           "The pointer should be checked by TryArrayAccessProcess() previously.");
     return AddressInst2AccessInfo[address_addI];
 }
 
@@ -2006,6 +2037,7 @@ HI_WithDirectiveTimingResourceEvaluation::getAccessPartitionBasedOnAccessInfoAnd
     {
         if (refInfo.cyclic[i])
         {
+
             refInfo.partition_id[i] = refInfo.index[i] % refInfo.partition_size[i];
             res_partiton_info.partition_id[i] = refInfo.partition_id[i];
         }
@@ -2233,6 +2265,11 @@ bool HI_WithDirectiveTimingResourceEvaluation::processNaiveAccess(Instruction *L
 
 void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, const SCEVAddRecExpr *SARE)
 {
+    // Currently, we can't handle selct instruction
+    if (I->getOpcode() == Instruction::Select)
+    {
+        return;
+    }
     if (SARE->isAffine())
     {
 
@@ -2260,7 +2297,7 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
                 *ArrayLog << trip_count_tmp << " ";
         if (DEBUG)
             *ArrayLog << "\n";
-        // ArrayLog->flush();
+        ArrayLog->flush();
 
         const SCEV *initial_expr_tmp = findTheActualStartValue(SARE);
 
@@ -2277,6 +2314,7 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
                     initial_const = start_V->getAPInt().getSExtValue();
                     if (DEBUG)
                         *ArrayLog << " -----> intial offset const: " << initial_const << "\n";
+                    ArrayLog->flush();
                     // assert(initial_const >= 0 && "the initial offset should be found.\n");
                     // some time, using 2-complement will end with fake negative initial offset
                     if (initial_const < 0)
@@ -2301,6 +2339,44 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
                         initial_const = (initial_const) & ((1 << start_V->getAPInt().getZExtValue()) - 1);
                     }
                 }
+                else if (const SCEVSignExtendExpr *sign_extend_value = dyn_cast<SCEVSignExtendExpr>(initial_expr_add->getOperand(i)))
+                {
+                    if (const SCEVConstant *start_V = dyn_cast<SCEVConstant>(sign_extend_value->getOperand(0)))
+                    {
+                        initial_const = start_V->getAPInt().getSExtValue();
+                        if (DEBUG)
+                            *ArrayLog << " -----> intial offset const: " << initial_const << "\n";
+                        ArrayLog->flush();
+                    }
+                    else if (const SCEVAddRecExpr *start_V = dyn_cast<SCEVAddRecExpr>(sign_extend_value->getOperand(0)))
+                    {
+                        const SCEV *start_value = start_V->getStart();
+                        if (const SCEVConstant *start_V = dyn_cast<SCEVConstant>(start_value))
+                        {
+                            initial_const = start_V->getAPInt().getSExtValue();
+                            if (DEBUG)
+                                *ArrayLog << " -----> intial offset const: " << initial_const << "\n";
+                            ArrayLog->flush();
+                        }
+                        if (DEBUG)
+                            *ArrayLog << " -----> intial offset const: " << initial_const << "\n";
+                        ArrayLog->flush();
+                    }
+                    else
+                    {
+                        llvm::errs() << "ERRORS: cannot find the start value for the sign extend.\n";
+                        assert(false && "The start value should be found.\n");
+                    }
+                }
+                else if (const SCEVUnknown *array_value_scev = dyn_cast<SCEVUnknown>(initial_expr_add->getOperand(i)))
+                {
+                    if (DEBUG)
+                        *ArrayLog << " -----> intial offset expression: " << *array_value_scev->getValue() << "\n";
+                    initial_const = 0;
+                    if (DEBUG)
+                        *ArrayLog << " -----> intial offset const: " << initial_const << "\n";
+                    ArrayLog->flush();
+                }
                 else
                 {
                     if (const SCEVUnknown *array_value_scev = dyn_cast<SCEVUnknown>(initial_expr_add->getOperand(i)))
@@ -2314,6 +2390,10 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
                         else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
                         {
                             target = tmp_allo_I;
+                        }
+                        else if (auto tmp_arg = dyn_cast<Argument>(array_value_scev->getValue()))
+                        {
+                            target = tmp_arg;
                         }
                         else
                         {
@@ -2361,53 +2441,9 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
                             {
                                 target = tmp_allo_I;
                             }
-                            else
+                            else if (auto tmp_arg = dyn_cast<Argument>(ptr_operand_SCEV_unknown->getValue()))
                             {
-                                assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
-                            }
-
-                            if (Target2ArrayInfo.find(target) == Target2ArrayInfo.end())
-                            {
-                                if (Alias2Target.find(target) !=
-                                    Alias2Target.end()) // it could be argument. We need to trace back
-                                                        // to get its original array declaration
-                                {
-                                    target = Alias2Target[target];
-                                }
-                                else
-                                {
-                                    llvm::errs() << "ERRORS: cannot find target [" << *target
-                                                 << "] in Target2ArrayInfo and its address=" << target << "\n";
-                                    assert(Target2ArrayInfo.find(target) != Target2ArrayInfo.end() &&
-                                           Alias2Target.find(target) != Alias2Target.end() &&
-                                           "Fail to find the array inforamtion for the target.");
-                                }
-                            }
-
-                            if (DEBUG)
-                            {
-                                *ArrayLog << " -----> access target info: " << Target2ArrayInfo[target] << "\n";
-                                ArrayLog->flush();
-                            }
-                        }
-                    }
-                    else if (const SCEVPtrToIntExpr *ptr2int_scev = dyn_cast<SCEVPtrToIntExpr>(initial_expr_add->getOperand(i)))
-                    {
-                        const SCEV *ptr_operand_SCEV = ptr2int_scev->getOperand(0);
-                        if (const SCEVUnknown *ptr_operand_SCEV_unknown = dyn_cast<SCEVUnknown>(ptr_operand_SCEV))
-                        {
-                            if (DEBUG)
-                            {
-                                *ArrayLog << " -----> access target: " << *ptr_operand_SCEV_unknown->getValue() << "\n";
-                                ArrayLog->flush();
-                            }
-                            if (auto tmp_PTI_I = dyn_cast<PtrToIntInst>(ptr_operand_SCEV_unknown->getValue()))
-                            {
-                                target = tmp_PTI_I->getOperand(0);
-                            }
-                            else if (auto tmp_allo_I = dyn_cast<AllocaInst>(ptr_operand_SCEV_unknown->getValue()))
-                            {
-                                target = tmp_allo_I;
+                                target = tmp_arg;
                             }
                             else
                             {
@@ -2441,6 +2477,9 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
                     }
                     else
                     {
+                        *ArrayLog << " -----> access target: " << *initial_expr_add->getOperand(i) << "\n";
+                        *ArrayLog << " -----> SCEV Expr: " << initial_expr_add->getOperand(i)->getSCEVType() << "\n";
+                        ArrayLog->flush();
                         assert(false && "The access target should be found.\n");
                     }
                 }
@@ -2463,6 +2502,14 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
             else if (auto tmp_allo_I = dyn_cast<AllocaInst>(initial_expr_unknown->getValue()))
             {
                 target = tmp_allo_I;
+            }
+            else if (auto tmp_arg = dyn_cast<Argument>(initial_expr_unknown->getValue()))
+            {
+                target = tmp_arg;
+            }
+            else if (auto tmp_GV = dyn_cast<GlobalVariable>(initial_expr_unknown->getValue()))
+            {
+                target = tmp_GV;
             }
             else
             {
@@ -2508,14 +2555,20 @@ void HI_WithDirectiveTimingResourceEvaluation::handleSAREAccess(Instruction *I, 
 
 void HI_WithDirectiveTimingResourceEvaluation::handleDirectAccess(Instruction *I, const SCEVUnknown *SUnkown)
 {
-
+    // Currently, we can't handle select instruction
+    if (I->getOpcode() == Instruction::Select)
+    {
+        return;
+    }
     int initial_const = 0;
 
     if (DEBUG)
+    {
         *ArrayLog << *I << " --> is unkown " << *SUnkown << "\n";
+        ArrayLog->flush();
+    }
 
     Value *target = nullptr;
-
     auto PTI = dyn_cast<PtrToIntInst>(SUnkown->getValue());
 
     assert(PTI);
@@ -2658,6 +2711,10 @@ void HI_WithDirectiveTimingResourceEvaluation::handleUnstandardSCEVAccessWithHea
                 {
                     target = tmp_allo_I;
                 }
+                else if (auto tmp_arg = dyn_cast<Argument>(array_value_scev->getValue()))
+                {
+                    target = tmp_arg;
+                }
                 else
                 {
                     assert(target && "There should be an PtrToInt/Alloc Instruction for the addition operation.\n");
@@ -2789,6 +2846,10 @@ void HI_WithDirectiveTimingResourceEvaluation::handleUnstandardSCEVAccess(Instru
                 else if (auto tmp_allo_I = dyn_cast<AllocaInst>(array_value_scev->getValue()))
                 {
                     target = tmp_allo_I;
+                }
+                else if (auto tmp_arg = dyn_cast<Argument>(array_value_scev->getValue()))
+                {
+                    target = tmp_arg;
                 }
                 else
                 {
@@ -3288,7 +3349,8 @@ HI_WithDirectiveTimingResourceEvaluation::BRAMRelatedCostForTopFunction(Function
         if (it->getType()->isPointerTy())
         {
             PointerType *tmp_PtrType = dyn_cast<PointerType>(it->getType());
-            if (tmp_PtrType->getArrayElementType()->isArrayTy())
+            // if (tmp_PtrType->getArrayElementType()->isArrayTy())
+            if (tmp_PtrType)
             {
                 if (DEBUG)
                     *Evaluating_log << "  get array information of [" << it->getName()

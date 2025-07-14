@@ -105,6 +105,16 @@ int main(int argc, const char **argv)
     std::string top_str = std::string(argv[2]);
     std::string configFile_str = std::string(argv[3]);
 
+    std::map<std::string, std::string> IRLoop2LoopLabel;
+    std::map<std::string, int> IRLoop2OriginTripCount;
+    std::map<std::string, std::vector<std::string>> LoopLabel2SubLoopLabel;
+    std::map<std::string, std::string> LoopLabel2ParentLoopLabel;
+    std::map<std::string, int> LoopLabel2UnrollFactor;
+    std::map<std::string, int> LoopLabel2II;
+    std::string OptimalSequence;
+
+    Parse_Config(configFile_str.c_str(), LoopLabel2UnrollFactor, LoopLabel2II, OptimalSequence);
+
     // Generate json-compilation-database for clang tooling
     compile_cmd_generate(std::string(argv[1]));
 
@@ -140,13 +150,40 @@ int main(int argc, const char **argv)
     SMDiagnostic Err;
     LLVMContext Context;
     // std::string cmd_str = "clang -O1 -emit-llvm -S -g "+std::string(argv[1])+" -o top.bc 2>&1";
-    std::string cmd_str = "clang -O1 -emit-llvm -S -g tmp.cc -o top.bc 2>&1";
+    // std::string cmd_str = "clang -O1 -emit-llvm -S -g tmp.cc -o top.bc 2>&1";
+    if (OptimalSequence == "")
+    {
+        std::string cmd_str = "clang -O1 -emit-llvm -S -g tmp.cc -o top.bc 2>&1";
+        print_cmd(cmd_str.c_str());
+        bool result = sysexec(cmd_str.c_str());
+        assert(result);
+        print_info("Optimal Sequence: -O1");
+    }
+    else
+    {
+        std::string cmd_str = "clang -O0 -Xclang -disable-O0-optnone -emit-llvm -S -g tmp.cc -o tmp.bc 2>&1";
+        print_cmd(cmd_str.c_str());
+        bool result = sysexec(cmd_str.c_str());
+        assert(result); // ensure the cmd is executed successfully
+        // OptimalSequence = "mem2reg," + OptimalSequence + ",separate-const-offset-from-gep<lower-gep>";
+        // std::string cmd_str2 = "opt -passes=" + OptimalSequence + "-S tmp.bc -o top.bc 2>&1";
+        // print_cmd(cmd_str2.c_str());
+        // result = sysexec(cmd_str2.c_str());
+        // assert(result); // ensure the cmd is executed successfully
+        print_info("Optimal Sequence: " + OptimalSequence);
+        // Split the OptimalSequence into individual passes
+        std::stringstream ss(OptimalSequence);
+        std::string pass;
+        std::string currentInput = "tmp.bc";
+        std::string currentOutput = "top.bc";
 
-    print_cmd(cmd_str.c_str());
-    bool result = sysexec(cmd_str.c_str());
-    assert(result); // ensure the cmd is executed successfully
-
-    // system(cmd_str.c_str());
+        while (std::getline(ss, pass, ','))
+        {
+            std::string cmd = "opt -passes=" + pass + " -S " + currentInput + " -o " + currentOutput + " 2>&1";
+            system(cmd.c_str());          // Execute the command
+            currentInput = currentOutput; // Update input for the next pass
+        }
+    }
 
     std::unique_ptr<llvm::Module> Mod(parseIRFile("top.bc", Err, Context));
     if (!Mod)
@@ -172,16 +209,6 @@ int main(int argc, const char **argv)
         targetname = "The target machine is: " + targetname;
         print_info(targetname.c_str());
     }
-
-    std::map<std::string, std::string> IRLoop2LoopLabel;
-    std::map<std::string, int> IRLoop2OriginTripCount;
-    std::map<std::string, std::vector<std::string>> LoopLabel2SubLoopLabel;
-    std::map<std::string, std::string> LoopLabel2ParentLoopLabel;
-    std::map<std::string, int> LoopLabel2UnrollFactor;
-    std::map<std::string, int> LoopLabel2II;
-
-    Parse_Config(configFile_str.c_str(), LoopLabel2UnrollFactor, LoopLabel2II);
-
     /*
         CreateLoopExtractorPass - This pass extracts all natural loops from the program into a function if it can,
         which can make the loop unrolling pass have more readable formats. While, the new function may interfere the
@@ -229,6 +256,14 @@ int main(int argc, const char **argv)
         tail call void @llvm.memset.p0.i64(ptr noundef nonnull align 4 dereferenceable(36) %C, i8 0, i64 36, i1 false), !dbg !50, !tbaa !53
     */
 
+    // auto unifyloopexits = createUnifyLoopExitsPass();
+    // PM_pre.add(unifyloopexits);
+    // print_info("Enable UnifyLoopExits Pass");
+
+    // auto loopsimplify = createLoopSimplifyPass();
+    // PM_pre.add(loopsimplify);
+    // print_info("Enable LoopSimplify Pass");
+
     std::map<std::string, std::vector<int>> IRFunc2BeginLine;
     auto hi_ir2sourcecode = new HI_IR2SourceCode("HI_IR2SourceCode", IRLoop2LoopLabel,
                                                  IRFunc2BeginLine, IRLoop2OriginTripCount, (argc == 5 && std::string(argv[4]) == "DEBUG"));
@@ -240,7 +275,7 @@ int main(int argc, const char **argv)
     // To differ with the HI_ArrayInfo which contains the pragma information, we define a new class ArrayInfo to store the
     // basic information of the array.
     std::map<llvm::Value *, ArrayInfo *> Target2ArrayInfo;
-    HI_ArrayInfo *hi_arrayinfo = new HI_ArrayInfo("HI_ArrayInfo", Target2ArrayInfo, (argc == 5 && std::string(argv[4]) == "DEBUG"));
+    HI_ArrayInfo *hi_arrayinfo = new HI_ArrayInfo("BasicArrayInfo", Target2ArrayInfo, (argc == 5 && std::string(argv[4]) == "DEBUG"));
     PM_pre.add(hi_arrayinfo);
 
     print_status("Start LLVM pre-processing");
@@ -252,9 +287,9 @@ int main(int argc, const char **argv)
     WriteBitcodeToFile(*Mod, OS_pre);
     OS_pre.flush();
 
-    cmd_str = "llvm-dis top_output_loopextract.bc -o top_output_loopextract.ll";
+    std::string cmd_str = "llvm-dis top_output_loopextract.bc -o top_output_loopextract.ll";
     print_cmd(cmd_str.c_str());
-    result = sysexec(cmd_str.c_str());
+    bool result = sysexec(cmd_str.c_str());
     assert(result);
 
     // llvm::errs() << *Mod;
@@ -291,10 +326,10 @@ int main(int argc, const char **argv)
         call void @_Z4_2mmPA3_iS0_S0_.for.cond20.preheader(ptr %C, i64 2, ptr %A, ptr %B), !dbg !59
         ret void, !dbg !61
     */
-    auto hi_loopunroll = new HI_LoopUnroll(IRLoop2LoopLabel, LoopLabel2UnrollFactor, 1, true,
-                                           std::nullopt); //"HI_LoopUnroll"
-    PM1.add(hi_loopunroll);
-    print_info("Enable HI_LoopUnroll Pass");
+    // auto hi_loopunroll = new HI_LoopUnroll(IRLoop2LoopLabel, LoopLabel2UnrollFactor, 1, true,
+    //                                        std::nullopt); //"HI_LoopUnroll"
+    // PM1.add(hi_loopunroll);
+    // print_info("Enable HI_LoopUnroll Pass");
 
     auto hi_separateconstoffsetfromgep =
         new HI_SeparateConstOffsetFromGEP("HI_SeparateConstOffsetFromGEP", true);
@@ -322,12 +357,12 @@ int main(int argc, const char **argv)
     // PM.add(separateconstoffsetfromgep);
     // print_info("Enable SeparateConstOffsetFromGEP Pass");
 
-    // if (argc == 5 && std::string(argv[4])=="enable-lsr")
-    // {
-    auto loopstrengthreducepass = createLoopStrengthReducePass();
-    PM1.add(loopstrengthreducepass);
-    print_info("Enable LoopStrengthReducePass Pass");
-    // }
+    if (argc == 5 && std::string(argv[4]) == "enable-lsr")
+    {
+        auto loopstrengthreducepass = createLoopStrengthReducePass();
+        PM1.add(loopstrengthreducepass);
+        print_info("Enable LoopStrengthReducePass Pass");
+    }
 
     auto hi_duplicateinstrm = new HI_DuplicateInstRm("rmInsts");
     PM1.add(hi_duplicateinstrm);
@@ -337,9 +372,9 @@ int main(int argc, const char **argv)
     // PM.add(lazyvalueinfowrapperpass);
     // print_info("Enable LazyValueInfoWrapperPass Pass");
 
-    // auto hi_varwidthreduce = new HI_VarWidthReduce("VarWidth");
-    // PM1.add(hi_varwidthreduce);
-    // print_info("Enable HI_VarWidthReduce Pass");
+    auto hi_varwidthreduce = new HI_VarWidthReduce("VarWidth");
+    PM1.add(hi_varwidthreduce);
+    print_info("Enable HI_VarWidthReduce Pass");
 
     auto hi_instructionmovebackward =
         new HI_InstructionMoveBackward("HI_instructionMoveBackward");
@@ -417,19 +452,19 @@ int main(int argc, const char **argv)
     // PM.add(createCorrelatedValuePropagationPass());
     // print_info("Enable CorrelatedValuePropagation Pass");
 
-    // auto hi_varwidthreduce1 =
-    //     new HI_VarWidthReduce("VarWidth1", (argc == 5 && std::string(argv[4]) == "DEBUG"));
-    // PM3.add(hi_varwidthreduce1);
-    // print_info("Enable HI_VarWidthReduce Pass");
+    auto hi_varwidthreduce1 =
+        new HI_VarWidthReduce("VarWidth1", (argc == 5 && std::string(argv[4]) == "DEBUG"));
+    PM3.add(hi_varwidthreduce1);
+    print_info("Enable HI_VarWidthReduce Pass");
 
     // don't remove chained operations
     auto hi_hlsduplicateinstrm1 = new HI_HLSDuplicateInstRm("HLSrmInsts1");
     PM3.add(hi_hlsduplicateinstrm1);
     print_info("Enable HI_HLSDuplicateInstRm Pass");
 
-    auto CFGSimplification_pass3 = createCFGSimplificationPass();
-    PM3.add(CFGSimplification_pass3);
-    print_info("Enable CFGSimplificationPass Pass");
+    // auto CFGSimplification_pass3 = createCFGSimplificationPass();
+    // PM3.add(CFGSimplification_pass3);
+    // print_info("Enable CFGSimplificationPass Pass");
 
     auto hi_instructionmovebackward1 =
         new HI_InstructionMoveBackward("HI_instructionMoveBackward1");
@@ -533,19 +568,21 @@ int main(int argc, const char **argv)
     PM4.add(hi_loopinformationcollect);
     print_info("Enable HI_LoopInFormationCollect Pass");
 
-    auto hi_loopdependenceanalysis = new HI_LoopDependenceAnalysis("HI_LoopDependenceAnalysis");
-    print_info("Enable HI_LoopDependenceAnalysis Pass");
-    PM4.add(hi_loopdependenceanalysis);
+    // auto hi_loopdependenceanalysis = new HI_LoopDependenceAnalysis("HI_LoopDependenceAnalysis");
+    // print_info("Enable HI_LoopDependenceAnalysis Pass");
+    // PM4.add(hi_loopdependenceanalysis);
 
     // auto hi_simpletimingevaluation = new
     // HI_SimpleTimingEvaluation("HI_SimpleTimingEvaluation",top_str.c_str()); print_info("Enable
     // HI_SimpleTimingEvaluation Pass"); PM.add(hi_simpletimingevaluation);
 
-    auto hi_MuxInsertionArrayPartition = new HI_MuxInsertionArrayPartition(
-        configFile_str.c_str(), top_str.c_str(), FuncParamLine2OutermostSize, IRFunc2BeginLine, Target2ArrayInfo, (argc == 5 && std::string(argv[4]) == "DEBUG"));
+    // This pass mainly focuses on the array partitioning pragma which is highly related to the verilog generation part.
+    // TODO: Finish bugs within this part.
+    // auto hi_MuxInsertionArrayPartition = new HI_MuxInsertionArrayPartition(
+    //     configFile_str.c_str(), top_str.c_str(), FuncParamLine2OutermostSize, IRFunc2BeginLine, Target2ArrayInfo, (argc == 5 && std::string(argv[4]) == "DEBUG"));
 
-    print_info("Enable HI_MuxInsertionArrayPartition Pass");
-    PM4.add(hi_MuxInsertionArrayPartition);
+    // print_info("Enable HI_MuxInsertionArrayPartition Pass");
+    // PM4.add(hi_MuxInsertionArrayPartition);
 
     print_info("Enable HI_FindFunctions Pass");
     print_info("Enable HI_DependenceList Pass");
@@ -1079,11 +1116,11 @@ int main(int argc, const char **argv)
 //     print_info("Enable HI_MuxInsertionArrayPartition Pass");
 //     PM.add(hi_MuxInsertionArrayPartition);
 
-//     auto hi_nodirectivetimingresourceevaluation = new HI_NoDirectiveTimingResourceEvaluation(
-//         configFile_str.c_str(), "HI_NoDirectiveTimingResourceEvaluation", "BRAM_info",
-//         top_str.c_str(), true);
-//     print_info("Enable HI_NoDirectiveTimingResourceEvaluation Pass");
-//     PM.add(hi_nodirectivetimingresourceevaluation);
+// auto hi_nodirectivetimingresourceevaluation = new HI_NoDirectiveTimingResourceEvaluation(
+//     configFile_str.c_str(), "HI_NoDirectiveTimingResourceEvaluation", "BRAM_info",
+//     top_str.c_str(), true);
+// print_info("Enable HI_NoDirectiveTimingResourceEvaluation Pass");
+// PM.add(hi_nodirectivetimingresourceevaluation);
 
 //     auto hi_withdirectivetimingresourceevaluation = new HI_WithDirectiveTimingResourceEvaluation(
 //         configFile_str.c_str(), "HI_WithDirectiveTimingResourceEvaluation", "BRAM_info_0",

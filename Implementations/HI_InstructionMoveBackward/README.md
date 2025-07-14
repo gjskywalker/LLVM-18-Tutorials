@@ -4,7 +4,6 @@ The HI_InstructionMoveBackward pass is used to move the instructions from the or
 
 This pass is based on the DominatorTreeWrapperPass in LLVM. As for the problem, what is dominator tree, please refer to https://en.wikipedia.org/wiki/Dominator_(graph_theory).
 
-
 the rought implementation idea is shown below:
 
 1. loop to find the lowest node in Dominator Tree, which should not be preocessed previously, to process

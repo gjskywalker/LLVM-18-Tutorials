@@ -354,7 +354,19 @@ Value *HI_ConstantOffsetExtractor::applyExts(Value *V)
         {
             // If Current is a constant, apply s/zext using ConstantExpr::getCast.
             // ConstantExpr::getCast emits a ConstantInt if C is a ConstantInt.
-            Current = ConstantExpr::getCast((*I)->getOpcode(), C, (*I)->getType());
+            if ((*I)->getOpcode() == Instruction::ZExt)
+            {
+                Current = ConstantInt::get((*I)->getType(), cast<ConstantInt>(C)->getZExtValue());
+            }
+            else if ((*I)->getOpcode() == Instruction::SExt)
+            {
+                Current = ConstantInt::get((*I)->getType(), cast<ConstantInt>(C)->getSExtValue());
+            }
+            else
+            {
+                Current = ConstantExpr::getCast((*I)->getOpcode(), C, (*I)->getType());
+            }
+            // Current = ConstantExpr::getCast((*I)->getOpcode(), C, (*I)->getType());
         }
         else
         {

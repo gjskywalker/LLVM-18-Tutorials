@@ -28,6 +28,7 @@ bool HI_WithDirectiveTimingResourceEvaluation::runOnModule(
     if (DEBUG)
         *Evaluating_log << " ======================= the module end =======================\n";
 
+    Evaluating_log->flush();
     // analyze BRAM accesses in the module before any other analysis
     TraceMemoryDeclarationAndAnalyzeAccessinModule(M);
 
@@ -56,6 +57,17 @@ bool HI_WithDirectiveTimingResourceEvaluation::runOnModule(
     //     +
     //     std::to_string((double)(tv_end.tv_sec-tv_begin.tv_sec)+(double)(tv_end.tv_usec-tv_begin.tv_usec)/1000000.0)
     //     + " s");
+
+    // for (auto it : accessCounterForBlock)
+    // {
+    //     llvm::errs() << "For BasicBlock " << it.first->getName() << ":\n";
+    //     for (auto it2 : it.second)
+    //     {
+    //         llvm::errs() << "  For Value " << it2.first.first->getName() << ":\n";
+    //         llvm::errs() << "  Partition Info: " << it2.first.second.port_num << "\n";
+    //         llvm::errs() << "  Access Count: " << it2.second << "\n";
+    //     }
+    // }
 
     return false;
 }

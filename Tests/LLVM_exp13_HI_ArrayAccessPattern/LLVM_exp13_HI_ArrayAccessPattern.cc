@@ -31,7 +31,7 @@ int main(int argc, char **argv)
         Err.print(argv[0], errs());
         return 1;
     }
-
+    // Print the module to stdout
     // Create a pass manager and fill it with the passes we want to run.
     legacy::PassManager PM, PM1;
     LLVMTargetRef T;
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
         print_info(targetname.c_str());
     }
 
-    Triple ModuleTriple(Mod->getTargetTriple());
+    Triple ModuleTriple(Mod->getTargetTriple());        
     TargetLibraryInfoImpl TLII(ModuleTriple);
     PM1.add(new TargetLibraryInfoWrapperPass(TLII));
 

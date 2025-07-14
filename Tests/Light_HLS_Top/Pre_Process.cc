@@ -14,6 +14,7 @@ void clangPreProcess(const char **argv, std::string top_str, std::map<std::strin
     pathAdvice();
 
     // parse the command-line args passed to your code
+    // TODO: Based on LLVM_exp14 modify the clang CommonOptionsParser
     int labelerArgc = 2;
     CommonOptionsParser op(labelerArgc, argv, StatSampleCategory);
 

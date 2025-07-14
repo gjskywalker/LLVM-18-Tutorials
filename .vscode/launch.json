@@ -5,15 +5,11 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
-      "args": [
-        "2mm.cc",
-        "_2mm",
-        "../config.txt"
-      ],
+      "args": ["helloworld.cc"],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp14_HI_WithDirectiveTimingResourceEvaluation/build",
-      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp14_HI_WithDirectiveTimingResourceEvaluation/build/LLVM_exp14_HI_WithDirectiveTimingResourceEvaluation",
+      "cwd": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp0_find_functions/build",
+      "program": "/home/eeuser/Desktop/LLVM-18-Tutorials/Tests/LLVM_exp0_find_functions/build/LLVM_exp0_find_functions",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

@@ -6,10 +6,15 @@ bool HI_ArrayInfo::runOnModule(Module &M)
 {
     for (auto &it : M.global_values())
     {
-        if (it.getType()->isArrayTy())
+        if (DEBUG)
+        {
+            *Array_out << "Global Value: " << it.getValueName() << "\n";
+            *Array_out << "Type: " << *it.getValueType() << "\n";
+        }
+        if (it.getValueType()->isArrayTy())
         {
             if (DEBUG)
-                *Array_out << "Global Array: " << it.getName() << "\n";
+                *Array_out << "Global Array: " << it.getValueName() << "\n";
             Target2ArrayInfo_ref[&it] = getArrayInfo(&it);
         }
     }
@@ -44,6 +49,25 @@ bool HI_ArrayInfo::runOnModule(Module &M)
             }
         }
     }
+    // TODO: for some cases the complete array information is not available, we chose to set the following defualt values to keep correct compilation flow.
+    // TODO: The default values are: num_dims = 1, dim_size[0] = 1, total_ele = 1, elementType = it.first->getType(), isArgument = true; This can affect the resource estimation but has tiny effect on latency estimation.
+    for (auto &it : Target2ArrayInfo_ref)
+    {
+        if (it.first)
+        {
+            if (it.second->dim_size[0] == 0)
+            {
+                it.second->num_dims = 1;
+                it.second->dim_size[0] = 1;
+                it.second->total_ele = 1;
+                // it.second->elementType = it.first->getType();
+                it.second->isArgument = true;
+            }
+        }
+        else
+            assert(false && "The target should not be nullptr.");
+    }
+    Array_out->flush();
     return false;
 }
 char HI_ArrayInfo::ID =
@@ -95,9 +119,25 @@ ArrayInfo *HI_ArrayInfo::getArrayInfo(Value *V)
                     tmp = array_T->getArrayElementType();
                 }
                 AI->elementType = tmp;
+                if (DEBUG)
+                {
+                    *Array_out << "Array: " << V->getName() << " has " << AI->num_dims << " dimensions. " << " and " << AI->total_ele << " elements.\n";
+                    *Array_out << "The element type is " << *AI->elementType << "\n";
+                    for (int i = 0; i < AI->num_dims; i++)
+                    {
+                        *Array_out << "Dimension " << i << " has size " << AI->dim_size[i] << "\n";
+                    }
+                }
+                break;
             }
         }
-        assert(find && "The target should be used by GEP instruction and this pass should be run before the HI_SeparateConstOffsetFromGEP pass.");
+        if (!find)
+        {
+            llvm::errs() << *V << "\n";
+            llvm::errs() << "Unused argument.\n";
+            // assert(find && "The target should be used by GEP instruction and this pass should be run before the HI_SeparateConstOffsetFromGEP pass.");
+        }
+
         auto idx0 = GEP_Inst->idx_begin();
         if (auto inst = dyn_cast<Instruction>(idx0))
         {
